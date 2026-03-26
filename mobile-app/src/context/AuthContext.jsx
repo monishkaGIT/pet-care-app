@@ -1,0 +1,54 @@
+import React, { createContext, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '../api/axiosConfig';
+
+export const AuthContext = createContext();
+
+export const AuthProvider = ({ children }) => {
+    const [isLoading, setIsLoading] = useState(true);
+    const [user, setUser] = useState(null);
+
+    const checkLoginStatus = async () => {
+        try {
+            const storedUser = await AsyncStorage.getItem('userData');
+            if (storedUser) {
+                setUser(JSON.parse(storedUser));
+            }
+        } catch (e) {
+            console.error('Failed to load user', e);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        checkLoginStatus();
+    }, []);
+
+    const login = async (email, password) => {
+        const response = await api.post('/login', { email, password });
+        const userData = response.data;
+        await AsyncStorage.setItem('userData', JSON.stringify(userData));
+        setUser(userData);
+        return userData;
+    };
+
+    const register = async (formData) => {
+        const response = await api.post('/register', formData);
+        const userData = response.data;
+        await AsyncStorage.setItem('userData', JSON.stringify(userData));
+        setUser(userData);
+        return userData;
+    };
+
+    const logout = async () => {
+        await AsyncStorage.removeItem('userData');
+        setUser(null);
+    };
+
+    return (
+        <AuthContext.Provider value={{ user, setUser, isLoading, login, register, logout }}>
+            {children}
+        </AuthContext.Provider>
+    );
+};
