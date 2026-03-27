@@ -8,6 +8,17 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
 import { fetchUserPets } from '../../api/petApi';
 
+function AskPawlyShortcut({ onPress, small }) {
+    return (
+        <TouchableOpacity style={small ? styles.askPawlyWrapSmall : styles.askPawlyWrap} onPress={onPress} activeOpacity={0.85}>
+            <View style={small ? styles.askPawlyCircleSmall : styles.askPawlyCircle}>
+                <MaterialCommunityIcons name="dog" size={small ? 28 : 38} color="#e0ad00" />
+            </View>
+            <Text style={small ? styles.askPawlyLabelSmall : styles.askPawlyLabel}>Ask Pawly?</Text>
+        </TouchableOpacity>
+    );
+}
+
 export default function HomeScreen() {
     const navigation = useNavigation();
     const [pets, setPets] = useState([]);
@@ -89,6 +100,8 @@ export default function HomeScreen() {
                         <Text style={styles.addFirstBtnText}>Add Your First Pet</Text>
                     </TouchableOpacity>
 
+                    <AskPawlyShortcut onPress={() => navigation.navigate('AskPawly')} />
+
                     {/* Info Cards */}
                     <View style={styles.infoCard}>
                         <View style={styles.infoCardInner}>
@@ -144,9 +157,11 @@ export default function HomeScreen() {
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.secondary]} />}
                 contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 120 }}
                 ListHeaderComponent={() => (
-                    <View style={{ marginBottom: 10 }}>
-                        <Text style={styles.familyTitle}>Your furry family</Text>
-                        <Text style={styles.familyDesc}>Keep track of your beloved pets' health and activities.</Text>
+                    <View style={styles.listHeaderRow}>
+                        <View style={{ flex: 1, paddingRight: 15 }}>
+                            <Text style={styles.familyTitle}>Your furry family</Text>
+                            <Text style={styles.familyDesc}>Keep track of your beloved pets' health and activities.</Text>
+                        </View>
                     </View>
                 )}
                 renderItem={({ item }) => (
@@ -184,6 +199,11 @@ export default function HomeScreen() {
                     </View>
                 )}
             />
+
+            {/* Ask Pawly Floating Button */}
+            <View style={styles.askPawlyFab}>
+                <AskPawlyShortcut small onPress={() => navigation.navigate('AskPawly')} />
+            </View>
 
             {/* FAB Button */}
             <TouchableOpacity
@@ -238,6 +258,44 @@ const styles = StyleSheet.create({
     },
     addFirstBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16, marginLeft: 8 },
 
+    askPawlyWrap: {
+        alignItems: 'center',
+        marginBottom: 22,
+    },
+    askPawlyCircle: {
+        width: 110,
+        height: 110,
+        borderRadius: 55,
+        backgroundColor: '#f7f3de',
+        justifyContent: 'center',
+        alignItems: 'center',
+        ...SHADOWS.card,
+    },
+    askPawlyLabel: {
+        marginTop: 10,
+        fontSize: 15,
+        fontWeight: '700',
+        color: COLORS.textMuted,
+    },
+    askPawlyWrapSmall: {
+        alignItems: 'center',
+    },
+    askPawlyCircleSmall: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: '#f7f3de',
+        justifyContent: 'center',
+        alignItems: 'center',
+        ...SHADOWS.card,
+    },
+    askPawlyLabelSmall: {
+        marginTop: 6,
+        fontSize: 12,
+        fontWeight: '700',
+        color: COLORS.textMuted,
+    },
+
     // ── Info Cards ──
     infoCard: {
         width: '100%', backgroundColor: '#dbeafe', borderRadius: 18,
@@ -264,6 +322,12 @@ const styles = StyleSheet.create({
     },
 
     // ── Pet List ──
+    listHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 10,
+    },
     familyTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.secondary, marginTop: 10 },
     familyDesc: { fontSize: 13, color: COLORS.textMuted, marginTop: 4, marginBottom: 10 },
 
@@ -293,8 +357,15 @@ const styles = StyleSheet.create({
     insightValue: { fontSize: 13, fontWeight: '600', color: COLORS.textPrimary, marginTop: 2 },
 
     // ── FAB ──
+    askPawlyFab: {
+        position: 'absolute',
+        bottom: 20,
+        right: 18,
+        alignItems: 'center',
+        zIndex: 10,
+    },
     fab: {
-        position: 'absolute', bottom: 110, right: 20,
+        position: 'absolute', bottom: 120, right: 20,
         width: 56, height: 56, borderRadius: 28,
         backgroundColor: COLORS.secondary, justifyContent: 'center', alignItems: 'center',
         elevation: 6,
