@@ -17,6 +17,7 @@ import MainTabNavigator from './MainTabNavigator';
 // User Screens
 import ProfileScreen from '../screens/user/ProfileScreen';
 import ChangePasswordScreen from '../screens/user/ChangePasswordScreen';
+import AskPawlyScreen from '../screens/main/AskPawlyScreen';
 
 // Pet Management Flow
 import MyPetsListScreen from '../screens/main/MyPetsListScreen';
@@ -88,6 +89,17 @@ export default function AppNavigator() {
                         <Stack.Screen name="Explore" component={ExploreScreen} />
                         <Stack.Screen name="CreatePost" component={CreatePostScreen} />
                         <Stack.Screen name="EditPost" component={EditPostScreen} />
+                        <Stack.Screen
+                            name="AskPawly"
+                            component={AskPawlyScreen}
+                            options={{
+                                headerShown: true,
+                                title: 'Ask Pawly',
+                                headerStyle: { backgroundColor: COLORS.primary },
+                                headerTintColor: COLORS.secondary,
+                                headerTitleAlign: 'center',
+                            }}
+                        />
                     </>
                 )}
             </Stack.Navigator>
