@@ -15,6 +15,9 @@ import RegisterScreen from '../screens/auth/RegisterScreen';
 import MainTabNavigator from './MainTabNavigator';
 import ProfileScreen from '../screens/user/ProfileScreen';
 import ChangePasswordScreen from '../screens/user/ChangePasswordScreen';
+import AddPetScreen from '../screens/main/AddPetScreen';
+import PetDetailScreen from '../screens/main/PetDetailScreen';
+import EditPetScreen from '../screens/main/EditPetScreen';
 
 // Admin Screens
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
@@ -60,6 +63,9 @@ export default function AppNavigator() {
                         <Stack.Screen name="MainTabs" component={MainTabNavigator} />
                         <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: true, title: 'My Profile', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary, headerTitleAlign: 'center' }} />
                         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: true, title: 'Change Password', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary }} />
+                        <Stack.Screen name="AddPet" component={AddPetScreen} />
+                        <Stack.Screen name="PetDetail" component={PetDetailScreen} />
+                        <Stack.Screen name="EditPet" component={EditPetScreen} />
                     </>
                 )}
             </Stack.Navigator>

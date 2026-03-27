@@ -1,0 +1,257 @@
+import React, { useState } from 'react';
+import {
+    View, Text, StyleSheet, TextInput, TouchableOpacity,
+    ScrollView, Alert, KeyboardAvoidingView, Platform
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { COLORS, SHADOWS } from '../../constants/theme';
+import { createPet } from '../../api/petApi';
+
+export default function AddPetScreen() {
+    const navigation = useNavigation();
+    const [loading, setLoading] = useState(false);
+    const [form, setForm] = useState({
+        name: '',
+        breed: '',
+        age: '',
+        weight: '',
+        gender: 'Male',
+        color: '',
+        isNeutered: false,
+        isMicrochipped: false,
+        isVaccinated: false,
+    });
+
+    const toggleField = (field) => setForm(prev => ({ ...prev, [field]: !prev[field] }));
+
+    const handleSave = async () => {
+        if (!form.name.trim() || !form.breed.trim()) {
+            Alert.alert('Missing Info', 'Please enter at least a name and breed.');
+            return;
+        }
+        setLoading(true);
+        try {
+            await createPet({
+                ...form,
+                age: parseFloat(form.age) || 0,
+                weight: parseFloat(form.weight) || 0,
+            });
+            navigation.goBack();
+        } catch (e) {
+            Alert.alert('Error', 'Failed to save pet profile.');
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+            <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 120 }}>
+                {/* Header */}
+                <View style={styles.header}>
+                    <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+                        <Ionicons name="arrow-back" size={24} color={COLORS.secondary} />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>
+                        Tell us about{'\n'}
+                        {form.name ? `[${form.name}]` : '[Pet Name]'}
+                    </Text>
+                    <TouchableOpacity style={styles.profileIcon}>
+                        <Ionicons name="person" size={18} color="#fff" />
+                    </TouchableOpacity>
+                </View>
+
+                {/* Form */}
+                <View style={styles.formCard}>
+                    {/* Name */}
+                    <Text style={styles.label}>Name</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Enter pet name"
+                        placeholderTextColor={COLORS.textPlaceholder}
+                        value={form.name}
+                        onChangeText={(v) => setForm(prev => ({ ...prev, name: v }))}
+                    />
+
+                    {/* Breed */}
+                    <Text style={styles.label}>Breed</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="e.g. Golden Retriever"
+                        placeholderTextColor={COLORS.textPlaceholder}
+                        value={form.breed}
+                        onChangeText={(v) => setForm(prev => ({ ...prev, breed: v }))}
+                    />
+
+                    {/* Age + Weight Row */}
+                    <View style={styles.row}>
+                        <View style={{ flex: 1, marginRight: 10 }}>
+                            <Text style={styles.label}>Age (Years)</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="0"
+                                placeholderTextColor={COLORS.textPlaceholder}
+                                keyboardType="numeric"
+                                value={form.age}
+                                onChangeText={(v) => setForm(prev => ({ ...prev, age: v }))}
+                            />
+                        </View>
+                        <View style={{ flex: 1, marginLeft: 10 }}>
+                            <Text style={styles.label}>Weight (kg)</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="0.0"
+                                placeholderTextColor={COLORS.textPlaceholder}
+                                keyboardType="numeric"
+                                value={form.weight}
+                                onChangeText={(v) => setForm(prev => ({ ...prev, weight: v }))}
+                            />
+                        </View>
+                    </View>
+
+                    {/* Gender */}
+                    <Text style={styles.label}>Gender</Text>
+                    <View style={styles.genderRow}>
+                        <TouchableOpacity
+                            style={[styles.genderBtn, form.gender === 'Male' && styles.genderBtnActive]}
+                            onPress={() => setForm(prev => ({ ...prev, gender: 'Male' }))}
+                        >
+                            <Ionicons name="male" size={16} color={form.gender === 'Male' ? COLORS.secondary : COLORS.textMuted} />
+                            <Text style={[styles.genderText, form.gender === 'Male' && styles.genderTextActive]}>Male</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.genderBtn, form.gender === 'Female' && styles.genderBtnActive]}
+                            onPress={() => setForm(prev => ({ ...prev, gender: 'Female' }))}
+                        >
+                            <Ionicons name="female" size={16} color={form.gender === 'Female' ? COLORS.secondary : COLORS.textMuted} />
+                            <Text style={[styles.genderText, form.gender === 'Female' && styles.genderTextActive]}>Female</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Color */}
+                    <Text style={styles.label}>Color / Markings</Text>
+                    <TextInput
+                        style={[styles.input, { height: 60, textAlignVertical: 'top' }]}
+                        placeholder="Describe pet colors"
+                        placeholderTextColor={COLORS.textPlaceholder}
+                        multiline
+                        value={form.color}
+                        onChangeText={(v) => setForm(prev => ({ ...prev, color: v }))}
+                    />
+                </View>
+
+                {/* Quick Toggles */}
+                <View style={styles.toggleCard}>
+                    <Text style={styles.toggleTitle}>QUICK TOGGLES</Text>
+                    <View style={styles.toggleRow}>
+                        <TouchableOpacity
+                            style={[styles.toggleChip, form.isNeutered && styles.toggleChipActive]}
+                            onPress={() => toggleField('isNeutered')}
+                        >
+                            <Text style={[styles.toggleChipText, form.isNeutered && styles.toggleChipTextActive]}>
+                                Neutered/Spayed
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.toggleChip, form.isMicrochipped && styles.toggleChipActive]}
+                            onPress={() => toggleField('isMicrochipped')}
+                        >
+                            <Text style={[styles.toggleChipText, form.isMicrochipped && styles.toggleChipTextActive]}>
+                                Microchipped
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.toggleChip, form.isVaccinated && styles.toggleChipActive]}
+                            onPress={() => toggleField('isVaccinated')}
+                        >
+                            <Text style={[styles.toggleChipText, form.isVaccinated && styles.toggleChipTextActive]}>
+                                Vaccinated
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                {/* Save Button */}
+                <TouchableOpacity
+                    style={[styles.saveBtn, loading && { opacity: 0.6 }]}
+                    onPress={handleSave}
+                    disabled={loading}
+                >
+                    <Ionicons name="save" size={20} color="#fff" />
+                    <Text style={styles.saveBtnText}>
+                        {loading ? 'Saving...' : 'Save Profile'}
+                    </Text>
+                </TouchableOpacity>
+            </ScrollView>
+        </KeyboardAvoidingView>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: COLORS.lightGray },
+
+    // Header
+    header: {
+        backgroundColor: COLORS.primary,
+        paddingHorizontal: 20, paddingTop: 50, paddingBottom: 25,
+        borderBottomLeftRadius: 30, borderBottomRightRadius: 30,
+        alignItems: 'center', ...SHADOWS.header,
+    },
+    backBtn: { position: 'absolute', left: 20, top: 50 },
+    headerTitle: { fontSize: 22, fontWeight: 'bold', color: COLORS.secondary, textAlign: 'center', lineHeight: 30 },
+    profileIcon: {
+        position: 'absolute', right: 20, top: 50,
+        width: 36, height: 36, borderRadius: 18,
+        backgroundColor: COLORS.secondary, justifyContent: 'center', alignItems: 'center',
+    },
+
+    // Form
+    formCard: {
+        backgroundColor: COLORS.surface, margin: 20, marginTop: 24,
+        borderRadius: 20, padding: 20, ...SHADOWS.card,
+    },
+    label: { fontSize: 13, fontWeight: '600', color: COLORS.secondary, marginBottom: 6, marginTop: 14 },
+    input: {
+        backgroundColor: COLORS.inputBg, borderWidth: 1, borderColor: COLORS.inputBorder,
+        borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12,
+        fontSize: 15, color: COLORS.textPrimary,
+    },
+    row: { flexDirection: 'row' },
+
+    // Gender
+    genderRow: { flexDirection: 'row', gap: 12 },
+    genderBtn: {
+        flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        paddingVertical: 12, borderRadius: 12,
+        borderWidth: 1.5, borderColor: COLORS.inputBorder, backgroundColor: COLORS.inputBg,
+    },
+    genderBtnActive: { borderColor: COLORS.secondary, backgroundColor: '#faf0e4' },
+    genderText: { marginLeft: 6, fontSize: 15, color: COLORS.textMuted },
+    genderTextActive: { color: COLORS.secondary, fontWeight: '600' },
+
+    // Toggle Card
+    toggleCard: {
+        backgroundColor: '#faf0e4', marginHorizontal: 20,
+        borderRadius: 20, padding: 20,
+    },
+    toggleTitle: { fontSize: 12, fontWeight: 'bold', color: COLORS.secondary, letterSpacing: 1, marginBottom: 12 },
+    toggleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+    toggleChip: {
+        paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20,
+        borderWidth: 1.5, borderColor: COLORS.secondary, backgroundColor: 'transparent',
+    },
+    toggleChipActive: { backgroundColor: COLORS.secondary },
+    toggleChipText: { fontSize: 13, fontWeight: '600', color: COLORS.secondary },
+    toggleChipTextActive: { color: '#fff' },
+
+    // Save Button
+    saveBtn: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: '#c8952e', marginHorizontal: 40, marginTop: 28,
+        paddingVertical: 16, borderRadius: 30,
+        elevation: 4,
+    },
+    saveBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 17, marginLeft: 10 },
+});
