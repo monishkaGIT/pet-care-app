@@ -47,3 +47,10 @@ export const deletePet = async (petId) => {
     const res = await axios.delete(`${BASE_URL}/${petId}`, { headers });
     return res.data;
 };
+
+export const askPawly = async (message) => {
+    const headers = await getHeaders();
+    const res = await axios.post(`http://${ip}:5000/api/ask-pawly`, { message }, { headers });
+    return res.data;
+};
+
