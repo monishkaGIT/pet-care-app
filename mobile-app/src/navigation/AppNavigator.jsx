@@ -11,10 +11,24 @@ import LandingScreen from '../screens/auth/LandingScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 
-// User Main App
+// Main Tab Navigator
 import MainTabNavigator from './MainTabNavigator';
+
+// User Screens
 import ProfileScreen from '../screens/user/ProfileScreen';
 import ChangePasswordScreen from '../screens/user/ChangePasswordScreen';
+
+// Pet Management Flow
+import MyPetsListScreen from '../screens/main/MyPetsListScreen';
+import AddPetSelectTypeScreen from '../screens/main/AddPetSelectTypeScreen';
+import AddPetDetailsScreen from '../screens/main/AddPetDetailsScreen';
+import EditPetProfileScreen from '../screens/main/EditPetProfileScreen';
+import PetDetailScreen from '../screens/main/PetDetailScreen';
+
+// Social Screens
+import NotificationsScreen from '../screens/main/NotificationsScreen';
+import ExploreScreen from '../screens/social/ExploreScreen';
+import CreatePostScreen from '../screens/social/CreatePostScreen';
 
 // Admin Screens
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
@@ -39,7 +53,6 @@ export default function AppNavigator() {
         <NavigationContainer>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
                 {user === null ? (
-                    // Unauthenticated Stack
                     <>
                         <Stack.Screen name="Splash" component={SplashScreen} />
                         <Stack.Screen name="Landing" component={LandingScreen} />
@@ -47,7 +60,6 @@ export default function AppNavigator() {
                         <Stack.Screen name="Register" component={RegisterScreen} />
                     </>
                 ) : user.role === 'admin' ? (
-                    // Admin Stack
                     <>
                         <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} options={{ headerShown: true, title: 'Admin Home', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary }} />
                         <Stack.Screen name="UserList" component={UserListScreen} options={{ headerShown: true, title: 'Manage Users', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary }} />
@@ -55,11 +67,25 @@ export default function AppNavigator() {
                         <Stack.Screen name="EditUser" component={EditUserScreen} options={{ headerShown: true, title: 'Edit User', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary }} />
                     </>
                 ) : (
-                    // Normal User Stack (Bottom Tabs act as Home base)
                     <>
+                        {/* Main App — Bottom Tabs */}
                         <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-                        <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: true, title: 'My Profile', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary, headerTitleAlign: 'center' }} />
+
+                        {/* User Profile */}
+                        <Stack.Screen name="UserProfile" component={ProfileScreen} />
                         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: true, title: 'Change Password', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary }} />
+
+                        {/* Pet CRUD Flow */}
+                        <Stack.Screen name="MyPetsList" component={MyPetsListScreen} />
+                        <Stack.Screen name="AddPetSelectType" component={AddPetSelectTypeScreen} />
+                        <Stack.Screen name="AddPetDetails" component={AddPetDetailsScreen} />
+                        <Stack.Screen name="EditPetProfile" component={EditPetProfileScreen} />
+                        <Stack.Screen name="PetDetail" component={PetDetailScreen} />
+
+                        {/* Social Feed Screens */}
+                        <Stack.Screen name="Notifications" component={NotificationsScreen} />
+                        <Stack.Screen name="Explore" component={ExploreScreen} />
+                        <Stack.Screen name="CreatePost" component={CreatePostScreen} />
                     </>
                 )}
             </Stack.Navigator>

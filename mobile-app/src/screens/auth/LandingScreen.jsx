@@ -1,101 +1,268 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import { COLORS, SHADOWS } from '../../constants/theme';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+import { COLORS } from '../../constants/theme';
+
+const { width, height } = Dimensions.get('window');
 
 const LandingScreen = ({ navigation }) => {
     return (
-        <View style={styles.container}>
-            <View style={styles.content}>
-                <Image
-                    source={require('../../../assets/logo.png')}
-                    style={styles.logo}
-                />
-                <Text style={styles.title}>Welcome to PetCare!</Text>
-                <Text style={styles.subtitle}>The ultimate pet management system.</Text>
-            </View>
+        <SafeAreaView style={styles.safeArea}>
+            <View style={styles.container}>
+                {/* Decorative Background Blur */}
+                <View style={styles.decorativeCircle} />
 
-            <View style={styles.footer}>
-                <TouchableOpacity
-                    style={styles.buttonPrimary}
-                    onPress={() => navigation.navigate('Register')}
-                >
-                    <Text style={styles.buttonPrimaryText}>Get Started</Text>
-                </TouchableOpacity>
+                {/* Hero Icon */}
+                <View style={styles.heroContainer}>
+                    <View style={styles.iconContainer}>
+                        <View style={styles.iconInnerContainer}>
+                            <MaterialIcons name="pets" size={100} color="#30628a" style={{ opacity: 0.9 }} />
+                        </View>
+                        
+                        {/* Floating Detail Badge */}
+                        <View style={styles.floatingBadge}>
+                            <View style={styles.badgeIconBg}>
+                                <MaterialIcons name="pets" size={16} color="#ffffff" />
+                            </View>
+                            <View>
+                                <Text style={styles.badgeTitle}>PETCARE PLUS</Text>
+                                <Text style={styles.badgeSubtitle}>Verified Comfort</Text>
+                            </View>
+                        </View>
+                    </View>
+                </View>
 
-                <TouchableOpacity
-                    style={styles.buttonSecondary}
-                    onPress={() => navigation.navigate('Login')}
-                >
-                    <Text style={styles.buttonSecondaryText}>I already have an account</Text>
-                </TouchableOpacity>
+                {/* Typography Section */}
+                <View style={styles.typographySection}>
+                    <Text style={styles.title}>
+                        Modern care for your <Text style={styles.titleHighlight}>best friend.</Text>
+                    </Text>
+                    <Text style={styles.subtitle}>
+                        A premium space designed for the holistic well-being of your pets. Simplified scheduling, health tracking, and community.
+                    </Text>
+                </View>
+
+                {/* Bottom Section */}
+                <View style={styles.bottomSection}>
+                    <TouchableOpacity
+                        style={styles.buttonPrimary}
+                        onPress={() => navigation.navigate('Register')}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={styles.buttonPrimaryText}>Get Started</Text>
+                        <MaterialIcons name="arrow-forward" size={24} color="#ffffff" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.buttonSecondary}
+                        onPress={() => navigation.navigate('Login')}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={styles.buttonSecondaryText}>Login</Text>
+                    </TouchableOpacity>
+
+                    {/* Bento Features */}
+                    <View style={styles.bentoContainer}>
+                        <View style={styles.bentoItem}>
+                            <MaterialIcons name="health-and-safety" size={20} color="#30628a" />
+                            <Text style={styles.bentoText}>Pro Health</Text>
+                        </View>
+                        <View style={styles.bentoItem}>
+                            <MaterialIcons name="event" size={20} color="#30628a" />
+                            <Text style={styles.bentoText}>Auto-Sched</Text>
+                        </View>
+                    </View>
+                </View>
+
+                {/* Footer Visual */}
+                <View style={styles.footerCircle} />
             </View>
-        </View>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#fff9ec',
+    },
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
-        justifyContent: 'space-between',
+        paddingHorizontal: 30,
+        paddingTop: 60,
+        paddingBottom: 40,
         alignItems: 'center',
-        paddingVertical: 50,
-        paddingHorizontal: 20
     },
-    content: {
-        flex: 1,
+    decorativeCircle: {
+        position: 'absolute',
+        top: -40,
+        left: -40,
+        width: 200,
+        height: 200,
+        borderRadius: 100,
+        backgroundColor: 'rgba(162, 210, 255, 0.3)', // primary-container
+    },
+    heroContainer: {
+        width: '100%',
+        alignItems: 'center',
+        marginBottom: 50,
+        marginTop: 20,
+        zIndex: 10,
+    },
+    iconContainer: {
+        width: width * 0.7,
+        height: width * 0.7,
+        maxWidth: 320,
+        maxHeight: 320,
+        backgroundColor: 'rgba(162, 210, 255, 0.2)',
+        borderRadius: 30,
+        alignItems: 'center',
         justifyContent: 'center',
-        alignItems: 'center',
-        width: '100%'
+        borderColor: 'rgba(48, 98, 138, 0.1)',
+        borderWidth: 1,
     },
-    logo: {
-        width: 150,
-        height: 150,
-        marginBottom: 30,
-        resizeMode: 'contain'
+    iconInnerContainer: {
+        width: width * 0.45,
+        height: width * 0.45,
+        maxWidth: 200,
+        maxHeight: 200,
+        backgroundColor: 'rgba(255, 255, 255, 0.4)',
+        borderRadius: 100,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    floatingBadge: {
+        position: 'absolute',
+        bottom: -15,
+        right: -10,
+        backgroundColor: 'rgba(255, 249, 236, 0.9)',
+        padding: 12,
+        borderRadius: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        shadowColor: '#6f4e37',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 5,
+    },
+    badgeIconBg: {
+        width: 36,
+        height: 36,
+        backgroundColor: '#79573f', // secondary
+        borderRadius: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 10,
+    },
+    badgeTitle: {
+        fontSize: 10,
+        color: '#79573f',
+        fontWeight: 'bold',
+        letterSpacing: 1,
+    },
+    badgeSubtitle: {
+        fontSize: 12,
+        color: '#41474e',
+        fontWeight: '500',
+    },
+    typographySection: {
+        alignItems: 'center',
+        marginBottom: 40,
+        zIndex: 10,
     },
     title: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: COLORS.secondary,
+        fontSize: 40,
+        fontWeight: '800',
+        color: '#79573f',
         textAlign: 'center',
-        marginBottom: 10
+        marginBottom: 15,
+        lineHeight: 48,
+    },
+    titleHighlight: {
+        color: '#30628a',
+        fontStyle: 'italic',
     },
     subtitle: {
-        fontSize: 18,
-        color: '#888',
+        fontSize: 16,
+        color: '#41474e',
         textAlign: 'center',
-        marginBottom: 40
+        lineHeight: 24,
+        paddingHorizontal: 10,
     },
-    footer: {
+    bottomSection: {
+        marginTop: 'auto',
         width: '100%',
-        paddingBottom: 20
+        zIndex: 10,
     },
     buttonPrimary: {
-        backgroundColor: COLORS.primary,
-        padding: 15,
-        borderRadius: 10,
+        width: '100%',
+        paddingVertical: 18,
+        paddingHorizontal: 30,
+        backgroundColor: '#30628a',
+        borderRadius: 30,
+        flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
         marginBottom: 15,
-        ...SHADOWS.button,
+        shadowColor: '#30628a',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 4,
     },
     buttonPrimaryText: {
-        color: COLORS.secondary,
+        color: '#ffffff',
         fontSize: 18,
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        marginRight: 10,
     },
     buttonSecondary: {
-        backgroundColor: COLORS.surface,
-        borderColor: COLORS.secondary,
+        width: '100%',
+        paddingVertical: 18,
+        paddingHorizontal: 30,
+        backgroundColor: 'transparent',
         borderWidth: 2,
-        padding: 15,
-        borderRadius: 10,
-        alignItems: 'center'
+        borderColor: '#79573f',
+        borderRadius: 30,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 30,
     },
     buttonSecondaryText: {
-        color: COLORS.secondary,
+        color: '#79573f',
         fontSize: 18,
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+    },
+    bentoContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        opacity: 0.8,
+    },
+    bentoItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#faf3e0', // surface-container-low
+        paddingVertical: 12,
+        paddingHorizontal: 15,
+        borderRadius: 12,
+        width: '47%',
+    },
+    bentoText: {
+        marginLeft: 10,
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#79573f',
+    },
+    footerCircle: {
+        position: 'absolute',
+        bottom: -50,
+        right: -50,
+        width: 250,
+        height: 250,
+        borderRadius: 125,
+        backgroundColor: 'rgba(255, 209, 179, 0.2)', // secondary-container
+        zIndex: 1,
     }
 });
 
