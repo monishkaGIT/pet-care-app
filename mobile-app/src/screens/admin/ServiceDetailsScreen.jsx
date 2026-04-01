@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -7,37 +7,40 @@ import {
     TouchableOpacity,
     Alert,
     Dimensions,
+    ActivityIndicator,
+    Image,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
+import { fetchServiceById, deleteService } from '../../api/serviceApi';
 
 const { width } = Dimensions.get('window');
 
-// ── Fallback data when no route param is supplied ──────────────────
-const DEFAULT_SERVICE = {
-    name: 'Luxury Grooming',
-    category: 'Grooming & Spa',
-    price: '$125.00',
-    priceLabel: 'Standard Rate',
-    description:
-        'Our Luxury Grooming service is designed for the discerning pet owner who seeks nothing but the absolute best for their furry companion. This comprehensive session goes far beyond a simple bath; it is a holistic wellness experience tailored to the specific needs of your pet\'s coat and skin.',
-    descriptionExtra:
-        'Every session begins with a detailed physical assessment and a therapeutic warm-water massage using organic, botanical-infused shampoos. We utilize hand-drying techniques to ensure a stress-free environment, avoiding the noise and heat of industrial dryers.',
-    features: [
-        { title: 'Aromatherapy Bath', subtitle: 'Calming lavender and chamomile essence.' },
-        { title: 'Precision Scissoring', subtitle: 'Hand-finished cut by master stylists.' },
-        { title: 'Nail Buffing', subtitle: 'Smooth, rounded edges for comfort.' },
-        { title: 'Ear Deep-Clean', subtitle: 'Medical-grade hygiene maintenance.' },
-    ],
-    meta: {
-        createdBy: 'Head Admin',
-        lastModified: 'Oct 12, 2023',
-        totalBookings: '1,248',
-    },
-};
-
 export default function ServiceDetailsScreen({ navigation, route }) {
-    const service = route?.params?.service ?? DEFAULT_SERVICE;
+    const serviceId = route?.params?.serviceId;
+    const [service, setService] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [deleting, setDeleting] = useState(false);
+
+    useEffect(() => {
+        loadService();
+    }, [serviceId]);
+
+    const loadService = async () => {
+        if (!serviceId) {
+            setLoading(false);
+            return;
+        }
+        try {
+            setLoading(true);
+            const data = await fetchServiceById(serviceId);
+            setService(data);
+        } catch (error) {
+            Alert.alert('Error', error.response?.data?.message || 'Failed to load service');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleEdit = () => {
         navigation.navigate('AddNewService', { service });
@@ -46,13 +49,57 @@ export default function ServiceDetailsScreen({ navigation, route }) {
     const handleDelete = () => {
         Alert.alert(
             'Delete Service',
-            `Are you sure you want to delete "${service.name}"? This action cannot be undone.`,
+            `Are you sure you want to delete "${service?.name}"? This action cannot be undone.`,
             [
                 { text: 'Cancel', style: 'cancel' },
-                { text: 'Delete', style: 'destructive', onPress: () => navigation.goBack() },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        setDeleting(true);
+                        try {
+                            await deleteService(serviceId);
+                            Alert.alert('Deleted', 'Service has been deleted successfully.');
+                            navigation.goBack();
+                        } catch (error) {
+                            Alert.alert('Error', error.response?.data?.message || 'Failed to delete service');
+                        } finally {
+                            setDeleting(false);
+                        }
+                    },
+                },
             ],
         );
     };
+
+    if (loading) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color={COLORS.primary} />
+                <Text style={{ marginTop: 12, color: COLORS.onSurfaceVariant }}>Loading service details...</Text>
+            </View>
+        );
+    }
+
+    if (!service) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <MaterialIcons name="error-outline" size={48} color={COLORS.error} />
+                <Text style={{ marginTop: 12, color: COLORS.onSurfaceVariant, fontSize: 16 }}>Service not found</Text>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 16 }}>
+                    <Text style={{ color: COLORS.primary, fontWeight: '700' }}>Go Back</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
+
+    // Format dates
+    const createdDate = service.createdAt
+        ? new Date(service.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+        : 'N/A';
+    const updatedDate = service.updatedAt
+        ? new Date(service.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+        : 'N/A';
 
     return (
         <View style={styles.container}>
@@ -75,61 +122,54 @@ export default function ServiceDetailsScreen({ navigation, route }) {
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                {/* ── Service Image ── */}
+                {service.imageUrl && (
+                    <Image
+                        source={{ uri: service.imageUrl }}
+                        style={styles.heroImage}
+                        resizeMode="cover"
+                    />
+                )}
+
                 {/* ── Tags row ── */}
                 <View style={styles.tagsRow}>
                     <View style={styles.categoryChip}>
-                        <Text style={styles.categoryChipText}>{service.category || 'Grooming & Spa'}</Text>
+                        <Text style={styles.categoryChipText}>{service.category}</Text>
                     </View>
-                    <View style={styles.premiumChip}>
-                        <MaterialIcons name="star" size={16} color={COLORS.onTertiaryContainer} />
-                        <Text style={styles.premiumChipText}>Premium Tier</Text>
+                    <View style={[styles.statusChip, { backgroundColor: service.isActive ? 'rgba(16,185,129,0.15)' : 'rgba(186,26,26,0.15)' }]}>
+                        <View style={[styles.statusDot, { backgroundColor: service.isActive ? '#10b981' : COLORS.error }]} />
+                        <Text style={[styles.statusChipText, { color: service.isActive ? '#10b981' : COLORS.error }]}>
+                            {service.isActive ? 'Active' : 'Inactive'}
+                        </Text>
                     </View>
                 </View>
 
                 {/* ── Big editorial title ── */}
-                <Text style={styles.bigTitle}>{service.name || 'Luxury Grooming'}</Text>
+                <Text style={styles.bigTitle}>{service.name}</Text>
 
                 {/* ── Price & Status cards ── */}
                 <View style={styles.infoCardsRow}>
                     <View style={[styles.infoCard, { borderLeftColor: COLORS.primary }]}>
-                        <Text style={styles.infoCardLabel}>{service.priceLabel || 'Standard Rate'}</Text>
+                        <Text style={styles.infoCardLabel}>Price per Session</Text>
                         <Text style={styles.infoCardValue}>
-                            {service.price || '$125.00'}
+                            ${service.price?.toFixed(2)}
                             <Text style={styles.infoCardUnit}> / session</Text>
                         </Text>
                     </View>
                     <View style={[styles.infoCard, { borderLeftColor: COLORS.secondary }]}>
                         <Text style={styles.infoCardLabel}>Current Availability</Text>
                         <View style={styles.availabilityRow}>
-                            <View style={styles.pulseDot} />
-                            <Text style={styles.infoCardValue}>Instant Booking</Text>
+                            <View style={[styles.pulseDot, { backgroundColor: service.isActive ? '#10b981' : COLORS.error }]} />
+                            <Text style={styles.infoCardValue}>
+                                {service.isActive ? 'Instant Booking' : 'Currently Unavailable'}
+                            </Text>
                         </View>
                     </View>
                 </View>
 
                 {/* ── Description article ── */}
-                <Text style={styles.sectionTitle}>The Royal Treatment for Your Companion</Text>
-                <Text style={styles.bodyText}>
-                    {service.description || DEFAULT_SERVICE.description}
-                </Text>
-                <Text style={[styles.bodyText, { marginTop: 12 }]}>
-                    {service.descriptionExtra || DEFAULT_SERVICE.descriptionExtra}
-                </Text>
-
-                {/* ── Feature list ── */}
-                <View style={styles.featureGrid}>
-                    {(service.features || DEFAULT_SERVICE.features).map((f, i) => (
-                        <View key={i} style={styles.featureItem}>
-                            <View style={styles.featureIconCircle}>
-                                <MaterialIcons name="check-circle" size={22} color={COLORS.primary} />
-                            </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.featureTitle}>{f.title}</Text>
-                                <Text style={styles.featureSubtitle}>{f.subtitle}</Text>
-                            </View>
-                        </View>
-                    ))}
-                </View>
+                <Text style={styles.sectionTitle}>Service Description</Text>
+                <Text style={styles.bodyText}>{service.description}</Text>
 
                 {/* ── Admin Controls card ── */}
                 <View style={[styles.controlsCard, SHADOWS.editorial]}>
@@ -138,43 +178,37 @@ export default function ServiceDetailsScreen({ navigation, route }) {
                         <MaterialIcons name="edit" size={20} color="#fff" />
                         <Text style={styles.editBtnText}>Edit Service</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.deleteBtn} activeOpacity={0.85} onPress={handleDelete}>
-                        <MaterialIcons name="delete" size={20} color={COLORS.error} />
-                        <Text style={styles.deleteBtnText}>Delete Service</Text>
+                    <TouchableOpacity
+                        style={[styles.deleteBtn, deleting && { opacity: 0.5 }]}
+                        activeOpacity={0.85}
+                        onPress={handleDelete}
+                        disabled={deleting}
+                    >
+                        {deleting ? (
+                            <ActivityIndicator size="small" color={COLORS.error} />
+                        ) : (
+                            <>
+                                <MaterialIcons name="delete" size={20} color={COLORS.error} />
+                                <Text style={styles.deleteBtnText}>Delete Service</Text>
+                            </>
+                        )}
                     </TouchableOpacity>
 
                     {/* ── Meta info ── */}
                     <View style={styles.metaSection}>
                         <View style={styles.metaRow}>
                             <Text style={styles.metaLabel}>Created By</Text>
-                            <Text style={styles.metaValue}>{(service.meta || DEFAULT_SERVICE.meta).createdBy}</Text>
+                            <Text style={styles.metaValue}>{service.createdBy?.name || 'Admin'}</Text>
+                        </View>
+                        <View style={styles.metaRow}>
+                            <Text style={styles.metaLabel}>Created On</Text>
+                            <Text style={styles.metaValue}>{createdDate}</Text>
                         </View>
                         <View style={styles.metaRow}>
                             <Text style={styles.metaLabel}>Last Modified</Text>
-                            <Text style={styles.metaValue}>{(service.meta || DEFAULT_SERVICE.meta).lastModified}</Text>
-                        </View>
-                        <View style={styles.metaRow}>
-                            <Text style={styles.metaLabel}>Total Bookings</Text>
-                            <Text style={[styles.metaValue, { color: COLORS.primary, fontWeight: '800' }]}>
-                                {(service.meta || DEFAULT_SERVICE.meta).totalBookings}
-                            </Text>
+                            <Text style={styles.metaValue}>{updatedDate}</Text>
                         </View>
                     </View>
-                </View>
-
-                {/* ── Performance banner ── */}
-                <View style={[styles.performanceBanner, SHADOWS.editorial]}>
-                    <MaterialIcons
-                        name="analytics"
-                        size={100}
-                        color="rgba(255,255,255,0.08)"
-                        style={styles.bannerWatermark}
-                    />
-                    <Text style={styles.bannerLabel}>Service Performance</Text>
-                    <Text style={styles.bannerTitle}>Growing Popularity</Text>
-                    <Text style={styles.bannerBody}>
-                        This service has seen a 24% increase in bookings over the last 30 days. Consider promoting it during weekends.
-                    </Text>
                 </View>
             </ScrollView>
         </View>
@@ -210,10 +244,16 @@ const styles = StyleSheet.create({
     },
     avatarText: { fontWeight: '800', color: COLORS.onPrimaryContainer, fontSize: 13 },
 
-    scrollContent: { paddingHorizontal: 24, paddingBottom: 48 },
+    scrollContent: { paddingBottom: 48 },
+
+    /* Hero Image */
+    heroImage: {
+        width: '100%',
+        height: 220,
+    },
 
     /* Tags */
-    tagsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 28 },
+    tagsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 20, paddingHorizontal: 24 },
     categoryChip: {
         backgroundColor: COLORS.secondaryContainer,
         paddingHorizontal: 14,
@@ -221,30 +261,31 @@ const styles = StyleSheet.create({
         borderRadius: 10,
     },
     categoryChipText: { fontSize: 12, fontWeight: '700', color: COLORS.onSecondaryContainer, textTransform: 'uppercase', letterSpacing: 0.8 },
-    premiumChip: {
+    statusChip: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
-        backgroundColor: 'rgba(255,192,146,0.25)',
+        gap: 6,
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 999,
     },
-    premiumChipText: { fontSize: 12, fontWeight: '700', color: COLORS.onTertiaryContainer },
+    statusDot: { width: 8, height: 8, borderRadius: 4 },
+    statusChipText: { fontSize: 12, fontWeight: '700' },
 
     /* Big title */
     bigTitle: {
-        fontSize: 42,
+        fontSize: 36,
         fontWeight: '800',
         color: COLORS.secondary,
         letterSpacing: -0.8,
-        lineHeight: 48,
+        lineHeight: 42,
         marginTop: 16,
         marginBottom: 24,
+        paddingHorizontal: 24,
     },
 
     /* Info cards row */
-    infoCardsRow: { gap: 12, marginBottom: 28 },
+    infoCardsRow: { gap: 12, marginBottom: 28, paddingHorizontal: 24 },
     infoCard: {
         backgroundColor: COLORS.surfaceContainerLow,
         borderRadius: 14,
@@ -255,25 +296,11 @@ const styles = StyleSheet.create({
     infoCardValue: { fontSize: 26, fontWeight: '800', color: COLORS.primary, marginTop: 4 },
     infoCardUnit: { fontSize: 14, fontWeight: '400', color: COLORS.onSurfaceVariant },
     availabilityRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 },
-    pulseDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#10b981' },
+    pulseDot: { width: 10, height: 10, borderRadius: 5 },
 
     /* Description */
-    sectionTitle: { fontSize: 24, fontWeight: '800', color: COLORS.secondary, marginBottom: 14 },
-    bodyText: { fontSize: 15, color: COLORS.onSurfaceVariant, lineHeight: 24 },
-
-    /* Feature grid */
-    featureGrid: { marginTop: 24, gap: 16 },
-    featureItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
-    featureIconCircle: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: COLORS.primaryContainer,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    featureTitle: { fontSize: 15, fontWeight: '700', color: COLORS.secondary },
-    featureSubtitle: { fontSize: 13, color: COLORS.onSurfaceVariant, marginTop: 2 },
+    sectionTitle: { fontSize: 24, fontWeight: '800', color: COLORS.secondary, marginBottom: 14, paddingHorizontal: 24 },
+    bodyText: { fontSize: 15, color: COLORS.onSurfaceVariant, lineHeight: 24, paddingHorizontal: 24 },
 
     /* Admin controls card */
     controlsCard: {
@@ -281,6 +308,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         padding: 28,
         marginTop: 32,
+        marginHorizontal: 24,
     },
     controlsTitle: { fontSize: 22, fontWeight: '800', color: COLORS.secondary, marginBottom: 20 },
     editBtn: {
@@ -291,7 +319,6 @@ const styles = StyleSheet.create({
         paddingVertical: 16,
         borderRadius: 999,
         marginBottom: 12,
-        // gold gradient approximation
         backgroundColor: COLORS.onTertiaryContainer,
     },
     editBtnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
@@ -312,17 +339,4 @@ const styles = StyleSheet.create({
     metaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     metaLabel: { fontSize: 12, fontWeight: '800', color: COLORS.secondary, textTransform: 'uppercase', letterSpacing: 0.5 },
     metaValue: { fontSize: 14, fontWeight: '500', color: COLORS.onSurfaceVariant },
-
-    /* Performance banner */
-    performanceBanner: {
-        backgroundColor: COLORS.primary,
-        borderRadius: 20,
-        padding: 28,
-        marginTop: 20,
-        overflow: 'hidden',
-    },
-    bannerWatermark: { position: 'absolute', right: -16, bottom: -16 },
-    bannerLabel: { fontSize: 10, fontWeight: '800', color: 'rgba(205,229,255,0.8)', textTransform: 'uppercase', letterSpacing: 1.5 },
-    bannerTitle: { fontSize: 22, fontWeight: '800', color: '#fff', marginTop: 4 },
-    bannerBody: { fontSize: 13, color: 'rgba(205,229,255,0.85)', lineHeight: 20, marginTop: 8 },
 });

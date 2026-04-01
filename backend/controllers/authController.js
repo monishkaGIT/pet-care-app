@@ -1,10 +1,30 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+
+// ── JWT Helper ─────────────────────────────────────────────────────
+const generateToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
+};
+
+// ── Public Auth ────────────────────────────────────────────────────
 
 exports.registerUser = async (req, res) => {
     try {
         const { name, email, password, phone, address, profileImage, role } = req.body;
-        
+
+        // Validation
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: "Name, email, and password are required" });
+        }
+        if (password.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters" });
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: "Please provide a valid email address" });
+        }
+
         const userExists = await User.findOne({ email });
         if (userExists) {
             return res.status(400).json({ message: "User already exists" });
@@ -13,12 +33,19 @@ exports.registerUser = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const user = await User.create({ 
+        const user = await User.create({
             name, email, password: hashedPassword, phone, address, profileImage, role: role || 'user'
         });
 
         res.status(201).json({
-            _id: user._id, name: user.name, email: user.email, role: user.role
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            phone: user.phone,
+            address: user.address,
+            profileImage: user.profileImage,
+            token: generateToken(user._id),
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -28,11 +55,23 @@ exports.registerUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ message: "Email and password are required" });
+        }
+
         const user = await User.findOne({ email });
 
         if (user && (await bcrypt.compare(password, user.password))) {
             res.json({
-                _id: user._id, name: user.name, email: user.email, role: user.role
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                phone: user.phone,
+                address: user.address,
+                profileImage: user.profileImage,
+                token: generateToken(user._id),
             });
         } else {
             res.status(401).json({ message: "Invalid credentials" });
@@ -41,6 +80,8 @@ exports.loginUser = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// ── Protected User Routes ──────────────────────────────────────────
 
 exports.getUserProfile = async (req, res) => {
     try {
@@ -63,10 +104,17 @@ exports.updateUserProfile = async (req, res) => {
             user.phone = req.body.phone !== undefined ? req.body.phone : user.phone;
             user.address = req.body.address !== undefined ? req.body.address : user.address;
             user.profileImage = req.body.profileImage || user.profileImage;
-            
+
             const updatedUser = await user.save();
             res.json({
-                _id: updatedUser._id, name: updatedUser.name, email: updatedUser.email, role: updatedUser.role
+                _id: updatedUser._id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                role: updatedUser.role,
+                phone: updatedUser.phone,
+                address: updatedUser.address,
+                profileImage: updatedUser.profileImage,
+                token: generateToken(updatedUser._id),
             });
         } else {
             res.status(404).json({ message: 'User not found' });
@@ -83,6 +131,14 @@ exports.changePassword = async (req, res) => {
         }
 
         const { oldPassword, newPassword } = req.body;
+
+        if (!oldPassword || !newPassword) {
+            return res.status(400).json({ message: "Old password and new password are required" });
+        }
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: "New password must be at least 6 characters" });
+        }
+
         const user = await User.findById(req.user._id);
 
         if (user && (await bcrypt.compare(oldPassword, user.password))) {
@@ -98,7 +154,8 @@ exports.changePassword = async (req, res) => {
     }
 };
 
-// --- Self Deletion (Simple - no OTP) ---
+// ── Self Deletion ──────────────────────────────────────────────────
+
 exports.deleteOwnAccount = async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
@@ -111,7 +168,8 @@ exports.deleteOwnAccount = async (req, res) => {
     }
 };
 
-// --- Admin Controls ---
+// ── Admin Controls ─────────────────────────────────────────────────
+
 exports.getUsers = async (req, res) => {
     try {
         const users = await User.find({}).select('-password');
@@ -124,18 +182,26 @@ exports.getUsers = async (req, res) => {
 exports.createUser = async (req, res) => {
     try {
         const { name, email, password, role, phone, address, profileImage } = req.body;
+
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: "Name, email, and password are required" });
+        }
+        if (password.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters" });
+        }
+
         const userExists = await User.findOne({ email });
         if (userExists) return res.status(400).json({ message: "User already exists" });
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const user = await User.create({ 
+        const user = await User.create({
             name, email, password: hashedPassword, role: role || 'user', phone, address, profileImage
         });
         res.status(201).json({ _id: user._id, name: user.name, email: user.email, role: user.role });
     } catch (error) {
-         res.status(500).json({ message: error.message });
+        res.status(500).json({ message: error.message });
     }
 };
 
@@ -169,7 +235,7 @@ exports.deleteUser = async (req, res) => {
 
         await User.deleteOne({ _id: userToDelete._id });
         res.json({ message: "User removed" });
-        
+
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

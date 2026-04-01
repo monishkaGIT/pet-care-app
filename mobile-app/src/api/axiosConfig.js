@@ -4,7 +4,8 @@ import Constants from 'expo-constants';
 
 const debuggerHost = Constants.expoConfig?.hostUri;
 const ip = debuggerHost ? debuggerHost.split(':')[0] : '192.168.73.16';
-export const API_URL = `http://${ip}:5000/api/users`;
+export const BASE_URL = `http://${ip}:5000`;
+export const API_URL = `${BASE_URL}/api/users`;
 
 const api = axios.create({
     baseURL: API_URL,
@@ -15,8 +16,8 @@ api.interceptors.request.use(
         const stored = await AsyncStorage.getItem('userData');
         if (stored) {
             const userData = JSON.parse(stored);
-            if (userData._id) {
-                config.headers['x-user-id'] = userData._id;
+            if (userData.token) {
+                config.headers['Authorization'] = `Bearer ${userData.token}`;
             }
         }
         return config;

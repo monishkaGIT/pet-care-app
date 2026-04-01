@@ -21,6 +21,7 @@ app.use(cors());
 
 // Mount routers
 app.use('/api/users', require('./routes/authRoutes'));
+app.use('/api/services', require('./routes/serviceRoutes'));
 
 app.get('/', (req, res) => {
   res.send('Pet Management API is running...');
