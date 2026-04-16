@@ -29,6 +29,7 @@ import PetDetailScreen from '../screens/main/PetDetailScreen';
 import NotificationsScreen from '../screens/main/NotificationsScreen';
 import ExploreScreen from '../screens/social/ExploreScreen';
 import CreatePostScreen from '../screens/social/CreatePostScreen';
+import EditPostScreen from '../screens/social/EditPostScreen';
 
 // Admin Screens
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
@@ -86,6 +87,7 @@ export default function AppNavigator() {
                         <Stack.Screen name="Notifications" component={NotificationsScreen} />
                         <Stack.Screen name="Explore" component={ExploreScreen} />
                         <Stack.Screen name="CreatePost" component={CreatePostScreen} />
+                        <Stack.Screen name="EditPost" component={EditPostScreen} />
                     </>
                 )}
             </Stack.Navigator>

@@ -1,21 +1,30 @@
-import React, { useContext, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
+import React, { useContext, useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, SafeAreaView, ActivityIndicator, Alert, FlatList } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { AuthContext } from '../../context/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
-import api from '../../api/axiosConfig';
+import api, { postApi } from '../../api/axiosConfig';
 
-const MOCK_GRID = [
-    'rgba(162,210,255,0.4)', '#efe8d5', 'rgba(162,210,255,0.2)',
-    '#f4eedb', '#a2d2ff', '#e9e2d0',
-    'rgba(162,210,255,0.3)', '#faf3e0', 'rgba(162,210,255,0.1)',
-];
-
-export default function SocialProfileScreen() {
+export default function SocialProfileScreen({ navigation }) {
     const { user, setUser, logout } = useContext(AuthContext);
     const [profileImage, setProfileImage] = useState(user?.profileImage || null);
     const [activeTab, setActiveTab] = useState('grid');
     const [loading, setLoading] = useState(false);
+    const [myPosts, setMyPosts] = useState([]);
+    const [postsLoading, setPostsLoading] = useState(true);
+
+    const fetchMyPosts = useCallback(async () => {
+        try {
+            const { data } = await postApi.get('/mine');
+            setMyPosts(data);
+        } catch {
+            // silently fail — profile still works
+        } finally {
+            setPostsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => { fetchMyPosts(); }, [fetchMyPosts]);
 
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
@@ -88,9 +97,9 @@ export default function SocialProfileScreen() {
                         </View>
                         <Text style={styles.bio}>🐾 Proud pet parent · {user?.email}</Text>
                         <View style={styles.statsRow}>
-                            <View style={styles.statItem}><Text style={styles.statVal}>124</Text><Text style={styles.statLbl}>POSTS</Text></View>
-                            <View style={styles.statItem}><Text style={styles.statVal}>12.5k</Text><Text style={styles.statLbl}>FOLLOWS</Text></View>
-                            <View style={styles.statItem}><Text style={styles.statVal}>842</Text><Text style={styles.statLbl}>FOLLOWING</Text></View>
+                            <View style={styles.statItem}><Text style={styles.statVal}>{myPosts.length}</Text><Text style={styles.statLbl}>POSTS</Text></View>
+                            <View style={styles.statItem}><Text style={styles.statVal}>—</Text><Text style={styles.statLbl}>FOLLOWS</Text></View>
+                            <View style={styles.statItem}><Text style={styles.statVal}>—</Text><Text style={styles.statLbl}>FOLLOWING</Text></View>
                         </View>
                     </View>
                 </View>
@@ -125,13 +134,32 @@ export default function SocialProfileScreen() {
                 </View>
 
                 {/* Post Grid */}
-                <View style={styles.postGrid}>
-                    {MOCK_GRID.map((color, i) => (
-                        <TouchableOpacity key={i} style={[styles.postCell, { backgroundColor: color }]} activeOpacity={0.8}>
-                            <MaterialIcons name="image" size={32} color="rgba(121,87,63,0.15)" />
-                        </TouchableOpacity>
-                    ))}
-                </View>
+                {postsLoading ? (
+                    <ActivityIndicator size="small" color="#a2d2ff" style={{ marginTop: 20 }} />
+                ) : myPosts.length === 0 ? (
+                    <View style={styles.emptyGrid}>
+                        <MaterialIcons name="camera-alt" size={40} color="rgba(162,210,255,0.5)" />
+                        <Text style={styles.emptyGridText}>No posts yet</Text>
+                    </View>
+                ) : (
+                    <View style={styles.postGrid}>
+                        {myPosts.map((post) => (
+                            <TouchableOpacity
+                                key={post._id}
+                                style={styles.postCell}
+                                activeOpacity={0.8}
+                            >
+                                {post.image ? (
+                                    <Image source={{ uri: post.image }} style={styles.postCellImg} />
+                                ) : (
+                                    <View style={[styles.postCell, { backgroundColor: '#efe8d5', margin: 0 }]}>
+                                        <MaterialIcons name="pets" size={28} color="rgba(121,87,63,0.3)" />
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                )}
 
                 {/* Logout */}
                 <TouchableOpacity style={styles.logoutRow} onPress={logout}>
@@ -211,7 +239,10 @@ const styles = StyleSheet.create({
     tabLbl: { fontSize: 9, fontWeight: 'bold', color: '#72787f', letterSpacing: 1, textTransform: 'uppercase' },
     tabLblActive: { color: '#79573f' },
     postGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-    postCell: { width: '31.8%', aspectRatio: 1, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+    postCell: { width: '31.8%', aspectRatio: 1, borderRadius: 10, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+    postCellImg: { width: '100%', height: '100%' },
+    emptyGrid: { alignItems: 'center', paddingVertical: 40, gap: 10 },
+    emptyGridText: { fontSize: 14, color: '#72787f', fontStyle: 'italic' },
     logoutRow: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
         marginTop: 24, paddingVertical: 14, borderRadius: 12,
