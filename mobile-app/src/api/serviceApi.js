@@ -85,6 +85,11 @@ export const updateService = async (id, serviceData) => {
         });
     }
 
+    // Tell backend to delete old image if user explicitly removed it
+    if (serviceData.removeImage) {
+        formData.append('removeImage', 'true');
+    }
+
     const { data } = await serviceApi.put(`/${id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
     });

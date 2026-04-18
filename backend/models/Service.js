@@ -35,7 +35,7 @@ const serviceSchema = new mongoose.Schema(
         },
         imageUrl: {
             type: String,
-            required: [true, "Service image is required"],
+            default: "",
         },
         imagePublicId: {
             type: String,

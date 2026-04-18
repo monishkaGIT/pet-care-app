@@ -52,7 +52,7 @@ function ServiceCard({ item }) {
     );
 }
 
-export default function ServicesScreen() {
+export default function ServicesScreen({ navigation }) {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -72,8 +72,12 @@ export default function ServicesScreen() {
     }, []);
 
     useEffect(() => {
-        loadServices();
-    }, [loadServices]);
+        const unsubscribe = navigation.addListener('focus', () => {
+            loadServices();
+        });
+
+        return unsubscribe;
+    }, [navigation, loadServices]);
 
     const onRefresh = () => {
         setRefreshing(true);

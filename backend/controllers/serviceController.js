@@ -176,15 +176,19 @@ exports.updateService = async (req, res) => {
             }
         }
 
-        // If a new image was uploaded, replace the old one
+        // Handle image changes
         if (req.file) {
-            // Delete old image from Cloudinary
+            // New image uploaded — replace the old one
             await deleteFromCloudinary(service.imagePublicId);
 
-            // Upload new image
             const cloudinaryResult = await uploadToCloudinary(req.file.buffer);
             service.imageUrl = cloudinaryResult.secure_url;
             service.imagePublicId = cloudinaryResult.public_id;
+        } else if (req.body.removeImage === "true") {
+            // User explicitly removed the image without uploading a new one
+            await deleteFromCloudinary(service.imagePublicId);
+            service.imageUrl = "";
+            service.imagePublicId = "";
         }
 
         // Update fields

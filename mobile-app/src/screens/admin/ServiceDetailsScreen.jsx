@@ -23,8 +23,12 @@ export default function ServiceDetailsScreen({ navigation, route }) {
     const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
-        loadService();
-    }, [serviceId]);
+        const unsubscribe = navigation.addListener('focus', () => {
+            loadService();
+        });
+
+        return unsubscribe;
+    }, [navigation, serviceId]);
 
     const loadService = async () => {
         if (!serviceId) {

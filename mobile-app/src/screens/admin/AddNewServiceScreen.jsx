@@ -32,6 +32,7 @@ export default function AddNewServiceScreen({ navigation, route }) {
     const [showCategoryPicker, setShowCategoryPicker] = useState(false);
     const [imageUri, setImageUri] = useState(existingService?.imageUrl || null);
     const [imageFile, setImageFile] = useState(null); // The actual file object for upload
+    const [imageRemoved, setImageRemoved] = useState(false); // Track if user explicitly removed the image
     const [imageLoading, setImageLoading] = useState(false);
     const [saving, setSaving] = useState(false);
 
@@ -65,6 +66,7 @@ export default function AddNewServiceScreen({ navigation, route }) {
                 type: asset.mimeType || 'image/jpeg',
                 name: asset.fileName || `service_${Date.now()}.jpg`,
             });
+            setImageRemoved(false); // Reset remove flag since new image was picked
             // Clear image error
             setErrors((prev) => ({ ...prev, image: null }));
         }
@@ -79,6 +81,7 @@ export default function AddNewServiceScreen({ navigation, route }) {
                 onPress: () => {
                     setImageUri(null);
                     setImageFile(null);
+                    setImageRemoved(true);
                 },
             },
         ]);
@@ -109,9 +112,12 @@ export default function AddNewServiceScreen({ navigation, route }) {
             newErrors.price = 'Price cannot be negative';
         }
 
-        // For new services, image is required. For edits, only if no existing image
-        if (!imageUri && !existingService?.imageUrl) {
-            newErrors.image = 'Please upload a service image';
+        // Image is required for new services.
+        // For edits: required if the user explicitly removed the existing image without picking a new one.
+        if (!imageUri) {
+            if (!existingService || imageRemoved) {
+                newErrors.image = 'Please upload a service image';
+            }
         }
 
         setErrors(newErrors);
@@ -135,6 +141,11 @@ export default function AddNewServiceScreen({ navigation, route }) {
             // Attach image only if a new one was picked
             if (imageFile) {
                 serviceData.image = imageFile;
+            }
+
+            // Signal backend to remove old image if user explicitly cleared it
+            if (imageRemoved && !imageFile) {
+                serviceData.removeImage = true;
             }
 
             if (existingService?._id) {
@@ -227,7 +238,7 @@ export default function AddNewServiceScreen({ navigation, route }) {
                                         onLoadEnd={() => setImageLoading(false)}
                                     />
                                     {imageLoading && (
-                                        <View style={styles.imageLoadingOverlay}>
+                                        <View style={styles.imageLoadingOverlay} pointerEvents="none">
                                             <ActivityIndicator size="large" color={COLORS.primary} />
                                         </View>
                                     )}
@@ -513,12 +524,14 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 10,
         right: 10,
-        width: 32,
-        height: 32,
-        borderRadius: 16,
+        width: 36,
+        height: 36,
+        borderRadius: 18,
         backgroundColor: 'rgba(0,0,0,0.55)',
         alignItems: 'center',
         justifyContent: 'center',
+        zIndex: 10,
+        elevation: 10,
     },
     changeImageBtn: {
         position: 'absolute',
@@ -531,6 +544,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 14,
         paddingVertical: 8,
         borderRadius: 999,
+        zIndex: 10,
+        elevation: 10,
     },
     changeImageBtnText: {
         fontSize: 12,
