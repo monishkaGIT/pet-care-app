@@ -40,11 +40,15 @@ const CATEGORY_ICONS = {
     'Walking': 'directions-walk',
 };
 
-function ServiceCard({ item, onEdit }) {
+function ServiceCard({ item, onPress }) {
     const iconName = CATEGORY_ICONS[item.category] || 'pets';
 
     return (
-        <View style={[styles.card, SHADOWS.editorial]}>
+        <TouchableOpacity
+            style={[styles.card, SHADOWS.editorial]}
+            activeOpacity={0.9}
+            onPress={() => onPress(item)}
+        >
             {/* Service Image */}
             {item.imageUrl ? (
                 <Image
@@ -80,11 +84,9 @@ function ServiceCard({ item, onEdit }) {
                     <Text style={styles.priceLabel}>Price</Text>
                     <Text style={styles.priceValue}>${item.price?.toFixed(2)}</Text>
                 </View>
-                <TouchableOpacity style={styles.editButton} activeOpacity={0.7} onPress={() => onEdit(item)}>
-                    <MaterialIcons name="edit" size={20} color={COLORS.secondary} />
-                </TouchableOpacity>
+                <MaterialIcons name="chevron-right" size={24} color={COLORS.outline} />
             </View>
-        </View>
+        </TouchableOpacity>
     );
 }
 
@@ -218,7 +220,7 @@ export default function ManageServicesScreen({ navigation }) {
                     <ServiceCard
                         key={item._id}
                         item={item}
-                        onEdit={() => navigation.navigate('ServiceDetails', { serviceId: item._id })}
+                        onPress={() => navigation.navigate('ServiceDetails', { serviceId: item._id })}
                     />
                 ))}
 
@@ -381,15 +383,6 @@ const styles = StyleSheet.create({
     },
     priceLabel: { fontSize: 10, fontWeight: '700', color: COLORS.outline, textTransform: 'uppercase', letterSpacing: 0.5 },
     priceValue: { fontSize: 24, fontWeight: '800', color: COLORS.secondary },
-    editButton: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: COLORS.surfaceContainerHigh,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-
     /* Stats */
     statsWrapper: { marginTop: 32 },
     statsInfoCard: {
