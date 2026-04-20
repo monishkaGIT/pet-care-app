@@ -1,22 +1,60 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const petSchema = new mongoose.Schema({
-    owner: {
+    userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: "User",
         required: true
     },
-    name: { type: String, required: true, trim: true },
-    type: { type: String, required: true, enum: ['dog', 'cat', 'rabbit', 'bird', 'fish', 'other'] },
-    breed: { type: String, default: '' },
-    age: { type: Number, default: 0 },
-    weight: { type: Number, default: 0 },
-    gender: { type: String, enum: ['male', 'female', 'unknown'], default: 'unknown' },
-    color: { type: String, default: '' },
-    neutered: { type: Boolean, default: false },
-    microchipped: { type: Boolean, default: false },
-    vaccinated: { type: Boolean, default: false },
-    profileImage: { type: String, default: '' },
-}, { timestamps: true });
+    name: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    breed: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    age: {
+        type: Number,
+        default: 0
+    },
+    weight: {
+        type: Number,
+        default: 0
+    },
+    gender: {
+        type: String,
+        enum: ["Male", "Female"],
+        default: "Male"
+    },
+    color: {
+        type: String,
+        trim: true
+    },
+    isNeutered: {
+        type: Boolean,
+        default: false
+    },
+    isMicrochipped: {
+        type: Boolean,
+        default: false
+    },
+    microchipNumber: {
+        type: String,
+        trim: true
+    },
+    isVaccinated: {
+        type: Boolean,
+        default: false
+    },
+    insurance: {
+        type: String,
+        trim: true
+    }
+}, {
+    timestamps: true
+});
 
-module.exports = mongoose.model('Pet', petSchema);
+module.exports = mongoose.model("Pet", petSchema, "MyPets");

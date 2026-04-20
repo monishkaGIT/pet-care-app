@@ -1,48 +1,68 @@
 import React, { useState, useCallback } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity,
-    ScrollView, SafeAreaView, Image, ActivityIndicator
+    ScrollView, SafeAreaView, Image, ActivityIndicator, Alert
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
-import { petApi } from '../../api/axiosConfig';
+import { fetchPetById, deletePet } from '../../api/petApi';
 
 const INFO_ROWS = (pet) => [
     { label: 'Breed', value: pet.breed || '—' },
     { label: 'Color', value: pet.color || '—' },
-    { label: 'Type', value: pet.type ? pet.type.charAt(0).toUpperCase() + pet.type.slice(1) : '—' },
-    { label: 'Microchip', value: pet.microchipped ? 'Yes ✓' : 'No' },
+    { label: 'Type', value: '—' },
+    { label: 'Microchip', value: pet.isMicrochipped ? (pet.microchipNumber || 'Yes') : 'No' },
 ];
 
 export default function PetDetailScreen() {
     const navigation = useNavigation();
     const route = useRoute();
-    const routePet = route.params?.pet;
-    const [pet, setPet] = useState(routePet);
-    const [refreshing, setRefreshing] = useState(false);
+    const { petId } = route.params;
+    const [pet, setPet] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    // Refresh pet data every time the screen gains focus (e.g. after editing)
+    const loadPet = async () => {
+        try {
+            const data = await fetchPetById(petId);
+            setPet(data);
+        } catch {
+            Alert.alert('Error', 'Failed to load pet details.');
+            navigation.goBack();
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useFocusEffect(
         useCallback(() => {
-            if (!routePet?._id) return;
-            let active = true;
-            const fetchPet = async () => {
-                try {
-                    setRefreshing(true);
-                    const { data } = await petApi.get(`/${routePet._id}`);
-                    if (active) setPet(data);
-                } catch {
-                    // keep existing data on error
-                } finally {
-                    if (active) setRefreshing(false);
-                }
-            };
-            fetchPet();
-            return () => { active = false; };
-        }, [routePet?._id])
+            setLoading(true);
+            loadPet();
+        }, [petId])
     );
 
-    if (!pet) {
+    const handleDelete = () => {
+        Alert.alert(
+            'Delete Pet',
+            `Are you sure you want to delete ${pet?.name}?`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await deletePet(petId);
+                            navigation.goBack();
+                        } catch {
+                            Alert.alert('Error', 'Failed to delete pet.');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    if (loading || !pet) {
         return (
             <SafeAreaView style={styles.safeArea}>
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -64,7 +84,7 @@ export default function PetDetailScreen() {
                         <Text style={styles.heroBrand}>PetCare</Text>
                         <TouchableOpacity
                             style={styles.editBtn}
-                            onPress={() => navigation.navigate('EditPetProfile', { pet })}
+                            onPress={() => navigation.navigate('EditPet', { petId: pet._id })}
                             activeOpacity={0.8}
                         >
                             <MaterialIcons name="edit" size={20} color="#30628a" />
@@ -80,7 +100,7 @@ export default function PetDetailScreen() {
                                 <MaterialIcons name="pets" size={64} color="#a2d2ff" />
                             </View>
                         )}
-                        {pet.vaccinated && (
+                        {pet.isVaccinated && (
                             <View style={styles.verifiedBadge}>
                                 <MaterialIcons name="check" size={14} color="#ffffff" />
                             </View>
@@ -89,7 +109,7 @@ export default function PetDetailScreen() {
 
                     <Text style={styles.petName}>{pet.name}</Text>
                     <Text style={styles.petSub}>
-                        {pet.breed || pet.type} · {pet.gender !== 'unknown' ? pet.gender : 'Unknown gender'}
+                        {pet.breed || 'Unknown breed'} · {pet.gender || 'Unknown gender'}
                     </Text>
                 </View>
 
@@ -97,7 +117,7 @@ export default function PetDetailScreen() {
                 <View style={styles.actionRow}>
                     <TouchableOpacity
                         style={styles.actionBtn}
-                        onPress={() => navigation.navigate('EditPetProfile', { pet })}
+                        onPress={() => navigation.navigate('EditPet', { petId: pet._id })}
                         activeOpacity={0.85}
                     >
                         <MaterialIcons name="edit" size={18} color="#ffffff" />
@@ -105,11 +125,11 @@ export default function PetDetailScreen() {
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={[styles.actionBtn, styles.actionBtnOutline]}
-                        onPress={() => navigation.navigate('Social')}
+                        onPress={handleDelete}
                         activeOpacity={0.85}
                     >
-                        <MaterialIcons name="groups" size={18} color="#30628a" />
-                        <Text style={styles.actionBtnOutlineText}>Social Feed</Text>
+                        <MaterialIcons name="delete" size={18} color="#30628a" />
+                        <Text style={styles.actionBtnOutlineText}>Delete</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -151,11 +171,11 @@ export default function PetDetailScreen() {
                         </View>
                         <View style={styles.healthInfo}>
                             <Text style={styles.healthTitle}>
-                                {pet.vaccinated ? 'Vaccinations Up to Date ✓' : 'Vaccination Status Unknown'}
+                                {pet.isVaccinated ? 'Vaccinations Up to Date ✓' : 'Vaccination Status Unknown'}
                             </Text>
                             <Text style={styles.healthSub}>
-                                {pet.neutered ? 'Neutered/Spayed · ' : ''}
-                                {pet.microchipped ? 'Microchipped' : 'Not microchipped'}
+                                {pet.isNeutered ? 'Neutered/Spayed · ' : ''}
+                                {pet.isMicrochipped ? 'Microchipped' : 'Not microchipped'}
                             </Text>
                         </View>
                         <MaterialIcons name="chevron-right" size={20} color="#72787f" />

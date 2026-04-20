@@ -1,12 +1,11 @@
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity,
     ScrollView, SafeAreaView, ActivityIndicator, Image, RefreshControl
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { AuthContext } from '../../context/AuthContext';
-import { petApi } from '../../api/axiosConfig';
+import { fetchUserPets } from '../../api/petApi';
 import BeagleLottie from '../../components/BeagleLottie';
 
 const PET_COLORS = [
@@ -37,7 +36,7 @@ function PetCard({ pet, index, onPress }) {
                 </Text>
             </View>
             <View style={styles.petCardRight}>
-                {pet.vaccinated && (
+                {pet.isVaccinated && (
                     <View style={styles.badge}>
                         <MaterialIcons name="verified" size={12} color="#30628a" />
                         <Text style={styles.badgeText}>Vaccinated</Text>
@@ -51,14 +50,13 @@ function PetCard({ pet, index, onPress }) {
 
 export default function HomeScreen() {
     const navigation = useNavigation();
-    const { user } = useContext(AuthContext);
     const [pets, setPets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
     const fetchPets = useCallback(async () => {
         try {
-            const { data } = await petApi.get('/');
+            const data = await fetchUserPets();
             setPets(data);
         } catch (e) {
             // silently fail — show empty state
@@ -101,10 +99,10 @@ export default function HomeScreen() {
                             </TouchableOpacity>
                             <View style={styles.greetingArea}>
                                 <Text style={styles.brandText}>PetCare</Text>
-                                <Text style={styles.greetingText}>Hi {user?.name?.split(' ')[0] || 'there'} 👋</Text>
+                                <Text style={styles.greetingText}>Hi there 👋</Text>
                             </View>
                         </View>
-                        <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('MyPetsList')}>
+                        <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('UserProfile')}>
                             <MaterialIcons name="list" size={24} color="#30628a" />
                         </TouchableOpacity>
                     </View>
@@ -131,7 +129,7 @@ export default function HomeScreen() {
                             <TouchableOpacity
                                 style={styles.addPetBtn}
                                 activeOpacity={0.85}
-                                onPress={() => navigation.navigate('AddPetSelectType')}
+                                onPress={() => navigation.navigate('AddPet')}
                             >
                                 <MaterialIcons name="add-circle" size={22} color="#ffffff" />
                                 <Text style={styles.addPetBtnText}>Add Your First Pet</Text>
@@ -142,7 +140,7 @@ export default function HomeScreen() {
                         <>
                             <View style={styles.sectionHeader}>
                                 <Text style={styles.sectionTitle}>Your furry family</Text>
-                                <TouchableOpacity onPress={() => navigation.navigate('MyPetsList')}>
+                                <TouchableOpacity onPress={() => navigation.navigate('UserProfile')}>
                                     <Text style={styles.seeAll}>See all</Text>
                                 </TouchableOpacity>
                             </View>
@@ -152,12 +150,12 @@ export default function HomeScreen() {
                                     key={pet._id}
                                     pet={pet}
                                     index={i}
-                                    onPress={() => navigation.navigate('PetDetail', { pet })}
+                                    onPress={() => navigation.navigate('PetDetail', { petId: pet._id })}
                                 />
                             ))}
 
                             {pets.length > 3 && (
-                                <TouchableOpacity style={styles.viewMoreBtn} onPress={() => navigation.navigate('MyPetsList')}>
+                                <TouchableOpacity style={styles.viewMoreBtn} onPress={() => navigation.navigate('UserProfile')}>
                                     <Text style={styles.viewMoreText}>View all {pets.length} pets</Text>
                                     <MaterialIcons name="arrow-forward" size={16} color="#30628a" />
                                 </TouchableOpacity>
@@ -170,7 +168,7 @@ export default function HomeScreen() {
                         <TouchableOpacity
                             style={[styles.bentoCard, styles.bentoCardPrimary]}
                             activeOpacity={0.9}
-                            onPress={() => navigation.navigate('AddPetSelectType')}
+                            onPress={() => navigation.navigate('AddPet')}
                         >
                             <View style={styles.bentoContent}>
                                 <Text style={styles.bentoTitlePrimary}>Add a Pet</Text>
@@ -207,7 +205,7 @@ export default function HomeScreen() {
                 <TouchableOpacity
                     style={styles.fab}
                     activeOpacity={0.85}
-                    onPress={() => navigation.navigate('AddPetSelectType')}
+                    onPress={() => navigation.navigate('AddPet')}
                 >
                     <MaterialIcons name="add" size={28} color="#ffffff" />
                 </TouchableOpacity>

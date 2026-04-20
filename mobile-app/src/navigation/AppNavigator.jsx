@@ -18,12 +18,9 @@ import MainTabNavigator from './MainTabNavigator';
 import ProfileScreen from '../screens/user/ProfileScreen';
 import ChangePasswordScreen from '../screens/user/ChangePasswordScreen';
 import AskPawlyScreen from '../screens/main/AskPawlyScreen';
+import AddPetScreen from '../screens/main/AddPetScreen';
+import EditPetScreen from '../screens/main/EditPetScreen';
 
-// Pet Management Flow
-import MyPetsListScreen from '../screens/main/MyPetsListScreen';
-import AddPetSelectTypeScreen from '../screens/main/AddPetSelectTypeScreen';
-import AddPetDetailsScreen from '../screens/main/AddPetDetailsScreen';
-import EditPetProfileScreen from '../screens/main/EditPetProfileScreen';
 import PetDetailScreen from '../screens/main/PetDetailScreen';
 
 // Social Screens
@@ -78,11 +75,9 @@ export default function AppNavigator() {
                         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: true, title: 'Change Password', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary }} />
 
                         {/* Pet CRUD Flow */}
-                        <Stack.Screen name="MyPetsList" component={MyPetsListScreen} />
-                        <Stack.Screen name="AddPetSelectType" component={AddPetSelectTypeScreen} />
-                        <Stack.Screen name="AddPetDetails" component={AddPetDetailsScreen} />
-                        <Stack.Screen name="EditPetProfile" component={EditPetProfileScreen} />
+                        <Stack.Screen name="AddPet" component={AddPetScreen} />
                         <Stack.Screen name="PetDetail" component={PetDetailScreen} />
+                        <Stack.Screen name="EditPet" component={EditPetScreen} />
 
                         {/* Social Feed Screens */}
                         <Stack.Screen name="Notifications" component={NotificationsScreen} />
