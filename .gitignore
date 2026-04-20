@@ -40,3 +40,9 @@ metro-cache/
 
 # TypeScript
 *.tsbuildinfo
+
+# Local-only skill assets and docs
+.agents/skills/
+skills-lock.json
+*.docx
+*.pdf
