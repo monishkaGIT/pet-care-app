@@ -26,4 +26,8 @@ api.interceptors.request.use(
     }
 );
 
+// Feedbacks API
+export const feedbackApi = axios.create({ baseURL: `${BASE_URL}/feedbacks` });
+feedbackApi.interceptors.request.use(authInterceptor, (error) => Promise.reject(error));
+
 export default api;
