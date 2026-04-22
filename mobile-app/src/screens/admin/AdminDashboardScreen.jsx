@@ -23,6 +23,11 @@ export default function AdminDashboardScreen({ navigation }) {
                 <Text style={styles.cardDesc}>Manually register a user or assign admin privileges</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={[styles.card, { borderLeftColor: COLORS.primary }]} onPress={() => navigation.navigate('ManageServices')}>
+                <Text style={styles.cardTitle}>Manage Services</Text>
+                <Text style={styles.cardDesc}>View, add, or edit pet care services and pricing</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={[styles.btn, styles.logoutBtn]} onPress={logout}>
                 <Text style={styles.btnText}>Logout</Text>
             </TouchableOpacity>

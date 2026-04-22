@@ -35,6 +35,9 @@ import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 import UserListScreen from '../screens/admin/UserListScreen';
 import CreateUserScreen from '../screens/admin/CreateUserScreen';
 import EditUserScreen from '../screens/admin/EditUserScreen';
+import ManageServicesScreen from '../screens/admin/ManageServicesScreen';
+import AddNewServiceScreen from '../screens/admin/AddNewServiceScreen';
+import ServiceDetailsScreen from '../screens/admin/ServiceDetailsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -65,6 +68,9 @@ export default function AppNavigator() {
                         <Stack.Screen name="UserList" component={UserListScreen} options={{ headerShown: true, title: 'Manage Users', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary }} />
                         <Stack.Screen name="CreateUser" component={CreateUserScreen} options={{ headerShown: true, title: 'Create User', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary }} />
                         <Stack.Screen name="EditUser" component={EditUserScreen} options={{ headerShown: true, title: 'Edit User', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary }} />
+                        <Stack.Screen name="ManageServices" component={ManageServicesScreen} options={{ headerShown: false }} />
+                        <Stack.Screen name="AddNewService" component={AddNewServiceScreen} options={{ headerShown: false }} />
+                        <Stack.Screen name="ServiceDetails" component={ServiceDetailsScreen} options={{ headerShown: false }} />
                     </>
                 ) : (
                     <>
