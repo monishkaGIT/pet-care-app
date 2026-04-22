@@ -55,12 +55,14 @@ export default function AskPawlyScreen() {
             }
         } catch (err) {
             console.error('Failed to ask pawly:', err);
+            const fallback = 'Oops, I am having trouble connecting right now. Please try again later!';
+            const errorText = err?.response?.data?.message || fallback;
             setMessages((prev) => [
                 ...prev,
                 {
                     id: `${Date.now()}-bot`,
                     from: 'bot',
-                    text: 'Oops, I am having trouble connecting right now. Please try again later!',
+                    text: errorText,
                 },
             ]);
         } finally {

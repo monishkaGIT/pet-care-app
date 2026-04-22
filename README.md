@@ -1,5 +1,10 @@
 # PetCare — Pet Management Mobile App
 
+## Stitch AI Prompt
+
+> **Build a complete, production-ready React Native (Expo) mobile application for pet management called "PetCare".** The app uses a MERN stack backend (MongoDB, Express, Node.js) already built and connected. Generate all UI screens described below with full navigation, role-based authentication, and the exact design system specified. Every screen must be fully functional with API integration, form validation, loading states, and error handling.
+
+---
 
 ## 🎨 Design System & Theme
 
@@ -351,3 +356,8 @@ Scan QR code with Expo Go. **Phone and laptop must be on the same Wi-Fi network.
 - [ ] Chat/messaging between pet owners
 - [ ] Lost & found pets feature
 - [ ] Pet adoption marketplace
+
+
+syuff for me to rewmmber 
+
+npm run reset:data -- --yes to reset database

@@ -1,11 +1,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
+import { BASE_URL } from './baseUrl';
 
-const debuggerHost = Constants.expoConfig?.hostUri;
-const ip = debuggerHost ? debuggerHost.split(':')[0] : '192.168.73.16';
-
-export const BASE_URL = `http://${ip}:5000/api`;
 export const API_URL = `${BASE_URL}/users`;
 
 // Shared request interceptor that injects x-user-id

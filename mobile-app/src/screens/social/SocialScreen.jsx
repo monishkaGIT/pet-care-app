@@ -29,7 +29,8 @@ function getPetChipStyle(type) {
 function PostCard({ post, currentUserId, onLike, onDelete, onEdit }) {
     const isOwner = post.author?._id === currentUserId;
     const isLiked = post.likes?.includes(currentUserId);
-    const petChip = post.pet ? getPetChipStyle(post.pet.type) : null;
+    const petTypeOrBreed = post.pet?.type || post.pet?.breed;
+    const petChip = petTypeOrBreed ? getPetChipStyle(petTypeOrBreed) : null;
 
     const handleOptions = () => {
         Alert.alert(
@@ -74,7 +75,7 @@ function PostCard({ post, currentUserId, onLike, onDelete, onEdit }) {
                             {petChip && (
                                 <View style={[styles.petChip, { backgroundColor: petChip.bg }]}>
                                     <Text style={[styles.petChipText, { color: petChip.text }]}>
-                                        {post.pet.type.toUpperCase()}
+                                        {petTypeOrBreed.toUpperCase()}
                                     </Text>
                                 </View>
                             )}

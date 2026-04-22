@@ -1,86 +1,138 @@
 const Pet = require('../models/Pet');
 
-// @desc  Get all pets for the logged-in user
-// @route GET /api/pets
-// @access Private
-const getMyPets = async (req, res) => {
-    try {
-        const pets = await Pet.find({ owner: req.user._id }).sort({ createdAt: -1 });
-        res.json(pets);
-    } catch (error) {
-        res.status(500).json({ message: 'Server error fetching pets' });
-    }
-};
-
-// @desc  Get a single pet by ID
-// @route GET /api/pets/:id
-// @access Private
-const getPetById = async (req, res) => {
-    try {
-        const pet = await Pet.findOne({ _id: req.params.id, owner: req.user._id });
-        if (!pet) return res.status(404).json({ message: 'Pet not found' });
-        res.json(pet);
-    } catch (error) {
-        res.status(500).json({ message: 'Server error fetching pet' });
-    }
-};
-
-// @desc  Create a new pet
-// @route POST /api/pets
-// @access Private
+// @desc    Create a new pet
+// @route   POST /api/pets
 const createPet = async (req, res) => {
     try {
-        const { name, type, breed, age, weight, gender, color, neutered, microchipped, vaccinated, profileImage } = req.body;
-        if (!name || !type) return res.status(400).json({ message: 'Pet name and type are required' });
+        const userId = req.headers['x-user-id'];
+        if (!userId) {
+            res.status(401);
+            throw new Error('Not authorized - no user ID');
+        }
 
         const pet = await Pet.create({
-            owner: req.user._id,
-            name, type,
-            breed: breed || '',
-            age: age || 0,
-            weight: weight || 0,
-            gender: gender || 'unknown',
-            color: color || '',
-            neutered: !!neutered,
-            microchipped: !!microchipped,
-            vaccinated: !!vaccinated,
-            profileImage: profileImage || '',
+            userId,
+            name: req.body.name,
+            breed: req.body.breed,
+            age: req.body.age || 0,
+            weight: req.body.weight || 0,
+            gender: req.body.gender || 'Male',
+            color: req.body.color || '',
+            isNeutered: req.body.isNeutered || false,
+            isMicrochipped: req.body.isMicrochipped || false,
+            microchipNumber: req.body.microchipNumber || '',
+            isVaccinated: req.body.isVaccinated || false,
+            insurance: req.body.insurance || '',
         });
+
         res.status(201).json(pet);
     } catch (error) {
-        res.status(500).json({ message: 'Server error creating pet' });
+        res.status(res.statusCode === 200 ? 500 : res.statusCode);
+        throw error;
     }
 };
 
-// @desc  Update a pet
-// @route PUT /api/pets/:id
-// @access Private
+// @desc    Get all pets for logged-in user
+// @route   GET /api/pets
+const getUserPets = async (req, res) => {
+    try {
+        const userId = req.headers['x-user-id'];
+        if (!userId) {
+            res.status(401);
+            throw new Error('Not authorized - no user ID');
+        }
+
+        const pets = await Pet.find({ userId }).sort({ createdAt: -1 });
+        res.json(pets);
+    } catch (error) {
+        res.status(res.statusCode === 200 ? 500 : res.statusCode);
+        throw error;
+    }
+};
+
+// @desc    Get single pet by ID
+// @route   GET /api/pets/:id
+const getPetById = async (req, res) => {
+    try {
+        const userId = req.headers['x-user-id'];
+        if (!userId) {
+            res.status(401);
+            throw new Error('Not authorized - no user ID');
+        }
+
+        const pet = await Pet.findOne({ _id: req.params.id, userId });
+
+        if (!pet) {
+            res.status(404);
+            throw new Error('Pet not found');
+        }
+
+        res.json(pet);
+    } catch (error) {
+        res.status(res.statusCode === 200 ? 500 : res.statusCode);
+        throw error;
+    }
+};
+
+// @desc    Update a pet
+// @route   PUT /api/pets/:id
 const updatePet = async (req, res) => {
     try {
-        const pet = await Pet.findOne({ _id: req.params.id, owner: req.user._id });
-        if (!pet) return res.status(404).json({ message: 'Pet not found' });
+        const userId = req.headers['x-user-id'];
+        if (!userId) {
+            res.status(401);
+            throw new Error('Not authorized - no user ID');
+        }
 
-        const fields = ['name', 'type', 'breed', 'age', 'weight', 'gender', 'color', 'neutered', 'microchipped', 'vaccinated', 'profileImage'];
-        fields.forEach(f => { if (req.body[f] !== undefined) pet[f] = req.body[f]; });
+        const pet = await Pet.findOne({ _id: req.params.id, userId });
 
-        const updated = await pet.save();
-        res.json(updated);
+        if (!pet) {
+            res.status(404);
+            throw new Error('Pet not found');
+        }
+
+        const updatedPet = await Pet.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true, runValidators: true }
+        );
+
+        res.json(updatedPet);
     } catch (error) {
-        res.status(500).json({ message: 'Server error updating pet' });
+        res.status(res.statusCode === 200 ? 500 : res.statusCode);
+        throw error;
     }
 };
 
-// @desc  Delete a pet
-// @route DELETE /api/pets/:id
-// @access Private
+// @desc    Delete a pet
+// @route   DELETE /api/pets/:id
 const deletePet = async (req, res) => {
     try {
-        const pet = await Pet.findOneAndDelete({ _id: req.params.id, owner: req.user._id });
-        if (!pet) return res.status(404).json({ message: 'Pet not found' });
-        res.json({ message: 'Pet deleted successfully' });
+        const userId = req.headers['x-user-id'];
+        if (!userId) {
+            res.status(401);
+            throw new Error('Not authorized - no user ID');
+        }
+
+        const pet = await Pet.findOne({ _id: req.params.id, userId });
+
+        if (!pet) {
+            res.status(404);
+            throw new Error('Pet not found');
+        }
+
+        await Pet.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Pet removed successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error deleting pet' });
+        res.status(res.statusCode === 200 ? 500 : res.statusCode);
+        throw error;
     }
 };
 
-module.exports = { getMyPets, getPetById, createPet, updatePet, deletePet };
+module.exports = {
+    createPet,
+    getUserPets,
+    getPetById,
+    updatePet,
+    deletePet,
+};

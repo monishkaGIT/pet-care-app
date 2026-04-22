@@ -20,6 +20,7 @@ import ChangePasswordScreen from '../screens/user/ChangePasswordScreen';
 import AskPawlyScreen from '../screens/main/AskPawlyScreen';
 import AddPetScreen from '../screens/main/AddPetScreen';
 import EditPetScreen from '../screens/main/EditPetScreen';
+import MyPetsList from '../screens/main/MyPetsList';
 
 import PetDetailScreen from '../screens/main/PetDetailScreen';
 
@@ -76,6 +77,7 @@ export default function AppNavigator() {
 
                         {/* Pet CRUD Flow */}
                         <Stack.Screen name="AddPet" component={AddPetScreen} />
+                        <Stack.Screen name="MyPetsList" component={MyPetsList} />
                         <Stack.Screen name="PetDetail" component={PetDetailScreen} />
                         <Stack.Screen name="EditPet" component={EditPetScreen} />
 

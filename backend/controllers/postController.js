@@ -10,7 +10,7 @@ const getAllPosts = async (req, res) => {
         const posts = await Post.find()
             .sort({ createdAt: -1 })
             .populate('author', 'name profileImage')
-            .populate('pet', 'name type profileImage');
+            .populate('pet', 'name type breed profileImage');
         res.json(posts);
     } catch (error) {
         res.status(500).json({ message: 'Server error fetching posts' });
@@ -26,7 +26,7 @@ const getMyPosts = async (req, res) => {
     try {
         const posts = await Post.find({ author: req.user._id })
             .sort({ createdAt: -1 })
-            .populate('pet', 'name type');
+            .populate('pet', 'name type breed profileImage');
         res.json(posts);
     } catch (error) {
         res.status(500).json({ message: 'Server error fetching your posts' });
@@ -42,7 +42,7 @@ const getPostById = async (req, res) => {
     try {
         const post = await Post.findById(req.params.id)
             .populate('author', 'name profileImage')
-            .populate('pet', 'name type profileImage')
+            .populate('pet', 'name type breed profileImage')
             .populate('comments.author', 'name profileImage');
         if (!post) return res.status(404).json({ message: 'Post not found' });
         res.json(post);
@@ -77,7 +77,7 @@ const createPost = async (req, res) => {
         // Return the post populated so the feed can render immediately
         const populated = await post.populate([
             { path: 'author', select: 'name profileImage' },
-            { path: 'pet', select: 'name type' },
+            { path: 'pet', select: 'name type breed profileImage' },
         ]);
 
         res.status(201).json(populated);

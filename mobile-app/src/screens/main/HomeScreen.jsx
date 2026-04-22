@@ -140,7 +140,7 @@ export default function HomeScreen() {
                         <>
                             <View style={styles.sectionHeader}>
                                 <Text style={styles.sectionTitle}>Your furry family</Text>
-                                <TouchableOpacity onPress={() => navigation.navigate('UserProfile')}>
+                                <TouchableOpacity onPress={() => navigation.navigate('MyPetsList')}>
                                     <Text style={styles.seeAll}>See all</Text>
                                 </TouchableOpacity>
                             </View>
@@ -155,7 +155,7 @@ export default function HomeScreen() {
                             ))}
 
                             {pets.length > 3 && (
-                                <TouchableOpacity style={styles.viewMoreBtn} onPress={() => navigation.navigate('UserProfile')}>
+                                <TouchableOpacity style={styles.viewMoreBtn} onPress={() => navigation.navigate('MyPetsList')}>
                                     <Text style={styles.viewMoreText}>View all {pets.length} pets</Text>
                                     <MaterialIcons name="arrow-forward" size={16} color="#30628a" />
                                 </TouchableOpacity>
@@ -179,6 +179,22 @@ export default function HomeScreen() {
                                 <MaterialIcons name="arrow-forward" size={16} color="#30628a" />
                             </View>
                             <MaterialIcons name="pets" size={100} color="rgba(48,98,138,0.05)" style={styles.bentoBgIcon} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.bentoCard, styles.bentoCardTertiary]}
+                            activeOpacity={0.9}
+                            onPress={() => navigation.navigate('AskPawly')}
+                        >
+                            <View style={styles.bentoContent}>
+                                <Text style={styles.bentoTitleTertiary}>Ask Pawly</Text>
+                                <Text style={styles.bentoSubTertiary}>Get instant help on food, vaccines, training, and everyday pet care.</Text>
+                            </View>
+                            <View style={styles.bentoActionTertiary}>
+                                <Text style={styles.bentoActionTextTertiary}>Chat with Pawly</Text>
+                                <MaterialIcons name="arrow-forward" size={16} color="#1f5f91" />
+                            </View>
+                            <MaterialIcons name="chat" size={100} color="rgba(31,95,145,0.08)" style={styles.bentoBgIcon} />
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -286,12 +302,17 @@ const styles = StyleSheet.create({
     bentoGrid: { marginTop: 16 },
     bentoCard: { borderRadius: 16, padding: 24, minHeight: 150, marginBottom: 16, overflow: 'hidden', justifyContent: 'space-between' },
     bentoCardPrimary: { backgroundColor: '#faf3e0' },
+    bentoCardTertiary: { backgroundColor: '#eaf6ff' },
     bentoCardSecondary: { backgroundColor: '#ffd1b3' },
     bentoContent: { zIndex: 10 },
     bentoTitlePrimary: { fontSize: 18, fontWeight: 'bold', color: '#79573f', marginBottom: 6 },
     bentoSubPrimary: { fontSize: 13, color: '#41474e', lineHeight: 19 },
     bentoActionPrimary: { flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 6, zIndex: 10 },
     bentoActionTextPrimary: { color: '#30628a', fontWeight: 'bold', fontSize: 13 },
+    bentoTitleTertiary: { fontSize: 18, fontWeight: 'bold', color: '#1f5f91', marginBottom: 6 },
+    bentoSubTertiary: { fontSize: 13, color: '#2f4f66', lineHeight: 19 },
+    bentoActionTertiary: { flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 6, zIndex: 10 },
+    bentoActionTextTertiary: { color: '#1f5f91', fontWeight: 'bold', fontSize: 13 },
     bentoTitleSecondary: { fontSize: 18, fontWeight: 'bold', color: '#7a5840', marginBottom: 6 },
     bentoSubSecondary: { fontSize: 13, color: 'rgba(122,88,64,0.8)', lineHeight: 19 },
     bentoActionSecondary: { flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 6, zIndex: 10 },
