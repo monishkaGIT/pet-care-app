@@ -23,6 +23,7 @@ app.use(cors());
 app.use('/api/users', require('./routes/authRoutes'));
 app.use('/api/pets', require('./routes/petRoutes'));
 app.use('/api/ask-pawly', require('./routes/askPawlyRoutes'));
+app.use('/api/bookings', require('./routes/bookingRoutes'));
 
 app.get('/', (req, res) => {
   res.send('Pet Management API is running...');

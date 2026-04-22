@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
 
 import HomeScreen from '../screens/main/HomeScreen';
-import ServicesScreen from '../screens/main/ServicesScreen';
+import ServicesScreen from '../screens/service-booking/ServicesScreen';
 import SocialScreen from '../screens/main/SocialScreen';
 import PetHealthScreen from '../screens/main/PetHealthScreen';
 import FeedbackScreen from '../screens/user/FeedbackScreen';

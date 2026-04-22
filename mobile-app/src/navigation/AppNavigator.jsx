@@ -19,6 +19,8 @@ import AddPetScreen from '../screens/main/AddPetScreen';
 import PetDetailScreen from '../screens/main/PetDetailScreen';
 import EditPetScreen from '../screens/main/EditPetScreen';
 import AskPawlyScreen from '../screens/main/AskPawlyScreen';
+import BookAServiceScreen from '../screens/service-booking/BookAServiceScreen';
+import MyBookingsScreen from '../screens/service-booking/MyBookingsScreen';
 
 // Admin Screens
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
@@ -84,9 +86,12 @@ export default function AppNavigator() {
                                 headerTitleAlign: 'center',
                             }}
                         />
+                        <Stack.Screen name="BookAService" component={BookAServiceScreen} />
+                        <Stack.Screen name="MyBookings" component={MyBookingsScreen} />
                     </>
                 )}
             </Stack.Navigator>
         </NavigationContainer>
     );
 }
+
