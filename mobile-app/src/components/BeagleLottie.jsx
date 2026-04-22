@@ -22,7 +22,7 @@ const BeagleLottie = ({ type = 'empty', style }) => {
         default:
             // Represents "sleeping beagle" empty state
             source = { uri: 'https://assets9.lottiefiles.com/packages/lf20_U6OKyK.json' };
-            message = 'Zzz... No data available yet.';
+            message = '';
             break;
     }
 

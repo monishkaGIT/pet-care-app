@@ -16,6 +16,14 @@ const petSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
+    type: {
+        type: String,
+        trim: true
+    },
+    profileImage: {
+        type: String,
+        trim: true
+    },
     age: {
         type: Number,
         default: 0

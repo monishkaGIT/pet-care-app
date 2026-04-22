@@ -1,20 +1,49 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
-    View, Text, StyleSheet, TouchableOpacity, FlatList,
-    ScrollView, ActivityIndicator, RefreshControl
+    View, Text, StyleSheet, TouchableOpacity,
+    ScrollView, SafeAreaView, ActivityIndicator, Image, RefreshControl
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { COLORS, SHADOWS } from '../../constants/theme';
+import { MaterialIcons } from '@expo/vector-icons';
 import { fetchUserPets } from '../../api/petApi';
+import BeagleLottie from '../../components/BeagleLottie';
 
-function AskPawlyShortcut({ onPress, small }) {
+const PET_COLORS = [
+    { bg: 'rgba(162,210,255,0.35)', icon: '#30628a' },
+    { bg: 'rgba(255,209,179,0.4)', icon: '#79573f' },
+    { bg: 'rgba(255,192,146,0.4)', icon: '#8e4e14' },
+    { bg: 'rgba(162,210,255,0.2)', icon: '#275b82' },
+    { bg: '#faf3e0', icon: '#79573f' },
+];
+
+function PetCard({ pet, index, onPress }) {
+    const scheme = PET_COLORS[index % PET_COLORS.length];
     return (
-        <TouchableOpacity style={small ? styles.askPawlyWrapSmall : styles.askPawlyWrap} onPress={onPress} activeOpacity={0.85}>
-            <View style={small ? styles.askPawlyCircleSmall : styles.askPawlyCircle}>
-                <MaterialCommunityIcons name="dog" size={small ? 28 : 38} color="#e0ad00" />
+        <TouchableOpacity style={styles.petCard} onPress={onPress} activeOpacity={0.8}>
+            {pet.profileImage ? (
+                <Image source={{ uri: pet.profileImage }} style={styles.petAvatar} />
+            ) : (
+                <View style={[styles.petAvatarPlaceholder, { backgroundColor: scheme.bg }]}>
+                    <MaterialIcons name="pets" size={28} color={scheme.icon} />
+                </View>
+            )}
+            <View style={styles.petCardInfo}>
+                <Text style={styles.petCardName}>{pet.name}</Text>
+                <Text style={styles.petCardBreed}>{pet.breed || pet.type}</Text>
+                <Text style={styles.petCardAge}>
+                    {pet.age > 0 ? `${pet.age} yr${pet.age !== 1 ? 's' : ''} old` : 'Age unknown'}
+                    {pet.weight > 0 ? ` · ${pet.weight} kg` : ''}
+                </Text>
             </View>
-            <Text style={small ? styles.askPawlyLabelSmall : styles.askPawlyLabel}>Ask Pawly?</Text>
+            <View style={styles.petCardRight}>
+                {pet.isVaccinated && (
+                    <View style={styles.badge}>
+                        <MaterialIcons name="verified" size={12} color="#30628a" />
+                        <Text style={styles.badgeText}>Vaccinated</Text>
+                    </View>
+                )}
+                <MaterialIcons name="chevron-right" size={22} color="#72787f" style={{ marginTop: 8 }} />
+            </View>
         </TouchableOpacity>
     );
 }
@@ -25,351 +54,320 @@ export default function HomeScreen() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
-    const loadPets = async () => {
+    const fetchPets = useCallback(async () => {
         try {
             const data = await fetchUserPets();
             setPets(data);
         } catch (e) {
-            console.error('Failed to load pets', e);
+            // silently fail — show empty state
         } finally {
             setLoading(false);
             setRefreshing(false);
         }
-    };
+    }, []);
 
-    useFocusEffect(
-        useCallback(() => {
-            setLoading(true);
-            loadPets();
-        }, [])
-    );
+    // Refetch every time the tab is focused (e.g. after adding a pet)
+    useFocusEffect(useCallback(() => {
+        setLoading(true);
+        fetchPets();
+    }, [fetchPets]));
 
     const onRefresh = () => {
         setRefreshing(true);
-        loadPets();
+        fetchPets();
     };
 
-    if (loading) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={COLORS.secondary} />
-            </View>
-        );
-    }
-
-    // ─── EMPTY STATE (Image 1) ─────────────────────────────
-    if (pets.length === 0) {
-        return (
-            <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 1 }}>
+    return (
+        <SafeAreaView style={styles.safeArea}>
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#30628a" />}
+            >
                 {/* Header */}
-                <View style={styles.header}>
+                <View style={styles.headerWrapper}>
+                    <View style={styles.glowTopRight} />
+                    <View style={styles.glowMidLeft} />
                     <View style={styles.headerTopRow}>
-                        <TouchableOpacity style={styles.profileBtn} onPress={() => navigation.navigate('Profile')}>
-                            <Ionicons name="person-circle-outline" size={36} color={COLORS.secondary} />
-                        </TouchableOpacity>
-                        <View style={{ flex: 1 }}>
-                            <Text style={styles.headerBrand}>PetCare</Text>
-                            <Text style={styles.headerSubtitle}>Welcome back to PetCare!</Text>
+                        <View style={styles.userInfoArea}>
+                            <TouchableOpacity
+                                style={styles.profileBtn}
+                                onPress={() => navigation.navigate('UserProfile')}
+                                activeOpacity={0.8}
+                            >
+                                <MaterialIcons name="account-circle" size={32} color="#79573f" />
+                            </TouchableOpacity>
+                            <View style={styles.greetingArea}>
+                                <Text style={styles.brandText}>PetCare</Text>
+                                <Text style={styles.greetingText}>Hi there 👋</Text>
+                            </View>
                         </View>
-                        <TouchableOpacity>
-                            <Ionicons name="notifications" size={24} color={COLORS.secondary} />
+                        <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('UserProfile')}>
+                            <MaterialIcons name="list" size={24} color="#30628a" />
                         </TouchableOpacity>
                     </View>
-                    <Text style={styles.headerTitle}>My Pets</Text>
+                    <View style={styles.headerBottomRow}>
+                        <Text style={styles.pageTitle}>My Pets</Text>
+                        <Text style={styles.petCount}>{pets.length} {pets.length === 1 ? 'pal' : 'pals'}</Text>
+                    </View>
                 </View>
 
-                {/* Empty Illustration */}
-                <View style={styles.emptyBody}>
-                    <View style={styles.emptyCircle}>
-                        <MaterialCommunityIcons name="paw" size={60} color="#b8a99a" />
-                        <View style={styles.emptyPlusBtn}>
-                            <Ionicons name="add" size={18} color="#fff" />
+                {/* Content */}
+                <View style={styles.contentArea}>
+                    {loading ? (
+                        <ActivityIndicator size="large" color="#30628a" style={{ marginTop: 60 }} />
+                    ) : pets.length === 0 ? (
+                        /* Empty State */
+                        <View style={styles.emptyStateContainer}>
+                            <View style={styles.lottieWrapper}>
+                                <BeagleLottie type="empty" />
+                            </View>
+                            <Text style={styles.emptyTextTitle}>No pets yet</Text>
+                            <Text style={styles.emptyTextSub}>
+                                You haven't added any furry friends yet.{'\n'}Let's get started!
+                            </Text>
+                            <TouchableOpacity
+                                style={styles.addPetBtn}
+                                activeOpacity={0.85}
+                                onPress={() => navigation.navigate('AddPet')}
+                            >
+                                <MaterialIcons name="add-circle" size={22} color="#ffffff" />
+                                <Text style={styles.addPetBtnText}>Add Your First Pet</Text>
+                            </TouchableOpacity>
                         </View>
-                    </View>
-
-                    <Text style={styles.emptyTitle}>Zzz… No data available</Text>
-                    <Text style={styles.emptyDesc}>
-                        It looks like you haven't added any{'\n'}furry friends yet. Let's get started!
-                    </Text>
-
-                    <TouchableOpacity
-                        style={styles.addFirstBtn}
-                        onPress={() => navigation.navigate('AddPet')}
-                    >
-                        <Ionicons name="add-circle" size={20} color="#fff" />
-                        <Text style={styles.addFirstBtnText}>Add Your First Pet</Text>
-                    </TouchableOpacity>
-
-                    <AskPawlyShortcut onPress={() => navigation.navigate('AskPawly')} />
-
-                    {/* Info Cards */}
-                    <View style={styles.infoCard}>
-                        <View style={styles.infoCardInner}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.infoCardTitle}>Pet Health Check</Text>
-                                <Text style={styles.infoCardDesc}>
-                                    Keep track of vaccinations and{'\n'}upcoming vet appointments easily.
-                                </Text>
-                                <TouchableOpacity style={styles.learnMoreBtn}>
-                                    <Text style={styles.learnMoreText}>Learn More →</Text>
+                    ) : (
+                        /* Pet List */
+                        <>
+                            <View style={styles.sectionHeader}>
+                                <Text style={styles.sectionTitle}>Your furry family</Text>
+                                <TouchableOpacity onPress={() => navigation.navigate('MyPetsList')}>
+                                    <Text style={styles.seeAll}>See all</Text>
                                 </TouchableOpacity>
                             </View>
-                            <MaterialCommunityIcons name="medical-bag" size={44} color="rgba(162,210,255,0.5)" />
-                        </View>
-                    </View>
 
-                    <View style={[styles.infoCard, { backgroundColor: '#fde8d8' }]}>
-                        <View style={styles.infoCardInner}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.infoCardTitle}>Social Community</Text>
-                                <Text style={styles.infoCardDesc}>
-                                    Connect with other pet parents in{'\n'}your neighborhood.
-                                </Text>
-                                <TouchableOpacity style={styles.learnMoreBtn}>
-                                    <Text style={[styles.learnMoreText, { color: COLORS.secondary }]}>Join Group 🐾</Text>
+                            {pets.slice(0, 3).map((pet, i) => (
+                                <PetCard
+                                    key={pet._id}
+                                    pet={pet}
+                                    index={i}
+                                    onPress={() => navigation.navigate('PetDetail', { petId: pet._id })}
+                                />
+                            ))}
+
+                            {pets.length > 3 && (
+                                <TouchableOpacity style={styles.viewMoreBtn} onPress={() => navigation.navigate('MyPetsList')}>
+                                    <Text style={styles.viewMoreText}>View all {pets.length} pets</Text>
+                                    <MaterialIcons name="arrow-forward" size={16} color="#30628a" />
                                 </TouchableOpacity>
+                            )}
+                        </>
+                    )}
+
+                    {/* Bento Cards */}
+                    <View style={styles.bentoGrid}>
+                        <TouchableOpacity
+                            style={[styles.bentoCard, styles.bentoCardPrimary]}
+                            activeOpacity={0.9}
+                            onPress={() => navigation.navigate('AddPet')}
+                        >
+                            <View style={styles.bentoContent}>
+                                <Text style={styles.bentoTitlePrimary}>Add a Pet</Text>
+                                <Text style={styles.bentoSubPrimary}>Register a new furry friend to your profile and track their health.</Text>
                             </View>
-                            <MaterialCommunityIcons name="account-group" size={44} color="rgba(111,78,55,0.25)" />
-                        </View>
+                            <View style={styles.bentoActionPrimary}>
+                                <Text style={styles.bentoActionTextPrimary}>Get Started</Text>
+                                <MaterialIcons name="arrow-forward" size={16} color="#30628a" />
+                            </View>
+                            <MaterialIcons name="pets" size={100} color="rgba(48,98,138,0.05)" style={styles.bentoBgIcon} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.bentoCard, styles.bentoCardTertiary]}
+                            activeOpacity={0.9}
+                            onPress={() => navigation.navigate('AskPawly')}
+                        >
+                            <View style={styles.bentoContent}>
+                                <View style={styles.bentoTitleRow}>
+                                    <Text style={styles.bentoTitleTertiary}>Ask Pawly</Text>
+                                    <View style={styles.askPawlyIconBadge}>
+                                        <MaterialIcons name="smart-toy" size={16} color="#1f5f91" />
+                                    </View>
+                                </View>
+                                <Text style={styles.bentoSubTertiary}>Get instant help on food, vaccines, training, and everyday pet care.</Text>
+                            </View>
+                            <View style={styles.bentoActionTertiary}>
+                                <Text style={styles.bentoActionTextTertiary}>Chat with Pawly</Text>
+                                <MaterialIcons name="arrow-forward" size={16} color="#1f5f91" />
+                            </View>
+                            <MaterialIcons name="chat" size={100} color="rgba(31,95,145,0.08)" style={styles.bentoBgIcon} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.bentoCard, styles.bentoCardSecondary]}
+                            activeOpacity={0.9}
+                            onPress={() => navigation.navigate('Social')}
+                        >
+                            <View style={styles.bentoContent}>
+                                <Text style={styles.bentoTitleSecondary}>Social Feed</Text>
+                                <Text style={styles.bentoSubSecondary}>Connect with other pet parents and share your pet moments.</Text>
+                            </View>
+                            <View style={styles.bentoActionSecondary}>
+                                <Text style={styles.bentoActionTextSecondary}>Join the Feed</Text>
+                                <MaterialIcons name="groups" size={16} color="#7a5840" />
+                            </View>
+                            <MaterialIcons name="forum" size={100} color="rgba(122,88,64,0.05)" style={styles.bentoBgIcon} />
+                        </TouchableOpacity>
                     </View>
                 </View>
             </ScrollView>
-        );
-    }
 
-    // ─── PET LIST STATE (Image 3) ──────────────────────────
-    return (
-        <View style={styles.container}>
-            {/* Header */}
-            <View style={styles.headerList}>
-                <View>
-                    <Text style={styles.headerBrand}>PetCare</Text>
-                    <Text style={styles.headerTitleList}>MyPets</Text>
-                </View>
-                <TouchableOpacity style={styles.profileBtnList} onPress={() => navigation.navigate('Profile')}>
-                    <Ionicons name="person" size={20} color="#fff" />
-                </TouchableOpacity>
-            </View>
-
-            <FlatList
-                data={pets}
-                keyExtractor={(item) => item._id}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.secondary]} />}
-                contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 120 }}
-                ListHeaderComponent={() => (
-                    <View style={styles.listHeaderRow}>
-                        <View style={{ flex: 1, paddingRight: 15 }}>
-                            <Text style={styles.familyTitle}>Your furry family</Text>
-                            <Text style={styles.familyDesc}>Keep track of your beloved pets' health and activities.</Text>
-                        </View>
-                    </View>
-                )}
-                renderItem={({ item }) => (
+            {/* FAB */}
+            {pets.length > 0 && (
+                <View style={styles.fabStack}>
                     <TouchableOpacity
-                        style={styles.petCard}
-                        activeOpacity={0.7}
-                        onPress={() => navigation.navigate('PetDetail', { petId: item._id })}
+                        style={styles.fab}
+                        activeOpacity={0.85}
+                        onPress={() => navigation.navigate('AddPet')}
                     >
-                        <View style={styles.petCardIcon}>
-                            <MaterialCommunityIcons name="paw" size={28} color={COLORS.secondary} />
-                        </View>
-                        <View style={{ flex: 1, marginLeft: 14 }}>
-                            <Text style={styles.petCardName}>{item.name}</Text>
-                            <Text style={styles.petCardBreed}>{item.breed}</Text>
-                            <Text style={styles.petCardAge}>{item.age} years old</Text>
-                        </View>
-                        <Ionicons name="chevron-forward" size={22} color="#ccc" />
+                        <MaterialIcons name="add" size={28} color="#ffffff" />
                     </TouchableOpacity>
-                )}
-                ListFooterComponent={() => (
-                    <View style={styles.insightsSection}>
-                        <Text style={styles.insightsTitle}>Quick Insights</Text>
-                        <View style={styles.insightsRow}>
-                            <View style={styles.insightCard}>
-                                <MaterialCommunityIcons name="clipboard-text-outline" size={24} color={COLORS.secondary} />
-                                <Text style={styles.insightLabel}>UPCOMING</Text>
-                                <Text style={styles.insightValue}>Vaccination (2d)</Text>
-                            </View>
-                            <View style={[styles.insightCard, { backgroundColor: COLORS.primary }]}>
-                                <MaterialCommunityIcons name="walk" size={24} color={COLORS.secondary} />
-                                <Text style={[styles.insightLabel, { color: COLORS.secondary }]}>NEXT WALK</Text>
-                                <Text style={[styles.insightValue, { color: COLORS.secondary }]}>6:30 PM Today</Text>
-                            </View>
-                        </View>
-                    </View>
-                )}
-            />
 
-            {/* Ask Pawly Floating Button */}
-            <View style={styles.askPawlyFab}>
-                <AskPawlyShortcut small onPress={() => navigation.navigate('AskPawly')} />
-            </View>
-
-            {/* FAB Button */}
-            <TouchableOpacity
-                style={styles.fab}
-                onPress={() => navigation.navigate('AddPet')}
-            >
-                <Ionicons name="add" size={30} color="#fff" />
-            </TouchableOpacity>
-        </View>
+                    <TouchableOpacity
+                        style={styles.fabChat}
+                        activeOpacity={0.85}
+                        onPress={() => navigation.navigate('AskPawly')}
+                    >
+                        <MaterialIcons name="smart-toy" size={28} color="#ffffff" />
+                    </TouchableOpacity>
+                </View>
+            )}
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: COLORS.lightGray },
-    loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.lightGray },
-
-    // ── Empty State Header ──
-    header: {
-        backgroundColor: COLORS.primary,
-        paddingHorizontal: 20,
-        paddingTop: 50,
-        paddingBottom: 20,
-        borderBottomLeftRadius: 30,
-        borderBottomRightRadius: 30,
-        ...SHADOWS.header,
+    safeArea: { flex: 1, backgroundColor: '#fff9ec' },
+    scrollContent: { flexGrow: 1, paddingBottom: 120 },
+    headerWrapper: {
+        backgroundColor: '#a2d2ff',
+        borderBottomLeftRadius: 40, borderBottomRightRadius: 40,
+        paddingHorizontal: 28, paddingTop: 50, paddingBottom: 30,
+        overflow: 'hidden',
     },
-    headerTopRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-    profileBtn: { marginRight: 10 },
-    headerBrand: { fontSize: 16, fontWeight: 'bold', color: COLORS.secondary },
-    headerSubtitle: { fontSize: 12, color: COLORS.secondary, opacity: 0.8 },
-    headerTitle: { fontSize: 28, fontWeight: 'bold', color: COLORS.secondary },
-
-    // ── Empty Body ──
-    emptyBody: { alignItems: 'center', paddingHorizontal: 30, paddingTop: 40 },
-    emptyCircle: {
-        width: 130, height: 130, borderRadius: 65,
-        backgroundColor: '#ede7e0', justifyContent: 'center', alignItems: 'center',
-        marginBottom: 20,
+    glowTopRight: { position: 'absolute', top: -40, right: -40, width: 150, height: 150, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 75 },
+    glowMidLeft: { position: 'absolute', top: 60, left: -30, width: 120, height: 120, backgroundColor: 'rgba(121,87,63,0.1)', borderRadius: 60 },
+    headerTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, zIndex: 10 },
+    userInfoArea: { flexDirection: 'row', alignItems: 'center' },
+    profileBtn: {
+        width: 50, height: 50, borderRadius: 25,
+        backgroundColor: 'rgba(255,255,255,0.4)', borderWidth: 3, borderColor: 'rgba(255,255,255,0.5)',
+        alignItems: 'center', justifyContent: 'center', marginRight: 14,
     },
-    emptyPlusBtn: {
-        position: 'absolute', bottom: 8, right: 8,
-        width: 30, height: 30, borderRadius: 15,
-        backgroundColor: COLORS.secondary, justifyContent: 'center', alignItems: 'center',
-        elevation: 3,
+    greetingArea: { justifyContent: 'center' },
+    brandText: { fontSize: 22, fontWeight: 'bold', color: '#79573f' },
+    greetingText: { fontSize: 12, color: '#275b82', opacity: 0.9 },
+    iconBtn: {
+        width: 44, height: 44, borderRadius: 22,
+        backgroundColor: 'rgba(255,255,255,0.4)',
+        alignItems: 'center', justifyContent: 'center',
     },
-    emptyTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.textPrimary, marginBottom: 8, textAlign: 'center' },
-    emptyDesc: { fontSize: 14, color: COLORS.textMuted, textAlign: 'center', lineHeight: 20, marginBottom: 24 },
-    addFirstBtn: {
-        flexDirection: 'row', alignItems: 'center',
-        backgroundColor: COLORS.secondary, paddingVertical: 14, paddingHorizontal: 28,
-        borderRadius: 30, marginBottom: 30, ...SHADOWS.button,
+    headerBottomRow: { zIndex: 10, flexDirection: 'row', alignItems: 'baseline', gap: 10 },
+    pageTitle: { fontSize: 30, fontWeight: '800', color: '#79573f' },
+    petCount: { fontSize: 14, color: '#30628a', fontWeight: '600' },
+    contentArea: { paddingHorizontal: 20, paddingTop: 24 },
+    // Empty state
+    emptyStateContainer: { alignItems: 'center', marginBottom: 32 },
+    lottieWrapper: { width: 200, height: 200, alignItems: 'center', justifyContent: 'center' },
+    emptyTextTitle: { fontSize: 20, fontWeight: 'bold', color: '#79573f', marginTop: 10, marginBottom: 8 },
+    emptyTextSub: { fontSize: 14, color: '#41474e', textAlign: 'center', paddingHorizontal: 30, marginBottom: 20, lineHeight: 21 },
+    addPetBtn: {
+        backgroundColor: '#30628a', paddingVertical: 14, paddingHorizontal: 24,
+        borderRadius: 30, flexDirection: 'row', alignItems: 'center', gap: 8,
+        shadowColor: '#30628a', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 5,
     },
-    addFirstBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16, marginLeft: 8 },
-
-    askPawlyWrap: {
-        alignItems: 'center',
-        marginBottom: 22,
-    },
-    askPawlyCircle: {
-        width: 110,
-        height: 110,
-        borderRadius: 55,
-        backgroundColor: '#f7f3de',
-        justifyContent: 'center',
-        alignItems: 'center',
-        ...SHADOWS.card,
-    },
-    askPawlyLabel: {
-        marginTop: 10,
-        fontSize: 15,
-        fontWeight: '700',
-        color: COLORS.textMuted,
-    },
-    askPawlyWrapSmall: {
-        alignItems: 'center',
-    },
-    askPawlyCircleSmall: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: '#f7f3de',
-        justifyContent: 'center',
-        alignItems: 'center',
-        ...SHADOWS.card,
-    },
-    askPawlyLabelSmall: {
-        marginTop: 6,
-        fontSize: 12,
-        fontWeight: '700',
-        color: COLORS.textMuted,
-    },
-
-    // ── Info Cards ──
-    infoCard: {
-        width: '100%', backgroundColor: '#dbeafe', borderRadius: 18,
-        padding: 20, marginBottom: 16,
-    },
-    infoCardInner: { flexDirection: 'row', alignItems: 'center' },
-    infoCardTitle: { fontSize: 17, fontWeight: 'bold', color: COLORS.textPrimary, marginBottom: 6 },
-    infoCardDesc: { fontSize: 13, color: COLORS.textMuted, lineHeight: 18, marginBottom: 10 },
-    learnMoreBtn: {},
-    learnMoreText: { fontSize: 14, fontWeight: 'bold', color: COLORS.primary },
-
-    // ── List State Header ──
-    headerList: {
-        backgroundColor: COLORS.primary,
-        paddingHorizontal: 20, paddingTop: 50, paddingBottom: 22,
-        borderBottomLeftRadius: 30, borderBottomRightRadius: 30,
-        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end',
-        ...SHADOWS.header,
-    },
-    headerTitleList: { fontSize: 28, fontWeight: 'bold', color: COLORS.secondary },
-    profileBtnList: {
-        width: 40, height: 40, borderRadius: 20,
-        backgroundColor: COLORS.secondary, justifyContent: 'center', alignItems: 'center',
-    },
-
-    // ── Pet List ──
-    listHeaderRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 10,
-    },
-    familyTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.secondary, marginTop: 10 },
-    familyDesc: { fontSize: 13, color: COLORS.textMuted, marginTop: 4, marginBottom: 10 },
-
+    addPetBtnText: { color: '#ffffff', fontWeight: 'bold', fontSize: 16 },
+    // Pet list
+    sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+    sectionTitle: { fontSize: 17, fontWeight: '700', color: '#79573f' },
+    seeAll: { fontSize: 13, color: '#30628a', fontWeight: '600' },
     petCard: {
-        flexDirection: 'row', alignItems: 'center',
-        backgroundColor: COLORS.surface, borderRadius: 16,
-        padding: 16, marginBottom: 12,
-        ...SHADOWS.card,
+        backgroundColor: '#ffffff', borderRadius: 16, padding: 16,
+        flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 12,
+        borderWidth: 1, borderColor: '#efe8d5',
+        shadowColor: 'rgba(111,78,55,0.04)', shadowOffset: { width: 0, height: 4 }, shadowRadius: 12, shadowOpacity: 1, elevation: 1,
     },
-    petCardIcon: {
-        width: 52, height: 52, borderRadius: 26,
-        backgroundColor: '#ede7e0', justifyContent: 'center', alignItems: 'center',
+    petAvatar: { width: 58, height: 58, borderRadius: 29 },
+    petAvatarPlaceholder: { width: 58, height: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center' },
+    petCardInfo: { flex: 1 },
+    petCardName: { fontSize: 17, fontWeight: 'bold', color: '#79573f' },
+    petCardBreed: { fontSize: 13, color: '#41474e', marginTop: 2, textTransform: 'capitalize' },
+    petCardAge: { fontSize: 12, color: '#72787f', marginTop: 2 },
+    petCardRight: { alignItems: 'flex-end' },
+    badge: {
+        flexDirection: 'row', alignItems: 'center', gap: 4,
+        backgroundColor: 'rgba(162,210,255,0.3)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10,
     },
-    petCardName: { fontSize: 17, fontWeight: 'bold', color: COLORS.textPrimary },
-    petCardBreed: { fontSize: 13, color: COLORS.secondary, marginTop: 1 },
-    petCardAge: { fontSize: 12, color: COLORS.textMuted, marginTop: 2 },
-
-    // ── Quick Insights ──
-    insightsSection: { marginTop: 14 },
-    insightsTitle: { fontSize: 18, fontWeight: 'bold', color: COLORS.secondary, marginBottom: 10 },
-    insightsRow: { flexDirection: 'row', gap: 12 },
-    insightCard: {
-        flex: 1, backgroundColor: COLORS.surface, borderRadius: 16,
-        padding: 14, ...SHADOWS.card,
+    badgeText: { fontSize: 10, color: '#30628a', fontWeight: 'bold' },
+    viewMoreBtn: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+        paddingVertical: 12, marginBottom: 20,
     },
-    insightLabel: { fontSize: 10, fontWeight: 'bold', color: COLORS.textMuted, marginTop: 8, letterSpacing: 0.5 },
-    insightValue: { fontSize: 13, fontWeight: '600', color: COLORS.textPrimary, marginTop: 2 },
-
-    // ── FAB ──
-    askPawlyFab: {
-        position: 'absolute',
-        bottom: 20,
-        right: 18,
+    viewMoreText: { color: '#30628a', fontWeight: '600', fontSize: 14 },
+    // Bento
+    bentoGrid: { marginTop: 16 },
+    bentoCard: { borderRadius: 16, padding: 24, minHeight: 150, marginBottom: 16, overflow: 'hidden', justifyContent: 'space-between' },
+    bentoCardPrimary: { backgroundColor: '#faf3e0' },
+    bentoCardTertiary: { backgroundColor: '#eaf6ff' },
+    bentoCardSecondary: { backgroundColor: '#ffd1b3' },
+    bentoContent: { zIndex: 10 },
+    bentoTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    bentoTitlePrimary: { fontSize: 18, fontWeight: 'bold', color: '#79573f', marginBottom: 6 },
+    bentoSubPrimary: { fontSize: 13, color: '#41474e', lineHeight: 19 },
+    bentoActionPrimary: { flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 6, zIndex: 10 },
+    bentoActionTextPrimary: { color: '#30628a', fontWeight: 'bold', fontSize: 13 },
+    bentoTitleTertiary: { fontSize: 18, fontWeight: 'bold', color: '#1f5f91', marginBottom: 6 },
+    askPawlyIconBadge: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
         alignItems: 'center',
-        zIndex: 10,
+        justifyContent: 'center',
+        backgroundColor: 'rgba(31,95,145,0.12)',
+        marginBottom: 6,
+    },
+    bentoSubTertiary: { fontSize: 13, color: '#2f4f66', lineHeight: 19 },
+    bentoActionTertiary: { flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 6, zIndex: 10 },
+    bentoActionTextTertiary: { color: '#1f5f91', fontWeight: 'bold', fontSize: 13 },
+    bentoTitleSecondary: { fontSize: 18, fontWeight: 'bold', color: '#7a5840', marginBottom: 6 },
+    bentoSubSecondary: { fontSize: 13, color: 'rgba(122,88,64,0.8)', lineHeight: 19 },
+    bentoActionSecondary: { flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 6, zIndex: 10 },
+    bentoActionTextSecondary: { color: '#7a5840', fontWeight: 'bold', fontSize: 13 },
+    bentoBgIcon: { position: 'absolute', bottom: -20, right: -20, zIndex: 1 },
+    // FAB
+    fabStack: {
+        position: 'absolute',
+        bottom: 28,
+        right: 24,
+        alignItems: 'center',
+        gap: 10,
     },
     fab: {
-        position: 'absolute', bottom: 120, right: 20,
         width: 56, height: 56, borderRadius: 28,
-        backgroundColor: COLORS.secondary, justifyContent: 'center', alignItems: 'center',
+        backgroundColor: '#D4A017',
+        alignItems: 'center', justifyContent: 'center',
+        shadowColor: '#D4A017', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 10, elevation: 8,
+    },
+    fabChat: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#1f5f91',
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#1f5f91',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.28,
+        shadowRadius: 8,
         elevation: 6,
-        shadowColor: COLORS.secondary, shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.4, shadowRadius: 5,
     },
 });

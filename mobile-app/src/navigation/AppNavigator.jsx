@@ -11,16 +11,22 @@ import LandingScreen from '../screens/auth/LandingScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 
-// User Main App
+// Main Tab Navigator
 import MainTabNavigator from './MainTabNavigator';
+
+// User Screens
 import ProfileScreen from '../screens/user/ProfileScreen';
 import ChangePasswordScreen from '../screens/user/ChangePasswordScreen';
-import AddPetScreen from '../screens/main/AddPetScreen';
-import PetDetailScreen from '../screens/main/PetDetailScreen';
-import EditPetScreen from '../screens/main/EditPetScreen';
 import AskPawlyScreen from '../screens/main/AskPawlyScreen';
 import BookAServiceScreen from '../screens/service-booking/BookAServiceScreen';
 import MyBookingsScreen from '../screens/service-booking/MyBookingsScreen';
+import AddPetScreen from '../screens/main/AddPetScreen';
+import EditPetScreen from '../screens/main/EditPetScreen';
+import MyPetsList from '../screens/main/MyPetsList';
+import PetDetailScreen from '../screens/main/PetDetailScreen';
+
+// Social Screens
+import EditPostScreen from '../screens/social/EditPostScreen';
 
 // Admin Screens
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
@@ -48,7 +54,6 @@ export default function AppNavigator() {
         <NavigationContainer>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
                 {user === null ? (
-                    // Unauthenticated Stack
                     <>
                         <Stack.Screen name="Splash" component={SplashScreen} />
                         <Stack.Screen name="Landing" component={LandingScreen} />
@@ -56,7 +61,6 @@ export default function AppNavigator() {
                         <Stack.Screen name="Register" component={RegisterScreen} />
                     </>
                 ) : user.role === 'admin' ? (
-                    // Admin Stack
                     <>
                         <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} options={{ headerShown: true, title: 'Admin Home', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary }} />
                         <Stack.Screen name="UserList" component={UserListScreen} options={{ headerShown: true, title: 'Manage Users', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary }} />
@@ -67,14 +71,22 @@ export default function AppNavigator() {
                         <Stack.Screen name="ServiceDetails" component={ServiceDetailsScreen} options={{ headerShown: false }} />
                     </>
                 ) : (
-                    // Normal User Stack (Bottom Tabs act as Home base)
                     <>
+                        {/* Main App — Bottom Tabs */}
                         <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-                        <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: true, title: 'My Profile', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary, headerTitleAlign: 'center' }} />
+
+                        {/* User Profile */}
+                        <Stack.Screen name="UserProfile" component={ProfileScreen} />
                         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: true, title: 'Change Password', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary }} />
+
+                        {/* Pet CRUD Flow */}
                         <Stack.Screen name="AddPet" component={AddPetScreen} />
+                        <Stack.Screen name="MyPetsList" component={MyPetsList} />
                         <Stack.Screen name="PetDetail" component={PetDetailScreen} />
                         <Stack.Screen name="EditPet" component={EditPetScreen} />
+
+                        {/* Social detail screen */}
+                        <Stack.Screen name="EditPost" component={EditPostScreen} />
                         <Stack.Screen
                             name="AskPawly"
                             component={AskPawlyScreen}

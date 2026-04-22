@@ -1,12 +1,18 @@
 import React, { useState, useCallback } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity,
-    ScrollView, ActivityIndicator, Alert
+    ScrollView, SafeAreaView, Image, ActivityIndicator, Alert
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { COLORS, SHADOWS } from '../../constants/theme';
 import { fetchPetById, deletePet } from '../../api/petApi';
+
+const INFO_ROWS = (pet) => [
+    { label: 'Breed', value: pet.breed || '—' },
+    { label: 'Color', value: pet.color || '—' },
+    { label: 'Type', value: '—' },
+    { label: 'Microchip', value: pet.isMicrochipped ? (pet.microchipNumber || 'Yes') : 'No' },
+];
 
 export default function PetDetailScreen() {
     const navigation = useNavigation();
@@ -19,8 +25,7 @@ export default function PetDetailScreen() {
         try {
             const data = await fetchPetById(petId);
             setPet(data);
-        } catch (e) {
-            console.error('Failed to load pet', e);
+        } catch {
             Alert.alert('Error', 'Failed to load pet details.');
             navigation.goBack();
         } finally {
@@ -37,8 +42,8 @@ export default function PetDetailScreen() {
 
     const handleDelete = () => {
         Alert.alert(
-            '⚠️ Delete Pet',
-            `Are you sure you want to delete ${pet?.name}? This action cannot be undone.`,
+            'Delete Pet',
+            `Are you sure you want to delete ${pet?.name}?`,
             [
                 { text: 'Cancel', style: 'cancel' },
                 {
@@ -48,7 +53,7 @@ export default function PetDetailScreen() {
                         try {
                             await deletePet(petId);
                             navigation.goBack();
-                        } catch (e) {
+                        } catch {
                             Alert.alert('Error', 'Failed to delete pet.');
                         }
                     }
@@ -59,221 +64,189 @@ export default function PetDetailScreen() {
 
     if (loading || !pet) {
         return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={COLORS.secondary} />
-            </View>
+            <SafeAreaView style={styles.safeArea}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color="#30628a" />
+                </View>
+            </SafeAreaView>
         );
     }
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 120 }}>
-            {/* Header */}
-            <View style={styles.header}>
-                <View style={styles.headerTopRow}>
-                    <TouchableOpacity onPress={() => navigation.goBack()}>
-                        <Ionicons name="menu" size={26} color={COLORS.secondary} />
-                    </TouchableOpacity>
-                    <Text style={styles.headerBrand}>PetCare</Text>
-                    <TouchableOpacity style={styles.profileIcon} onPress={() => navigation.navigate('Profile')}>
-                        <Ionicons name="person" size={18} color="#fff" />
-                    </TouchableOpacity>
+        <SafeAreaView style={styles.safeArea}>
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                {/* Hero Header */}
+                <View style={styles.heroHeader}>
+                    <View style={styles.heroTopBar}>
+                        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.8}>
+                            <MaterialIcons name="arrow-back" size={24} color="#30628a" />
+                        </TouchableOpacity>
+                        <Text style={styles.heroBrand}>PetCare</Text>
+                        <TouchableOpacity
+                            style={styles.editBtn}
+                            onPress={() => navigation.navigate('EditPet', { petId: pet._id })}
+                            activeOpacity={0.8}
+                        >
+                            <MaterialIcons name="edit" size={20} color="#30628a" />
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Avatar */}
+                    <View style={styles.avatarContainer}>
+                        {pet.profileImage ? (
+                            <Image source={{ uri: pet.profileImage }} style={styles.avatar} />
+                        ) : (
+                            <View style={styles.avatarPlaceholder}>
+                                <MaterialIcons name="pets" size={64} color="#a2d2ff" />
+                            </View>
+                        )}
+                        {pet.isVaccinated && (
+                            <View style={styles.verifiedBadge}>
+                                <MaterialIcons name="check" size={14} color="#ffffff" />
+                            </View>
+                        )}
+                    </View>
+
+                    <Text style={styles.petName}>{pet.name}</Text>
+                    <Text style={styles.petSub}>
+                        {pet.breed || 'Unknown breed'} · {pet.gender || 'Unknown gender'}
+                    </Text>
                 </View>
 
-                {/* Pet Avatar */}
-                <View style={styles.avatarWrap}>
-                    <View style={styles.avatar}>
-                        <MaterialCommunityIcons name="paw" size={50} color={COLORS.primary} />
-                    </View>
-                    <View style={styles.checkBadge}>
-                        <Ionicons name="checkmark" size={14} color="#fff" />
-                    </View>
-                </View>
-
-                <Text style={styles.petName}>{pet.name}</Text>
-                <Text style={styles.petSubtitle}>{pet.breed} • {pet.gender}</Text>
-
-                {/* Action Buttons */}
+                {/* Action Row */}
                 <View style={styles.actionRow}>
                     <TouchableOpacity
-                        style={styles.editBtn}
+                        style={styles.actionBtn}
                         onPress={() => navigation.navigate('EditPet', { petId: pet._id })}
+                        activeOpacity={0.85}
                     >
-                        <Ionicons name="pencil" size={16} color="#fff" />
-                        <Text style={styles.editBtnText}>Edit</Text>
+                        <MaterialIcons name="edit" size={18} color="#ffffff" />
+                        <Text style={styles.actionBtnText}>Edit</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
-                        <Ionicons name="trash" size={16} color="#fff" />
-                        <Text style={styles.deleteBtnText}>Delete</Text>
+                    <TouchableOpacity
+                        style={[styles.actionBtn, styles.actionBtnOutline]}
+                        onPress={handleDelete}
+                        activeOpacity={0.85}
+                    >
+                        <MaterialIcons name="delete" size={18} color="#30628a" />
+                        <Text style={styles.actionBtnOutlineText}>Delete</Text>
                     </TouchableOpacity>
                 </View>
-            </View>
 
-            {/* Stats Row */}
-            <View style={styles.statsRow}>
-                <View style={styles.statCard}>
-                    <MaterialCommunityIcons name="scale-bathroom" size={26} color={COLORS.secondary} />
-                    <Text style={styles.statLabel}>AGE</Text>
-                    <Text style={styles.statValue}>{pet.age} Years</Text>
+                {/* Stat Bento */}
+                <View style={styles.statsGrid}>
+                    <View style={styles.statCard}>
+                        <View style={styles.statIconWrap}><MaterialIcons name="cake" size={22} color="#79573f" /></View>
+                        <Text style={styles.statLabel}>AGE</Text>
+                        <Text style={styles.statValue}>{pet.age > 0 ? `${pet.age} Yr${pet.age !== 1 ? 's' : ''}` : 'Unknown'}</Text>
+                    </View>
+                    <View style={styles.statCard}>
+                        <View style={styles.statIconWrap}><MaterialIcons name="fitness-center" size={22} color="#79573f" /></View>
+                        <Text style={styles.statLabel}>WEIGHT</Text>
+                        <Text style={styles.statValue}>{pet.weight > 0 ? `${pet.weight} kg` : 'Unknown'}</Text>
+                    </View>
                 </View>
-                <View style={styles.statCard}>
-                    <MaterialCommunityIcons name="weight-kilogram" size={26} color={COLORS.secondary} />
-                    <Text style={styles.statLabel}>WEIGHT</Text>
-                    <Text style={styles.statValue}>{pet.weight} kg</Text>
-                </View>
-            </View>
 
-            {/* General Information */}
-            <View style={styles.infoCard}>
-                <View style={styles.infoHeader}>
-                    <Ionicons name="information-circle" size={20} color={COLORS.primary} />
-                    <Text style={styles.infoTitle}>General Information</Text>
-                </View>
-                <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Breed</Text>
-                    <Text style={styles.infoValue}>{pet.breed}</Text>
-                </View>
-                <View style={styles.divider} />
-                <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Color</Text>
-                    <Text style={styles.infoValue}>{pet.color || '—'}</Text>
-                </View>
-                <View style={styles.divider} />
-                <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Microchip</Text>
-                    <Text style={styles.infoValue}>
-                        {pet.isMicrochipped ? (pet.microchipNumber || 'Yes') : 'No'}
+                {/* General Info Card */}
+                <View style={styles.infoCard}>
+                    <Text style={styles.infoCardTitle}>
+                        <MaterialIcons name="info" size={18} color="#79573f" />{'  '}General Information
                     </Text>
+                    {INFO_ROWS(pet).map((row, i) => (
+                        <View key={i} style={[styles.infoRow, i < INFO_ROWS(pet).length - 1 && styles.infoRowBorder]}>
+                            <Text style={styles.infoRowLabel}>{row.label}</Text>
+                            <Text style={styles.infoRowValue}>{row.value}</Text>
+                        </View>
+                    ))}
                 </View>
-                <View style={styles.divider} />
-                <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Insurance</Text>
-                    <Text style={[styles.infoValue, pet.insurance ? { color: '#10b981' } : {}]}>
-                        {pet.insurance || 'N/A'}
+
+                {/* Health Status Card */}
+                <View style={styles.infoCard}>
+                    <Text style={styles.infoCardTitle}>
+                        <MaterialIcons name="medical-services" size={18} color="#79573f" />{'  '}Health Status
                     </Text>
-                </View>
-            </View>
-
-            {/* Health Status */}
-            <View style={styles.infoCard}>
-                <View style={styles.infoHeader}>
-                    <MaterialCommunityIcons name="plus-box" size={20} color={COLORS.secondary} />
-                    <Text style={styles.infoTitle}>Health Status</Text>
-                </View>
-                <TouchableOpacity style={styles.healthRow}>
-                    <View style={styles.healthIcon}>
-                        <MaterialCommunityIcons name="clipboard-text-outline" size={22} color={COLORS.secondary} />
-                    </View>
-                    <View style={{ flex: 1, marginLeft: 12 }}>
-                        <Text style={styles.healthLabel}>
-                            {pet.isVaccinated ? 'Vaccinations Up to Date' : 'Vaccinations Pending'}
-                        </Text>
-                        <Text style={styles.healthSub}>
-                            {pet.isVaccinated ? 'Next: Rabies (Oct 2024)' : 'No records yet'}
-                        </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color="#ccc" />
-                </TouchableOpacity>
-
-                <View style={styles.healthRow}>
-                    <View style={styles.healthIcon}>
-                        <MaterialCommunityIcons name="needle" size={22} color={COLORS.secondary} />
-                    </View>
-                    <View style={{ flex: 1, marginLeft: 12 }}>
-                        <Text style={styles.healthLabel}>
-                            {pet.isNeutered ? 'Neutered / Spayed' : 'Not Neutered'}
-                        </Text>
-                        <Text style={styles.healthSub}>
-                            {pet.isNeutered ? 'Completed' : 'Status: Pending'}
-                        </Text>
+                    <View style={styles.healthRow}>
+                        <View style={styles.healthIconBox}>
+                            <MaterialIcons name="vaccines" size={28} color="#30628a" />
+                        </View>
+                        <View style={styles.healthInfo}>
+                            <Text style={styles.healthTitle}>
+                                {pet.isVaccinated ? 'Vaccinations Up to Date ✓' : 'Vaccination Status Unknown'}
+                            </Text>
+                            <Text style={styles.healthSub}>
+                                {pet.isNeutered ? 'Neutered/Spayed · ' : ''}
+                                {pet.isMicrochipped ? 'Microchipped' : 'Not microchipped'}
+                            </Text>
+                        </View>
+                        <MaterialIcons name="chevron-right" size={20} color="#72787f" />
                     </View>
                 </View>
-            </View>
-        </ScrollView>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: COLORS.lightGray },
-    loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.lightGray },
-
-    // Header
-    header: {
-        backgroundColor: COLORS.primary,
-        paddingHorizontal: 20, paddingTop: 50, paddingBottom: 30,
-        borderBottomLeftRadius: 30, borderBottomRightRadius: 30,
-        alignItems: 'center', ...SHADOWS.header,
+    safeArea: { flex: 1, backgroundColor: '#fff9ec' },
+    scrollContent: { paddingBottom: 80 },
+    heroHeader: {
+        backgroundColor: '#a2d2ff', borderBottomLeftRadius: 20, borderBottomRightRadius: 20,
+        paddingHorizontal: 24, paddingTop: 10, paddingBottom: 40,
+        alignItems: 'center', minHeight: 300,
     },
-    headerTopRow: {
-        flexDirection: 'row', justifyContent: 'space-between',
-        alignItems: 'center', width: '100%', marginBottom: 18,
+    heroTopBar: {
+        width: '100%', flexDirection: 'row', alignItems: 'center',
+        justifyContent: 'space-between', marginBottom: 28,
     },
-    headerBrand: { fontSize: 18, fontWeight: 'bold', color: COLORS.secondary },
-    profileIcon: {
-        width: 36, height: 36, borderRadius: 18,
-        backgroundColor: COLORS.secondary, justifyContent: 'center', alignItems: 'center',
+    backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center' },
+    heroBrand: { fontSize: 20, fontWeight: 'bold', color: '#79573f' },
+    editBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center' },
+    avatarContainer: { position: 'relative', marginBottom: 16 },
+    avatar: { width: 128, height: 128, borderRadius: 64, borderWidth: 4, borderColor: '#ffffff' },
+    avatarPlaceholder: {
+        width: 128, height: 128, borderRadius: 64,
+        backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center',
+        borderWidth: 4, borderColor: 'rgba(255,255,255,0.5)',
     },
-
-    // Avatar
-    avatarWrap: { alignItems: 'center', marginBottom: 10 },
-    avatar: {
-        width: 100, height: 100, borderRadius: 50,
-        backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center',
-        elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1, shadowRadius: 4,
+    verifiedBadge: {
+        position: 'absolute', bottom: 4, right: 4,
+        width: 32, height: 32, borderRadius: 16,
+        backgroundColor: '#79573f', borderWidth: 3, borderColor: '#a2d2ff',
+        alignItems: 'center', justifyContent: 'center',
     },
-    checkBadge: {
-        position: 'absolute', bottom: 2, right: -2,
-        width: 24, height: 24, borderRadius: 12,
-        backgroundColor: COLORS.secondary, justifyContent: 'center', alignItems: 'center',
-        borderWidth: 2, borderColor: '#fff',
+    petName: { fontSize: 40, fontWeight: '800', color: '#79573f', marginBottom: 6 },
+    petSub: { fontSize: 15, color: '#275b82', fontWeight: '500', textTransform: 'capitalize' },
+    actionRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 24, marginTop: 20, marginBottom: 4 },
+    actionBtn: {
+        flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+        backgroundColor: '#30628a', paddingVertical: 13, borderRadius: 20,
+        shadowColor: '#30628a', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 3,
     },
-    petName: { fontSize: 26, fontWeight: 'bold', color: COLORS.textPrimary, marginTop: 6 },
-    petSubtitle: { fontSize: 14, color: COLORS.textMuted, marginTop: 2 },
-
-    // Action Buttons
-    actionRow: { flexDirection: 'row', gap: 14, marginTop: 16 },
-    editBtn: {
-        flexDirection: 'row', alignItems: 'center',
-        backgroundColor: COLORS.secondary, paddingVertical: 10, paddingHorizontal: 22,
-        borderRadius: 20,
-    },
-    editBtnText: { color: '#fff', fontWeight: 'bold', marginLeft: 6, fontSize: 14 },
-    deleteBtn: {
-        flexDirection: 'row', alignItems: 'center',
-        backgroundColor: COLORS.danger, paddingVertical: 10, paddingHorizontal: 22,
-        borderRadius: 20,
-    },
-    deleteBtnText: { color: '#fff', fontWeight: 'bold', marginLeft: 6, fontSize: 14 },
-
-    // Stats
-    statsRow: { flexDirection: 'row', gap: 14, marginHorizontal: 20, marginTop: 20 },
+    actionBtnText: { color: '#ffffff', fontWeight: 'bold', fontSize: 14 },
+    actionBtnOutline: { backgroundColor: '#e9e2d0', shadowOpacity: 0, elevation: 0 },
+    actionBtnOutlineText: { color: '#30628a', fontWeight: 'bold', fontSize: 14 },
+    statsGrid: { flexDirection: 'row', gap: 12, paddingHorizontal: 24, marginTop: 20 },
     statCard: {
-        flex: 1, backgroundColor: COLORS.surface, borderRadius: 16,
-        padding: 16, alignItems: 'center', ...SHADOWS.card,
+        flex: 1, backgroundColor: '#ffffff', borderRadius: 16, padding: 18,
+        borderWidth: 1, borderColor: '#efe8d5',
+        shadowColor: 'rgba(111,78,55,0.04)', shadowOffset: { width: 0, height: 4 }, shadowRadius: 12, shadowOpacity: 1, elevation: 1,
     },
-    statLabel: { fontSize: 11, fontWeight: 'bold', color: COLORS.textMuted, marginTop: 6, letterSpacing: 0.5 },
-    statValue: { fontSize: 16, fontWeight: 'bold', color: COLORS.textPrimary, marginTop: 2 },
-
-    // Info Card
+    statIconWrap: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#faf3e0', alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
+    statLabel: { fontSize: 10, color: '#72787f', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 'bold', marginBottom: 4 },
+    statValue: { fontSize: 20, fontWeight: '800', color: '#1e1c10' },
     infoCard: {
-        backgroundColor: COLORS.surface, marginHorizontal: 20, marginTop: 16,
-        borderRadius: 16, padding: 18, ...SHADOWS.card,
+        backgroundColor: '#ffffff', borderRadius: 16, padding: 20, margin: 24, marginBottom: 0,
+        borderWidth: 1, borderColor: '#efe8d5',
+        shadowColor: 'rgba(111,78,55,0.04)', shadowOffset: { width: 0, height: 4 }, shadowRadius: 12, shadowOpacity: 1, elevation: 1,
     },
-    infoHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
-    infoTitle: { fontSize: 16, fontWeight: 'bold', color: COLORS.textPrimary, marginLeft: 8 },
-    infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 },
-    infoLabel: { fontSize: 14, color: COLORS.textMuted },
-    infoValue: { fontSize: 14, fontWeight: '600', color: COLORS.textPrimary },
-    divider: { height: 1, backgroundColor: COLORS.inputBorder, marginVertical: 2 },
-
-    // Health
-    healthRow: {
-        flexDirection: 'row', alignItems: 'center', paddingVertical: 10,
-    },
-    healthIcon: {
-        width: 40, height: 40, borderRadius: 12,
-        backgroundColor: COLORS.lightGray, justifyContent: 'center', alignItems: 'center',
-    },
-    healthLabel: { fontSize: 14, fontWeight: '600', color: COLORS.textPrimary },
-    healthSub: { fontSize: 12, color: COLORS.textMuted, marginTop: 2 },
+    infoCardTitle: { fontSize: 16, fontWeight: 'bold', color: '#79573f', marginBottom: 16 },
+    infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12 },
+    infoRowBorder: { borderBottomWidth: 1, borderBottomColor: '#faf3e0' },
+    infoRowLabel: { fontSize: 14, color: '#41474e' },
+    infoRowValue: { fontSize: 14, fontWeight: '600', color: '#1e1c10' },
+    healthRow: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: '#faf3e0', padding: 14, borderRadius: 14 },
+    healthIconBox: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center' },
+    healthInfo: { flex: 1 },
+    healthTitle: { fontSize: 14, fontWeight: 'bold', color: '#1e1c10', marginBottom: 2 },
+    healthSub: { fontSize: 12, color: '#41474e', textTransform: 'capitalize' },
 });
