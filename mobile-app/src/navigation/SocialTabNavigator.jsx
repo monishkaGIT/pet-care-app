@@ -88,6 +88,8 @@ function SocialTabBar({ state, descriptors, navigation }) {
 export default function SocialTabNavigator() {
     return (
         <Tab.Navigator
+            initialRouteName="Feed"
+            backBehavior="initialRoute"
             tabBar={(props) => <SocialTabBar {...props} />}
             screenOptions={{ headerShown: false }}
         >

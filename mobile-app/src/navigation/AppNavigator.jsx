@@ -25,9 +25,6 @@ import MyPetsList from '../screens/main/MyPetsList';
 import PetDetailScreen from '../screens/main/PetDetailScreen';
 
 // Social Screens
-import NotificationsScreen from '../screens/main/NotificationsScreen';
-import ExploreScreen from '../screens/social/ExploreScreen';
-import CreatePostScreen from '../screens/social/CreatePostScreen';
 import EditPostScreen from '../screens/social/EditPostScreen';
 
 // Admin Screens
@@ -87,10 +84,7 @@ export default function AppNavigator() {
                         <Stack.Screen name="PetDetail" component={PetDetailScreen} />
                         <Stack.Screen name="EditPet" component={EditPetScreen} />
 
-                        {/* Social Feed Screens */}
-                        <Stack.Screen name="Notifications" component={NotificationsScreen} />
-                        <Stack.Screen name="Explore" component={ExploreScreen} />
-                        <Stack.Screen name="CreatePost" component={CreatePostScreen} />
+                        {/* Social detail screen */}
                         <Stack.Screen name="EditPost" component={EditPostScreen} />
                         <Stack.Screen
                             name="AskPawly"
