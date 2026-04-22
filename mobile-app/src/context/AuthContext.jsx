@@ -12,10 +12,19 @@ export const AuthProvider = ({ children }) => {
         try {
             const storedUser = await AsyncStorage.getItem('userData');
             if (storedUser) {
-                setUser(JSON.parse(storedUser));
+                try {
+                    const response = await api.get('/profile');
+                    setUser(response.data);
+                    await AsyncStorage.setItem('userData', JSON.stringify(response.data));
+                } catch (profileError) {
+                    await AsyncStorage.removeItem('userData');
+                    setUser(null);
+                }
             }
         } catch (e) {
             console.error('Failed to load user', e);
+            await AsyncStorage.removeItem('userData');
+            setUser(null);
         } finally {
             setIsLoading(false);
         }
