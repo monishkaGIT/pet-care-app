@@ -187,7 +187,12 @@ export default function HomeScreen() {
                             onPress={() => navigation.navigate('AskPawly')}
                         >
                             <View style={styles.bentoContent}>
-                                <Text style={styles.bentoTitleTertiary}>Ask Pawly</Text>
+                                <View style={styles.bentoTitleRow}>
+                                    <Text style={styles.bentoTitleTertiary}>Ask Pawly</Text>
+                                    <View style={styles.askPawlyIconBadge}>
+                                        <MaterialIcons name="smart-toy" size={16} color="#1f5f91" />
+                                    </View>
+                                </View>
                                 <Text style={styles.bentoSubTertiary}>Get instant help on food, vaccines, training, and everyday pet care.</Text>
                             </View>
                             <View style={styles.bentoActionTertiary}>
@@ -218,13 +223,23 @@ export default function HomeScreen() {
 
             {/* FAB */}
             {pets.length > 0 && (
-                <TouchableOpacity
-                    style={styles.fab}
-                    activeOpacity={0.85}
-                    onPress={() => navigation.navigate('AddPet')}
-                >
-                    <MaterialIcons name="add" size={28} color="#ffffff" />
-                </TouchableOpacity>
+                <View style={styles.fabStack}>
+                    <TouchableOpacity
+                        style={styles.fab}
+                        activeOpacity={0.85}
+                        onPress={() => navigation.navigate('AddPet')}
+                    >
+                        <MaterialIcons name="add" size={28} color="#ffffff" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.fabChat}
+                        activeOpacity={0.85}
+                        onPress={() => navigation.navigate('AskPawly')}
+                    >
+                        <MaterialIcons name="smart-toy" size={28} color="#ffffff" />
+                    </TouchableOpacity>
+                </View>
             )}
         </SafeAreaView>
     );
@@ -305,11 +320,21 @@ const styles = StyleSheet.create({
     bentoCardTertiary: { backgroundColor: '#eaf6ff' },
     bentoCardSecondary: { backgroundColor: '#ffd1b3' },
     bentoContent: { zIndex: 10 },
+    bentoTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     bentoTitlePrimary: { fontSize: 18, fontWeight: 'bold', color: '#79573f', marginBottom: 6 },
     bentoSubPrimary: { fontSize: 13, color: '#41474e', lineHeight: 19 },
     bentoActionPrimary: { flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 6, zIndex: 10 },
     bentoActionTextPrimary: { color: '#30628a', fontWeight: 'bold', fontSize: 13 },
     bentoTitleTertiary: { fontSize: 18, fontWeight: 'bold', color: '#1f5f91', marginBottom: 6 },
+    askPawlyIconBadge: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(31,95,145,0.12)',
+        marginBottom: 6,
+    },
     bentoSubTertiary: { fontSize: 13, color: '#2f4f66', lineHeight: 19 },
     bentoActionTertiary: { flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 6, zIndex: 10 },
     bentoActionTextTertiary: { color: '#1f5f91', fontWeight: 'bold', fontSize: 13 },
@@ -319,11 +344,30 @@ const styles = StyleSheet.create({
     bentoActionTextSecondary: { color: '#7a5840', fontWeight: 'bold', fontSize: 13 },
     bentoBgIcon: { position: 'absolute', bottom: -20, right: -20, zIndex: 1 },
     // FAB
+    fabStack: {
+        position: 'absolute',
+        bottom: 28,
+        right: 24,
+        alignItems: 'center',
+        gap: 10,
+    },
     fab: {
-        position: 'absolute', bottom: 100, right: 24,
         width: 56, height: 56, borderRadius: 28,
         backgroundColor: '#D4A017',
         alignItems: 'center', justifyContent: 'center',
         shadowColor: '#D4A017', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 10, elevation: 8,
+    },
+    fabChat: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#1f5f91',
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#1f5f91',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.28,
+        shadowRadius: 8,
+        elevation: 6,
     },
 });

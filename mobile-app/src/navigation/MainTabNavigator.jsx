@@ -52,7 +52,7 @@ export default function MainTabNavigator() {
         >
             <Tab.Screen name="MyPets" component={HomeScreen} options={{ tabBarLabel: 'MyPets' }} />
             <Tab.Screen name="Services" component={ServicesScreen} options={{ tabBarLabel: 'Services' }} />
-            {/* Social now routes to the nested Social Tab Navigator */}
+            {/* Social routes into its own nested tab flow (Feed/Explore/Create/Alerts/Profile) */}
             <Tab.Screen
                 name="Social"
                 component={SocialTabNavigator}

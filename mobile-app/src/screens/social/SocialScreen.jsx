@@ -230,6 +230,11 @@ export default function SocialScreen({ navigation }) {
     };
 
     const handleEdit = (post) => {
+        const parentNav = navigation.getParent();
+        if (parentNav) {
+            parentNav.navigate('EditPost', { post });
+            return;
+        }
         navigation.navigate('EditPost', { post });
     };
 
@@ -239,7 +244,17 @@ export default function SocialScreen({ navigation }) {
             'Are you sure you want to go back to main home?',
             [
                 { text: 'Cancel', style: 'cancel' },
-                { text: 'Yes', onPress: () => navigation.navigate('MyPets') },
+                {
+                    text: 'Yes',
+                    onPress: () => {
+                        const parentNav = navigation.getParent();
+                        if (parentNav) {
+                            parentNav.navigate('MyPets');
+                        } else {
+                            navigation.navigate('MyPets');
+                        }
+                    },
+                },
             ]
         );
     };
@@ -257,7 +272,7 @@ export default function SocialScreen({ navigation }) {
                 <TouchableOpacity
                     style={styles.headerBtn}
                     activeOpacity={0.8}
-                    onPress={() => navigation.navigate('CreatePost')}
+                    onPress={() => navigation.navigate('Create')}
                 >
                     <MaterialIcons name="add-circle" size={24} color="#30628a" />
                 </TouchableOpacity>
@@ -277,7 +292,7 @@ export default function SocialScreen({ navigation }) {
             <Text style={styles.emptySubtitle}>Be the first to share a pet moment!</Text>
             <TouchableOpacity
                 style={styles.emptyBtn}
-                onPress={() => navigation.navigate('CreatePost')}
+                onPress={() => navigation.navigate('Create')}
             >
                 <MaterialIcons name="add" size={18} color="#ffffff" />
                 <Text style={styles.emptyBtnText}>Create Post</Text>
