@@ -28,4 +28,8 @@ petApi.interceptors.request.use(authInterceptor, (error) => Promise.reject(error
 export const postApi = axios.create({ baseURL: `${BASE_URL}/posts` });
 postApi.interceptors.request.use(authInterceptor, (error) => Promise.reject(error));
 
+// Feedbacks API
+export const feedbackApi = axios.create({ baseURL: `${BASE_URL}/feedbacks` });
+feedbackApi.interceptors.request.use(authInterceptor, (error) => Promise.reject(error));
+
 export default api;
