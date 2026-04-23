@@ -23,6 +23,8 @@ import EditPetScreen from '../screens/main/EditPetScreen';
 import MyPetsList from '../screens/main/MyPetsList';
 
 import PetDetailScreen from '../screens/main/PetDetailScreen';
+import NewHealthRecordScreen from '../screens/main/NewHealthRecordScreen';
+import HealthRecordDetailScreen from '../screens/main/HealthRecordDetailScreen';
 
 // Social Screens
 import EditPostScreen from '../screens/social/EditPostScreen';
@@ -83,6 +85,10 @@ export default function AppNavigator() {
                         <Stack.Screen name="MyPetsList" component={MyPetsList} />
                         <Stack.Screen name="PetDetail" component={PetDetailScreen} />
                         <Stack.Screen name="EditPet" component={EditPetScreen} />
+
+                        {/* Health Record Screens */}
+                        <Stack.Screen name="NewHealthRecord" component={NewHealthRecordScreen} />
+                        <Stack.Screen name="HealthRecordDetail" component={HealthRecordDetailScreen} />
 
                         {/* Social detail screen */}
                         <Stack.Screen name="EditPost" component={EditPostScreen} />

@@ -32,4 +32,8 @@ postApi.interceptors.request.use(authInterceptor, (error) => Promise.reject(erro
 export const feedbackApi = axios.create({ baseURL: `${BASE_URL}/feedbacks` });
 feedbackApi.interceptors.request.use(authInterceptor, (error) => Promise.reject(error));
 
+// Health API (base for pet health — petId is appended at call-site)
+export const healthApi = axios.create({ baseURL: `${BASE_URL}/pets` });
+healthApi.interceptors.request.use(authInterceptor, (error) => Promise.reject(error));
+
 export default api;
