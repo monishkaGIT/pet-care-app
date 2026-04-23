@@ -16,6 +16,7 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, SHADOWS } from '../../constants/theme';
+import { createService, updateService } from '../../api/serviceApi';
 
 const CATEGORY_OPTIONS = ['Grooming', 'Boarding', 'Medical Care', 'Training', 'Walking'];
 
@@ -25,16 +26,21 @@ export default function AddNewServiceScreen({ navigation, route }) {
 
     const [serviceName, setServiceName] = useState(existingService?.name || '');
     const [selectedCategory, setSelectedCategory] = useState(existingService?.category || 'Boarding');
-    const [price, setPrice] = useState(existingService?.price?.replace('$', '') || '');
+    const [price, setPrice] = useState(existingService?.price?.toString() || '');
     const [description, setDescription] = useState(existingService?.description || '');
     const [isActive, setIsActive] = useState(existingService?.isActive ?? true);
     const [showCategoryPicker, setShowCategoryPicker] = useState(false);
-    const [imageUri, setImageUri] = useState(existingService?.imageUri || null);
+    const [imageUri, setImageUri] = useState(existingService?.imageUrl || null);
+    const [imageFile, setImageFile] = useState(null); // The actual file object for upload
+    const [imageRemoved, setImageRemoved] = useState(false); // Track if user explicitly removed the image
     const [imageLoading, setImageLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
+
+    // Field-level errors
+    const [errors, setErrors] = useState({});
 
     // ── Image Picker ────────────────────────────────────────────────
     const pickImage = async () => {
-        // Request permission
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
             Alert.alert(
@@ -52,29 +58,130 @@ export default function AddNewServiceScreen({ navigation, route }) {
         });
 
         if (!result.canceled && result.assets && result.assets.length > 0) {
-            setImageUri(result.assets[0].uri);
+            const asset = result.assets[0];
+            setImageUri(asset.uri);
+            // Prepare file object for FormData upload
+            setImageFile({
+                uri: asset.uri,
+                type: asset.mimeType || 'image/jpeg',
+                name: asset.fileName || `service_${Date.now()}.jpg`,
+            });
+            setImageRemoved(false); // Reset remove flag since new image was picked
+            // Clear image error
+            setErrors((prev) => ({ ...prev, image: null }));
         }
     };
 
     const removeImage = () => {
         Alert.alert('Remove Image', 'Are you sure you want to remove this image?', [
             { text: 'Cancel', style: 'cancel' },
-            { text: 'Remove', style: 'destructive', onPress: () => setImageUri(null) },
+            {
+                text: 'Remove',
+                style: 'destructive',
+                onPress: () => {
+                    setImageUri(null);
+                    setImageFile(null);
+                    setImageRemoved(true);
+                },
+            },
         ]);
     };
 
-    const handleSave = () => {
+    // ── Client-Side Validation ──────────────────────────────────────
+    const validate = () => {
+        const newErrors = {};
+
         if (!serviceName.trim()) {
-            Alert.alert('Validation', 'Please enter a service name.');
-            return;
+            newErrors.name = 'Service name is required';
+        } else if (serviceName.trim().length < 3) {
+            newErrors.name = 'Service name must be at least 3 characters';
         }
+
+        if (!description.trim()) {
+            newErrors.description = 'Description is required';
+        } else if (description.trim().length < 10) {
+            newErrors.description = 'Description must be at least 10 characters';
+        }
+
+        const priceNum = parseFloat(price);
+        if (!price || price.trim() === '') {
+            newErrors.price = 'Price is required';
+        } else if (isNaN(priceNum)) {
+            newErrors.price = 'Price must be a valid number';
+        } else if (priceNum < 0) {
+            newErrors.price = 'Price cannot be negative';
+        }
+
+        // Image is required for new services.
+        // For edits: required if the user explicitly removed the existing image without picking a new one.
         if (!imageUri) {
-            Alert.alert('Validation', 'Please upload a service image.');
-            return;
+            if (!existingService || imageRemoved) {
+                newErrors.image = 'Please upload a service image';
+            }
         }
-        Alert.alert('Success', `Service "${serviceName}" has been saved.`, [
-            { text: 'OK', onPress: () => navigation.goBack() },
-        ]);
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    // ── Save Handler ────────────────────────────────────────────────
+    const handleSave = async () => {
+        if (!validate()) return;
+
+        setSaving(true);
+        try {
+            const serviceData = {
+                name: serviceName.trim(),
+                category: selectedCategory,
+                description: description.trim(),
+                price: parseFloat(price),
+                isActive,
+            };
+
+            // Attach image only if a new one was picked
+            if (imageFile) {
+                serviceData.image = imageFile;
+            }
+
+            // Signal backend to remove old image if user explicitly cleared it
+            if (imageRemoved && !imageFile) {
+                serviceData.removeImage = true;
+            }
+
+            if (existingService?._id) {
+                // Update existing service
+                await updateService(existingService._id, serviceData);
+                Alert.alert('Success', `Service "${serviceName}" updated successfully!`, [
+                    { text: 'OK', onPress: () => navigation.goBack() },
+                ]);
+            } else {
+                // Create new service
+                if (!imageFile) {
+                    Alert.alert('Validation', 'Please upload a service image.');
+                    setSaving(false);
+                    return;
+                }
+                await createService(serviceData);
+                Alert.alert('Success', `Service "${serviceName}" created successfully!`, [
+                    { text: 'OK', onPress: () => navigation.goBack() },
+                ]);
+            }
+        } catch (error) {
+            const apiErrors = error.response?.data?.errors;
+            if (apiErrors && Array.isArray(apiErrors)) {
+                // Map API errors to field-level errors
+                const fieldErrors = {};
+                apiErrors.forEach((e) => {
+                    fieldErrors[e.field] = e.message;
+                });
+                setErrors(fieldErrors);
+                Alert.alert('Validation Failed', apiErrors.map(e => e.message).join('\n'));
+            } else {
+                Alert.alert('Error', error.response?.data?.message || 'Failed to save service');
+            }
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
@@ -131,7 +238,7 @@ export default function AddNewServiceScreen({ navigation, route }) {
                                         onLoadEnd={() => setImageLoading(false)}
                                     />
                                     {imageLoading && (
-                                        <View style={styles.imageLoadingOverlay}>
+                                        <View style={styles.imageLoadingOverlay} pointerEvents="none">
                                             <ActivityIndicator size="large" color={COLORS.primary} />
                                         </View>
                                     )}
@@ -155,7 +262,7 @@ export default function AddNewServiceScreen({ navigation, route }) {
                                 </View>
                             ) : (
                                 <TouchableOpacity
-                                    style={styles.uploadArea}
+                                    style={[styles.uploadArea, errors.image && styles.uploadAreaError]}
                                     activeOpacity={0.7}
                                     onPress={pickImage}
                                 >
@@ -168,18 +275,20 @@ export default function AddNewServiceScreen({ navigation, route }) {
                                     </Text>
                                 </TouchableOpacity>
                             )}
+                            {errors.image && <Text style={styles.errorText}>{errors.image}</Text>}
                         </View>
 
                         {/* Service Name */}
                         <View style={styles.fieldGroup}>
                             <Text style={styles.label}>Service Name</Text>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, errors.name && styles.inputError]}
                                 placeholder="e.g., Luxury Dog Boarding"
                                 placeholderTextColor={COLORS.outlineVariant}
                                 value={serviceName}
-                                onChangeText={setServiceName}
+                                onChangeText={(v) => { setServiceName(v); setErrors((p) => ({ ...p, name: null })); }}
                             />
+                            {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
                         </View>
 
                         {/* Category + Price row */}
@@ -229,14 +338,15 @@ export default function AddNewServiceScreen({ navigation, route }) {
                                 <View style={styles.priceInputWrapper}>
                                     <Text style={styles.dollarSign}>$</Text>
                                     <TextInput
-                                        style={[styles.input, { paddingLeft: 30 }]}
+                                        style={[styles.input, { paddingLeft: 30 }, errors.price && styles.inputError]}
                                         placeholder="0.00"
                                         placeholderTextColor={COLORS.outlineVariant}
                                         keyboardType="decimal-pad"
                                         value={price}
-                                        onChangeText={setPrice}
+                                        onChangeText={(v) => { setPrice(v); setErrors((p) => ({ ...p, price: null })); }}
                                     />
                                 </View>
+                                {errors.price && <Text style={styles.errorText}>{errors.price}</Text>}
                             </View>
                         </View>
 
@@ -244,15 +354,16 @@ export default function AddNewServiceScreen({ navigation, route }) {
                         <View style={styles.fieldGroup}>
                             <Text style={styles.label}>Description</Text>
                             <TextInput
-                                style={[styles.input, styles.textArea]}
+                                style={[styles.input, styles.textArea, errors.description && styles.inputError]}
                                 placeholder="Describe the premium experience the pet will receive..."
                                 placeholderTextColor={COLORS.outlineVariant}
                                 multiline
                                 numberOfLines={4}
                                 textAlignVertical="top"
                                 value={description}
-                                onChangeText={setDescription}
+                                onChangeText={(v) => { setDescription(v); setErrors((p) => ({ ...p, description: null })); }}
                             />
+                            {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
                         </View>
 
                         {/* Availability Toggle */}
@@ -285,15 +396,23 @@ export default function AddNewServiceScreen({ navigation, route }) {
                                 style={styles.cancelButton}
                                 activeOpacity={0.7}
                                 onPress={() => navigation.goBack()}
+                                disabled={saving}
                             >
                                 <Text style={styles.cancelButtonText}>Cancel</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={styles.saveButton}
+                                style={[styles.saveButton, saving && { opacity: 0.6 }]}
                                 activeOpacity={0.85}
                                 onPress={handleSave}
+                                disabled={saving}
                             >
-                                <Text style={styles.saveButtonText}>Save Service</Text>
+                                {saving ? (
+                                    <ActivityIndicator size="small" color="#fff" />
+                                ) : (
+                                    <Text style={styles.saveButtonText}>
+                                        {existingService ? 'Update Service' : 'Save Service'}
+                                    </Text>
+                                )}
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -359,6 +478,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         backgroundColor: COLORS.surfaceContainerLow,
     },
+    uploadAreaError: {
+        borderColor: COLORS.error,
+    },
     uploadIconCircle: {
         width: 64,
         height: 64,
@@ -402,12 +524,14 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 10,
         right: 10,
-        width: 32,
-        height: 32,
-        borderRadius: 16,
+        width: 36,
+        height: 36,
+        borderRadius: 18,
         backgroundColor: 'rgba(0,0,0,0.55)',
         alignItems: 'center',
         justifyContent: 'center',
+        zIndex: 10,
+        elevation: 10,
     },
     changeImageBtn: {
         position: 'absolute',
@@ -420,6 +544,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 14,
         paddingVertical: 8,
         borderRadius: 999,
+        zIndex: 10,
+        elevation: 10,
     },
     changeImageBtnText: {
         fontSize: 12,
@@ -437,6 +563,17 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: COLORS.onSurfaceVariant,
         fontWeight: '500',
+    },
+    inputError: {
+        borderWidth: 1,
+        borderColor: COLORS.error,
+    },
+    errorText: {
+        fontSize: 12,
+        color: COLORS.error,
+        marginTop: 4,
+        marginLeft: 2,
+        fontWeight: '600',
     },
     textArea: { minHeight: 110, paddingTop: 16 },
 

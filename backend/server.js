@@ -22,6 +22,7 @@ app.use(cors());
 
 // Mount routers
 app.use('/api/users', require('./routes/authRoutes'));
+app.use('/api/services', require('./routes/serviceRoutes'));
 app.use('/api/pets', require('./routes/petRoutes'));
 app.use('/api/posts', require('./routes/postRoutes'));
 app.use('/api/ask-pawly', require('./routes/askPawlyRoutes'));

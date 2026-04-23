@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     View,
     Text,
@@ -6,70 +6,16 @@ import {
     ScrollView,
     TouchableOpacity,
     Dimensions,
+    ActivityIndicator,
+    Alert,
+    RefreshControl,
+    Image,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
+import { fetchServices, fetchServiceStats } from '../../api/serviceApi';
 
 const { width } = Dimensions.get('window');
-
-// ── Dummy data (mirrors the HTML) ──────────────────────────────────
-const CATEGORIES = ['All Services', 'Grooming', 'Medical', 'Boarding', 'Training'];
-
-const SERVICES = [
-    {
-        id: '1',
-        name: 'Full Spa Experience',
-        category: 'Grooming',
-        description: 'Deep cleaning, nail trimming, and styling tailored to specific breed standards.',
-        priceLabel: 'Starting at',
-        price: '$65.00',
-        icon: 'content-cut',
-    },
-    {
-        id: '2',
-        name: 'Luxury Suite Stay',
-        category: 'Boarding',
-        description: 'Climate controlled private rooms with 24/7 monitoring and daily play sessions.',
-        priceLabel: 'Daily Rate',
-        price: '$45.00',
-        icon: 'home',
-    },
-    {
-        id: '3',
-        name: 'Behavioral Therapy',
-        category: 'Training',
-        description: 'Professional one-on-one sessions focusing on positive reinforcement and socialization techniques.',
-        priceLabel: 'Per Session',
-        price: '$120.00',
-        icon: 'sports',
-        features: ['Puppy Foundation', 'Advanced Obedience'],
-    },
-    {
-        id: '4',
-        name: 'Wellness Exam',
-        category: 'Medical',
-        description: 'Comprehensive health screening, vaccinations, and parasite prevention consultations.',
-        priceLabel: 'Exam Fee',
-        price: '$80.00',
-        icon: 'medical-services',
-    },
-    {
-        id: '5',
-        name: 'Urban Expedition',
-        category: 'Exercise',
-        description: 'Energetic 60-minute neighborhood walks with GPS tracking and photo updates for owners.',
-        priceLabel: 'Per Walk',
-        price: '$30.00',
-        icon: 'directions-walk',
-    },
-];
-
-const STATS = [
-    { icon: 'bolt', value: '8', label: 'Express' },
-    { icon: 'verified-user', value: '4', label: 'Premium' },
-    { icon: 'group-add', value: '2', label: 'Group' },
-    { icon: 'star', value: '12', label: 'Certified' },
-];
 
 // ── Components ─────────────────────────────────────────────────────
 
@@ -85,13 +31,37 @@ function FilterChip({ label, active, onPress }) {
     );
 }
 
-function ServiceCard({ item, onEdit }) {
+// Map category names to MaterialIcons
+const CATEGORY_ICONS = {
+    'Grooming': 'content-cut',
+    'Boarding': 'home',
+    'Medical Care': 'medical-services',
+    'Training': 'sports',
+    'Walking': 'directions-walk',
+};
+
+function ServiceCard({ item, onPress }) {
+    const iconName = CATEGORY_ICONS[item.category] || 'pets';
+
     return (
-        <View style={[styles.card, SHADOWS.editorial]}>
+        <TouchableOpacity
+            style={[styles.card, SHADOWS.editorial]}
+            activeOpacity={0.9}
+            onPress={() => onPress(item)}
+        >
+            {/* Service Image */}
+            {item.imageUrl ? (
+                <Image
+                    source={{ uri: item.imageUrl }}
+                    style={styles.cardImage}
+                    resizeMode="cover"
+                />
+            ) : null}
+
             {/* Header row */}
             <View style={styles.cardHeader}>
                 <View style={styles.iconCircle}>
-                    <MaterialIcons name={item.icon} size={28} color={COLORS.primary} />
+                    <MaterialIcons name={iconName} size={28} color={COLORS.primary} />
                 </View>
                 <View style={styles.categoryBadge}>
                     <Text style={styles.categoryBadgeText}>{item.category}</Text>
@@ -100,39 +70,82 @@ function ServiceCard({ item, onEdit }) {
 
             {/* Body */}
             <Text style={styles.cardTitle}>{item.name}</Text>
-            <Text style={styles.cardDescription}>{item.description}</Text>
+            <Text style={styles.cardDescription} numberOfLines={3}>{item.description}</Text>
 
-            {/* Optional features list */}
-            {item.features && item.features.map((f, i) => (
-                <View key={i} style={styles.featureRow}>
-                    <MaterialIcons name="check-circle" size={18} color={COLORS.primary} />
-                    <Text style={styles.featureText}>{f}</Text>
-                </View>
-            ))}
+            {/* Status indicator */}
+            <View style={styles.statusRow}>
+                <View style={[styles.statusDot, { backgroundColor: item.isActive ? '#10b981' : COLORS.error }]} />
+                <Text style={styles.statusText}>{item.isActive ? 'Active' : 'Inactive'}</Text>
+            </View>
 
             {/* Footer */}
             <View style={styles.cardFooter}>
                 <View>
-                    <Text style={styles.priceLabel}>{item.priceLabel}</Text>
-                    <Text style={styles.priceValue}>{item.price}</Text>
+                    <Text style={styles.priceLabel}>Price</Text>
+                    <Text style={styles.priceValue}>${item.price?.toFixed(2)}</Text>
                 </View>
-                <TouchableOpacity style={styles.editButton} activeOpacity={0.7} onPress={() => onEdit(item)}>
-                    <MaterialIcons name="edit" size={20} color={COLORS.secondary} />
-                </TouchableOpacity>
+                <MaterialIcons name="chevron-right" size={24} color={COLORS.outline} />
             </View>
-        </View>
+        </TouchableOpacity>
     );
 }
 
 // ── Screen ─────────────────────────────────────────────────────────
 
 export default function ManageServicesScreen({ navigation }) {
+    const [services, setServices] = useState([]);
+    const [stats, setStats] = useState(null);
     const [activeFilter, setActiveFilter] = useState('All Services');
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [error, setError] = useState(null);
+
+    // Derive unique categories from fetched services
+    const categories = ['All Services', ...new Set(services.map((s) => s.category))];
+
+    const loadData = useCallback(async () => {
+        try {
+            setError(null);
+            const [servicesData, statsData] = await Promise.all([
+                fetchServices(),
+                fetchServiceStats().catch(() => null), // Stats may fail for non-admin
+            ]);
+            setServices(servicesData);
+            if (statsData) setStats(statsData);
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to load services');
+            Alert.alert('Error', err.response?.data?.message || 'Failed to load services');
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('focus', () => {
+            loadData();
+        });
+        return unsubscribe;
+    }, [navigation, loadData]);
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        loadData();
+    };
 
     const filteredServices =
         activeFilter === 'All Services'
-            ? SERVICES
-            : SERVICES.filter((s) => s.category === activeFilter);
+            ? services
+            : services.filter((s) => s.category === activeFilter);
+
+    if (loading) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color={COLORS.primary} />
+                <Text style={{ marginTop: 12, color: COLORS.onSurfaceVariant }}>Loading services...</Text>
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -152,7 +165,11 @@ export default function ManageServicesScreen({ navigation }) {
                 </TouchableOpacity>
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}
+            >
                 {/* ── Hero / Header ── */}
                 <View style={styles.heroSection}>
                     <Text style={styles.heroTitle}>Service Catalog</Text>
@@ -175,7 +192,7 @@ export default function ManageServicesScreen({ navigation }) {
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.chipRow}
                 >
-                    {CATEGORIES.map((cat) => (
+                    {categories.map((cat) => (
                         <FilterChip
                             key={cat}
                             label={cat}
@@ -185,51 +202,72 @@ export default function ManageServicesScreen({ navigation }) {
                     ))}
                 </ScrollView>
 
+                {/* ── Empty state ── */}
+                {filteredServices.length === 0 && !loading && (
+                    <View style={styles.emptyState}>
+                        <MaterialIcons name="search-off" size={48} color={COLORS.outlineVariant} />
+                        <Text style={styles.emptyStateText}>No services found</Text>
+                        <Text style={styles.emptyStateSubtext}>
+                            {activeFilter !== 'All Services'
+                                ? `No services in "${activeFilter}" category`
+                                : 'Tap "Add New Service" to create your first listing'}
+                        </Text>
+                    </View>
+                )}
+
                 {/* ── Service cards ── */}
                 {filteredServices.map((item) => (
                     <ServiceCard
-                        key={item.id}
+                        key={item._id}
                         item={item}
-                        onEdit={() => navigation.navigate('ServiceDetails', { service: item })}
+                        onPress={() => navigation.navigate('ServiceDetails', { serviceId: item._id })}
                     />
                 ))}
 
                 {/* ── Stats section ── */}
-                <View style={styles.statsWrapper}>
-                    {/* Dark info card */}
-                    <View style={[styles.statsInfoCard, SHADOWS.editorial]}>
-                        <MaterialIcons
-                            name="pets"
-                            size={120}
-                            color="rgba(255,255,255,0.08)"
-                            style={styles.statsWatermark}
-                        />
-                        <Text style={styles.statsInfoLabel}>Service Performance</Text>
-                        <Text style={styles.statsInfoValue}>Total Active Services: 12</Text>
-                        <View style={styles.statsInfoRow}>
-                            <View>
-                                <Text style={styles.statsInfoSubLabel}>Revenue Boost</Text>
-                                <Text style={styles.statsInfoSubValue}>+14%</Text>
-                            </View>
-                            <View style={styles.statsInfoDivider} />
-                            <View>
-                                <Text style={styles.statsInfoSubLabel}>Customer Satisfaction</Text>
-                                <Text style={styles.statsInfoSubValue}>4.9/5</Text>
+                {stats && (
+                    <View style={styles.statsWrapper}>
+                        {/* Dark info card */}
+                        <View style={[styles.statsInfoCard, SHADOWS.editorial]}>
+                            <MaterialIcons
+                                name="pets"
+                                size={120}
+                                color="rgba(255,255,255,0.08)"
+                                style={styles.statsWatermark}
+                            />
+                            <Text style={styles.statsInfoLabel}>Service Performance</Text>
+                            <Text style={styles.statsInfoValue}>Total Active Services: {stats.activeServices}</Text>
+                            <View style={styles.statsInfoRow}>
+                                <View>
+                                    <Text style={styles.statsInfoSubLabel}>Total Services</Text>
+                                    <Text style={styles.statsInfoSubValue}>{stats.totalServices}</Text>
+                                </View>
+                                <View style={styles.statsInfoDivider} />
+                                <View>
+                                    <Text style={styles.statsInfoSubLabel}>Inactive</Text>
+                                    <Text style={styles.statsInfoSubValue}>{stats.inactiveServices}</Text>
+                                </View>
                             </View>
                         </View>
-                    </View>
 
-                    {/* Small stat tiles */}
-                    <View style={styles.statTileRow}>
-                        {STATS.map((s, i) => (
-                            <View key={i} style={styles.statTile}>
-                                <MaterialIcons name={s.icon} size={22} color={COLORS.primary} />
-                                <Text style={styles.statTileValue}>{s.value}</Text>
-                                <Text style={styles.statTileLabel}>{s.label}</Text>
+                        {/* Category stat tiles */}
+                        {stats.categoryCounts && stats.categoryCounts.length > 0 && (
+                            <View style={styles.statTileRow}>
+                                {stats.categoryCounts.map((cat, i) => (
+                                    <View key={i} style={styles.statTile}>
+                                        <MaterialIcons
+                                            name={CATEGORY_ICONS[cat._id] || 'pets'}
+                                            size={22}
+                                            color={COLORS.primary}
+                                        />
+                                        <Text style={styles.statTileValue}>{cat.count}</Text>
+                                        <Text style={styles.statTileLabel}>{cat._id}</Text>
+                                    </View>
+                                ))}
                             </View>
-                        ))}
+                        )}
                     </View>
-                </View>
+                )}
             </ScrollView>
         </View>
     );
@@ -294,14 +332,24 @@ const styles = StyleSheet.create({
     chipText: { fontSize: 13, fontWeight: '600', color: COLORS.secondary },
     chipTextActive: { color: '#fff' },
 
+    /* Empty state */
+    emptyState: { alignItems: 'center', paddingVertical: 40 },
+    emptyStateText: { fontSize: 18, fontWeight: '700', color: COLORS.secondary, marginTop: 12 },
+    emptyStateSubtext: { fontSize: 13, color: COLORS.onSurfaceVariant, marginTop: 4, textAlign: 'center' },
+
     /* Service cards */
     card: {
         backgroundColor: COLORS.surfaceContainerLowest,
         borderRadius: 16,
-        padding: 24,
+        padding: 0,
         marginBottom: 20,
+        overflow: 'hidden',
     },
-    cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
+    cardImage: {
+        width: '100%',
+        height: 180,
+    },
+    cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, paddingHorizontal: 24, paddingTop: 20 },
     iconCircle: {
         width: 52,
         height: 52,
@@ -317,30 +365,24 @@ const styles = StyleSheet.create({
         borderRadius: 12,
     },
     categoryBadgeText: { fontSize: 10, fontWeight: '800', color: COLORS.onSecondaryContainer, textTransform: 'uppercase', letterSpacing: 1.5 },
-    cardTitle: { fontSize: 22, fontWeight: '800', color: COLORS.secondary, marginBottom: 6 },
-    cardDescription: { fontSize: 13, color: COLORS.onSurfaceVariant, lineHeight: 20, marginBottom: 10 },
-    featureRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
-    featureText: { fontSize: 13, color: COLORS.onSurfaceVariant },
+    cardTitle: { fontSize: 22, fontWeight: '800', color: COLORS.secondary, marginBottom: 6, paddingHorizontal: 24 },
+    cardDescription: { fontSize: 13, color: COLORS.onSurfaceVariant, lineHeight: 20, marginBottom: 10, paddingHorizontal: 24 },
+    statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 24, marginBottom: 8 },
+    statusDot: { width: 8, height: 8, borderRadius: 4 },
+    statusText: { fontSize: 12, fontWeight: '600', color: COLORS.onSurfaceVariant },
     cardFooter: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginTop: 18,
+        marginTop: 10,
         paddingTop: 18,
+        paddingBottom: 20,
+        paddingHorizontal: 24,
         borderTopWidth: 1,
         borderTopColor: COLORS.surfaceContainerLow,
     },
     priceLabel: { fontSize: 10, fontWeight: '700', color: COLORS.outline, textTransform: 'uppercase', letterSpacing: 0.5 },
     priceValue: { fontSize: 24, fontWeight: '800', color: COLORS.secondary },
-    editButton: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: COLORS.surfaceContainerHigh,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-
     /* Stats */
     statsWrapper: { marginTop: 32 },
     statsInfoCard: {
