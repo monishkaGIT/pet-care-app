@@ -112,13 +112,7 @@ export default function AddNewServiceScreen({ navigation, route }) {
             newErrors.price = 'Price cannot be negative';
         }
 
-        // Image is required for new services.
-        // For edits: required if the user explicitly removed the existing image without picking a new one.
-        if (!imageUri) {
-            if (!existingService || imageRemoved) {
-                newErrors.image = 'Please upload a service image';
-            }
-        }
+        // Image is optional.
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -156,17 +150,13 @@ export default function AddNewServiceScreen({ navigation, route }) {
                 ]);
             } else {
                 // Create new service
-                if (!imageFile) {
-                    Alert.alert('Validation', 'Please upload a service image.');
-                    setSaving(false);
-                    return;
-                }
                 await createService(serviceData);
                 Alert.alert('Success', `Service "${serviceName}" created successfully!`, [
                     { text: 'OK', onPress: () => navigation.goBack() },
                 ]);
             }
         } catch (error) {
+            console.error('Service save error:', error.response?.data ?? error.message ?? error);
             const apiErrors = error.response?.data?.errors;
             if (apiErrors && Array.isArray(apiErrors)) {
                 // Map API errors to field-level errors
@@ -175,9 +165,10 @@ export default function AddNewServiceScreen({ navigation, route }) {
                     fieldErrors[e.field] = e.message;
                 });
                 setErrors(fieldErrors);
-                Alert.alert('Validation Failed', apiErrors.map(e => e.message).join('\n'));
+                Alert.alert('Validation Failed', apiErrors.map((e) => e.message).join('\n'));
             } else {
-                Alert.alert('Error', error.response?.data?.message || 'Failed to save service');
+                const errorMessage = error.response?.data?.message || error.message || 'Failed to save service';
+                Alert.alert('Error', errorMessage);
             }
         } finally {
             setSaving(false);
@@ -228,7 +219,7 @@ export default function AddNewServiceScreen({ navigation, route }) {
                     <View style={[styles.formCard, SHADOWS.editorial]}>
                         {/* ── Service Image Upload ── */}
                         <View style={styles.fieldGroup}>
-                            <Text style={styles.label}>Service Image</Text>
+                            <Text style={styles.label}>Service Image (Optional)</Text>
                             {imageUri ? (
                                 <View style={styles.imagePreviewContainer}>
                                     <Image
@@ -271,7 +262,7 @@ export default function AddNewServiceScreen({ navigation, route }) {
                                     </View>
                                     <Text style={styles.uploadTitle}>Tap to Upload Service Image</Text>
                                     <Text style={styles.uploadSubtitle}>
-                                        JPG, PNG or WEBP • Max 5 MB
+                                        Optional — JPG, PNG or WEBP • Max 5 MB
                                     </Text>
                                 </TouchableOpacity>
                             )}

@@ -1,5 +1,5 @@
 const Service = require("../models/Service");
-const cloudinary = require("../config/cloudinary");
+const { cloudinary, isCloudinaryConfigured } = require("../config/cloudinary");
 const { validateObjectId, validateServiceInput } = require("../middleware/validateRequest");
 
 /**
@@ -7,6 +7,10 @@ const { validateObjectId, validateServiceInput } = require("../middleware/valida
  */
 const uploadToCloudinary = (fileBuffer, folder = "petcare/services") => {
     return new Promise((resolve, reject) => {
+        if (!isCloudinaryConfigured) {
+            return reject(new Error("Cloudinary is not configured"));
+        }
+
         const stream = cloudinary.uploader.upload_stream(
             {
                 folder,
@@ -103,11 +107,6 @@ exports.createService = async (req, res) => {
         // Validate input fields
         const errors = validateServiceInput(req.body);
 
-        // Validate image file
-        if (!req.file) {
-            errors.push({ field: "image", message: "Service image is required" });
-        }
-
         if (errors.length > 0) {
             return res.status(400).json({ message: "Validation failed", errors });
         }
@@ -120,8 +119,18 @@ exports.createService = async (req, res) => {
             return res.status(400).json({ message: "A service with this name already exists" });
         }
 
-        // Upload image to Cloudinary
-        const cloudinaryResult = await uploadToCloudinary(req.file.buffer);
+        let imageUrl = "";
+        let imagePublicId = "";
+
+        if (req.file) {
+            if (isCloudinaryConfigured) {
+                const cloudinaryResult = await uploadToCloudinary(req.file.buffer);
+                imageUrl = cloudinaryResult.secure_url;
+                imagePublicId = cloudinaryResult.public_id;
+            } else {
+                console.warn("Received service image but Cloudinary is not configured. Skipping image upload.");
+            }
+        }
 
         const service = await Service.create({
             name: req.body.name.trim(),
@@ -129,8 +138,8 @@ exports.createService = async (req, res) => {
             description: req.body.description.trim(),
             price: parseFloat(req.body.price),
             isActive: req.body.isActive !== undefined ? req.body.isActive === "true" || req.body.isActive === true : true,
-            imageUrl: cloudinaryResult.secure_url,
-            imagePublicId: cloudinaryResult.public_id,
+            imageUrl,
+            imagePublicId,
             icon: req.body.icon || "pets",
             createdBy: req.user._id,
         });
@@ -138,6 +147,7 @@ exports.createService = async (req, res) => {
         const populated = await Service.findById(service._id).populate("createdBy", "name email");
         res.status(201).json(populated);
     } catch (error) {
+        console.error("CreateService error:", error);
         // Handle Mongoose validation errors
         if (error.name === "ValidationError") {
             const errors = Object.values(error.errors).map((err) => ({
@@ -181,15 +191,21 @@ exports.updateService = async (req, res) => {
 
         // Handle image changes
         if (req.file) {
-            // New image uploaded — replace the old one
-            await deleteFromCloudinary(service.imagePublicId);
+            if (isCloudinaryConfigured) {
+                // New image uploaded — replace the old one
+                await deleteFromCloudinary(service.imagePublicId);
 
-            const cloudinaryResult = await uploadToCloudinary(req.file.buffer);
-            service.imageUrl = cloudinaryResult.secure_url;
-            service.imagePublicId = cloudinaryResult.public_id;
+                const cloudinaryResult = await uploadToCloudinary(req.file.buffer);
+                service.imageUrl = cloudinaryResult.secure_url;
+                service.imagePublicId = cloudinaryResult.public_id;
+            } else {
+                console.warn("Received service image but Cloudinary is not configured. Skipping image update.");
+            }
         } else if (req.body.removeImage === "true") {
             // User explicitly removed the image without uploading a new one
-            await deleteFromCloudinary(service.imagePublicId);
+            if (isCloudinaryConfigured) {
+                await deleteFromCloudinary(service.imagePublicId);
+            }
             service.imageUrl = "";
             service.imagePublicId = "";
         }
@@ -207,6 +223,7 @@ exports.updateService = async (req, res) => {
 
         res.json(populated);
     } catch (error) {
+        console.error("UpdateService error:", error);
         if (error.name === "ValidationError") {
             const errors = Object.values(error.errors).map((err) => ({
                 field: err.path,
