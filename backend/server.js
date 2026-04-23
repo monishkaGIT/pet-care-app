@@ -25,6 +25,7 @@ app.use('/api/users', require('./routes/authRoutes'));
 app.use('/api/pets', require('./routes/petRoutes'));
 app.use('/api/posts', require('./routes/postRoutes'));
 app.use('/api/ask-pawly', require('./routes/askPawlyRoutes'));
+app.use('/api/bookings', require('./routes/bookingRoutes'));
 app.use('/api/feedbacks', require('./routes/feedbackRoutes'));
 app.use('/api/pets/:petId/health', require('./routes/healthRoutes'));
 

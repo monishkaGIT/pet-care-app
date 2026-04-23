@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
 
 import HomeScreen from '../screens/main/HomeScreen';
-import ServicesScreen from '../screens/main/ServicesScreen';
+import ServicesScreen from '../screens/service-booking/ServicesScreen';
 import SocialTabNavigator from './SocialTabNavigator';
 import PetHealthScreen from '../screens/main/PetHealthScreen';
 import FeedbackScreen from '../screens/user/FeedbackScreen';
