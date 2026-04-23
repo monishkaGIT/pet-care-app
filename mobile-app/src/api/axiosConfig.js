@@ -16,8 +16,8 @@ api.interceptors.request.use(
         const stored = await AsyncStorage.getItem('userData');
         if (stored) {
             const userData = JSON.parse(stored);
-            if (userData.token) {
-                config.headers['Authorization'] = `Bearer ${userData.token}`;
+            if (userData._id) {
+                config.headers['x-user-id'] = userData._id;
             }
         }
         return config;

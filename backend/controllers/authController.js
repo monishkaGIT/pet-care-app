@@ -1,11 +1,5 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-
-// ── JWT Helper ─────────────────────────────────────────────────────
-const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
-};
 
 // ── Public Auth ────────────────────────────────────────────────────
 
@@ -45,7 +39,6 @@ exports.registerUser = async (req, res) => {
             phone: user.phone,
             address: user.address,
             profileImage: user.profileImage,
-            token: generateToken(user._id),
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -71,7 +64,6 @@ exports.loginUser = async (req, res) => {
                 phone: user.phone,
                 address: user.address,
                 profileImage: user.profileImage,
-                token: generateToken(user._id),
             });
         } else {
             res.status(401).json({ message: "Invalid credentials" });
@@ -114,7 +106,6 @@ exports.updateUserProfile = async (req, res) => {
                 phone: updatedUser.phone,
                 address: updatedUser.address,
                 profileImage: updatedUser.profileImage,
-                token: generateToken(updatedUser._id),
             });
         } else {
             res.status(404).json({ message: 'User not found' });

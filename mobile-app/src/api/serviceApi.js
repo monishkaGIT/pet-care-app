@@ -8,14 +8,14 @@ const serviceApi = axios.create({
     baseURL: SERVICE_API_URL,
 });
 
-// Attach JWT token to every request
+// Attach user ID to every request
 serviceApi.interceptors.request.use(
     async (config) => {
         const stored = await AsyncStorage.getItem('userData');
         if (stored) {
             const userData = JSON.parse(stored);
-            if (userData.token) {
-                config.headers['Authorization'] = `Bearer ${userData.token}`;
+            if (userData._id) {
+                config.headers['x-user-id'] = userData._id;
             }
         }
         return config;
