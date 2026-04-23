@@ -97,6 +97,9 @@ exports.getServiceById = async (req, res) => {
 // ── POST /api/services — Create a new service (admin) ──────────────
 exports.createService = async (req, res) => {
     try {
+        // Ensure body exists (can be undefined when Content-Type isn't multipart)
+        if (!req.body) req.body = {};
+
         // Validate input fields
         const errors = validateServiceInput(req.body);
 
