@@ -55,7 +55,7 @@ export default function ServicesScreen() {
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.headerTopRow}>
-                        <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+                        <TouchableOpacity onPress={() => navigation.navigate('UserProfile')}>
                             <Ionicons name="person-circle-outline" size={36} color={COLORS.secondary} />
                         </TouchableOpacity>
                         <View style={{ flex: 1, alignItems: 'center' }}>
