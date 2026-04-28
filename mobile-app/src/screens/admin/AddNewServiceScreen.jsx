@@ -12,6 +12,7 @@ import {
     Platform,
     Image,
     ActivityIndicator,
+    StatusBar,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -424,7 +425,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 20,
-        paddingTop: 56,
+        paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 10 : 56,
         paddingBottom: 14,
         backgroundColor: COLORS.surfaceContainerLow,
     },

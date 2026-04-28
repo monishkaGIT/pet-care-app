@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useContext } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, FlatList,
     SafeAreaView, Alert, ActivityIndicator, RefreshControl, Image,
+    Platform, StatusBar,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { postApi } from '../../api/axiosConfig';
@@ -377,7 +378,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 24,
-        paddingTop: 10,
+        paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 10 : 10,
         paddingBottom: 20,
         shadowColor: '#6f4e37',
         shadowOffset: { width: 0, height: 4 },

@@ -5,10 +5,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 // Social screens
 import SocialFeedScreen from '../screens/social/SocialScreen';
-import ExploreScreen from '../screens/social/ExploreScreen';
 import CreatePostScreen from '../screens/social/CreatePostScreen';
 import AlertsScreen from '../screens/main/NotificationsScreen';
-import SocialProfileScreen from '../screens/social/SocialProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -16,10 +14,8 @@ const Tab = createBottomTabNavigator();
 function SocialTabBar({ state, descriptors, navigation }) {
     const TABS = [
         { name: 'Feed', icon: 'home', activeIcon: 'home', label: 'Feed' },
-        { name: 'Explore', icon: 'explore', activeIcon: 'explore', label: 'Explore' },
         { name: 'Create', icon: 'add-circle-outline', activeIcon: 'add-circle', label: 'Create' },
         { name: 'Alerts', icon: 'notifications-none', activeIcon: 'notifications', label: 'Alerts' },
-        { name: 'Profile', icon: 'person-outline', activeIcon: 'person', label: 'Profile' },
     ];
 
     return (
@@ -94,10 +90,8 @@ export default function SocialTabNavigator() {
             screenOptions={{ headerShown: false }}
         >
             <Tab.Screen name="Feed" component={SocialFeedScreen} />
-            <Tab.Screen name="Explore" component={ExploreScreen} />
             <Tab.Screen name="Create" component={CreatePostScreen} />
             <Tab.Screen name="Alerts" component={AlertsScreen} />
-            <Tab.Screen name="Profile" component={SocialProfileScreen} />
         </Tab.Navigator>
     );
 }

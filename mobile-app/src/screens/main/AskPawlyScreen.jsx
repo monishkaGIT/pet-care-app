@@ -8,6 +8,7 @@ import {
     FlatList,
     KeyboardAvoidingView,
     Platform,
+    StatusBar,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
@@ -142,7 +143,7 @@ const styles = StyleSheet.create({
     },
     header: {
         backgroundColor: COLORS.primary,
-        paddingTop: 52,
+        paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 10 : 52,
         paddingBottom: 18,
         paddingHorizontal: 20,
         borderBottomLeftRadius: 26,
@@ -227,7 +228,7 @@ const styles = StyleSheet.create({
         alignItems: 'flex-end',
         paddingHorizontal: 12,
         paddingTop: 8,
-        paddingBottom: 12,
+        paddingBottom: Platform.OS === 'android' ? 24 : 12,
         backgroundColor: COLORS.background,
         borderTopWidth: 1,
         borderTopColor: '#e8e2d8',

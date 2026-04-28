@@ -10,6 +10,8 @@ import {
     Alert,
     RefreshControl,
     Image,
+    Platform,
+    StatusBar,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
@@ -284,7 +286,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 20,
-        paddingTop: 56,
+        paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 10 : 56,
         paddingBottom: 14,
         backgroundColor: COLORS.surfaceContainerLow,
     },

@@ -10,6 +10,8 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  Platform,
+  StatusBar,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -170,7 +172,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 36,
     borderBottomRightRadius: 36,
     paddingHorizontal: 24,
-    paddingTop: 18,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 10 : 18,
     paddingBottom: 24,
     marginHorizontal: -20,
     marginBottom: 16,

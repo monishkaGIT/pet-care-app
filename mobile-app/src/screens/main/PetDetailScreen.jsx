@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity,
-    ScrollView, SafeAreaView, Image, ActivityIndicator, Alert
+    ScrollView, SafeAreaView, Image, ActivityIndicator, Alert,
+    Platform, StatusBar
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
@@ -191,7 +192,7 @@ const styles = StyleSheet.create({
     scrollContent: { paddingBottom: 80 },
     heroHeader: {
         backgroundColor: '#a2d2ff', borderBottomLeftRadius: 20, borderBottomRightRadius: 20,
-        paddingHorizontal: 24, paddingTop: 10, paddingBottom: 40,
+        paddingHorizontal: 24, paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 10 : 10, paddingBottom: 40,
         alignItems: 'center', minHeight: 300,
     },
     heroTopBar: {

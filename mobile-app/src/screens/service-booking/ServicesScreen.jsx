@@ -1,57 +1,83 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-    View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput
+    View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput,
+    ActivityIndicator, RefreshControl, Image, Platform, StatusBar
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
+import { fetchServices } from '../../api/serviceApi';
 
-const SERVICES = [
-    {
-        type: 'Grooming',
-        icon: 'content-cut',
-        description: 'Luxury spa treatments, breed-specific cuts, and deep cleaning for your companion\'s best look.',
-        cta: 'View Stylists',
-        color: '#a2d2ff',
-        bgColor: '#eaf4ff',
-    },
-    {
-        type: 'Boarding',
-        icon: 'home-heart',
-        description: 'A home away from home. 24/7 care in a climate-controlled, loving environment with outdoor play.',
-        cta: 'Book a Stay',
-        color: '#ffc092',
-        bgColor: '#fff3e8',
-    },
-    {
-        type: 'Walking',
-        icon: 'walk',
-        description: 'Scheduled urban hikes and park adventures to keep your pet active and happy while you work.',
-        cta: 'Schedule Walk',
-        color: '#b8d8a8',
-        bgColor: '#edf7e7',
-    },
-    {
-        type: 'Training',
-        icon: 'school-outline',
-        description: 'Positive reinforcement based coaching for all ages, from basic puppy manners to advanced behavior.',
-        cta: 'Meet Trainers',
-        color: '#f0c0c0',
-        bgColor: '#fef0f0',
-    },
-];
+// Map category names to MaterialCommunityIcons
+const CATEGORY_ICONS = {
+    'Grooming': 'content-cut',
+    'Boarding': 'home-heart',
+    'Walking': 'walk',
+    'Training': 'school-outline',
+    'Medical Care': 'medical-bag',
+};
+
+// Category color palette for cards without images
+const CATEGORY_COLORS = {
+    'Grooming': { color: '#a2d2ff', bgColor: '#eaf4ff' },
+    'Boarding': { color: '#ffc092', bgColor: '#fff3e8' },
+    'Walking': { color: '#b8d8a8', bgColor: '#edf7e7' },
+    'Training': { color: '#f0c0c0', bgColor: '#fef0f0' },
+    'Medical Care': { color: '#c5b3e6', bgColor: '#f3eeff' },
+};
+
+const DEFAULT_CATEGORY_COLOR = { color: '#a2d2ff', bgColor: '#eaf4ff' };
 
 export default function ServicesScreen() {
     const navigation = useNavigation();
+    const [services, setServices] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [searchText, setSearchText] = useState('');
 
-    const filteredServices = SERVICES.filter(s =>
-        s.type.toLowerCase().includes(searchText.toLowerCase())
+    const loadServices = useCallback(async () => {
+        try {
+            const data = await fetchServices();
+            // Only show active services to regular users
+            setServices(data.filter((s) => s.isActive));
+        } catch (error) {
+            console.error('Failed to load services:', error?.response?.data?.message || error.message);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    }, []);
+
+    // Refetch when the screen comes into focus (e.g. after admin adds a new service)
+    useFocusEffect(
+        useCallback(() => {
+            loadServices();
+        }, [loadServices])
     );
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        loadServices();
+    };
+
+    // Filter services by search text
+    const filteredServices = services.filter(s =>
+        s.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        s.category.toLowerCase().includes(searchText.toLowerCase()) ||
+        (s.description || '').toLowerCase().includes(searchText.toLowerCase())
+    );
+
+    // Group services by category for display
+    const categories = [...new Set(filteredServices.map(s => s.category))];
 
     return (
         <View style={styles.container}>
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.secondary} />
+                }
+            >
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.headerTopRow}>
@@ -79,29 +105,83 @@ export default function ServicesScreen() {
                             value={searchText}
                             onChangeText={setSearchText}
                         />
+                        {searchText.length > 0 && (
+                            <TouchableOpacity onPress={() => setSearchText('')}>
+                                <Ionicons name="close-circle" size={18} color={COLORS.textMuted} />
+                            </TouchableOpacity>
+                        )}
                     </View>
-                    <TouchableOpacity style={styles.searchBtn}>
-                        <Text style={styles.searchBtnText}>Search</Text>
-                    </TouchableOpacity>
                 </View>
 
-                {/* Service Cards */}
+                {/* Content */}
                 <View style={styles.cardsContainer}>
-                    {filteredServices.map((service) => (
-                        <View key={service.type} style={[styles.serviceCard, { backgroundColor: service.bgColor }]}>
-                            <View style={[styles.serviceIconCircle, { backgroundColor: service.color }]}>
-                                <MaterialCommunityIcons name={service.icon} size={28} color="#fff" />
-                            </View>
-                            <Text style={styles.serviceType}>{service.type}</Text>
-                            <Text style={styles.serviceDesc}>{service.description}</Text>
-                            <TouchableOpacity
-                                style={styles.serviceCta}
-                                onPress={() => navigation.navigate('BookAService', { serviceType: service.type })}
-                            >
-                                <Text style={styles.serviceCtaText}>{service.cta}  →</Text>
-                            </TouchableOpacity>
+                    {loading ? (
+                        <View style={styles.loadingState}>
+                            <ActivityIndicator size="large" color={COLORS.secondary} />
+                            <Text style={styles.loadingText}>Loading services...</Text>
                         </View>
-                    ))}
+                    ) : filteredServices.length === 0 ? (
+                        <View style={styles.emptyState}>
+                            <MaterialCommunityIcons name="magnify-close" size={48} color={COLORS.textMuted} />
+                            <Text style={styles.emptyTitle}>
+                                {searchText ? 'No matching services' : 'No services available'}
+                            </Text>
+                            <Text style={styles.emptySubtitle}>
+                                {searchText
+                                    ? 'Try a different search term.'
+                                    : 'Check back later for new pet care offerings.'}
+                            </Text>
+                        </View>
+                    ) : (
+                        filteredServices.map((service) => {
+                            const catColors = CATEGORY_COLORS[service.category] || DEFAULT_CATEGORY_COLOR;
+                            const iconName = CATEGORY_ICONS[service.category] || 'paw';
+
+                            return (
+                                <View key={service._id} style={[styles.serviceCard, { backgroundColor: catColors.bgColor }]}>
+                                    {/* Service Image (if available from admin) */}
+                                    {service.imageUrl ? (
+                                        <Image
+                                            source={{ uri: service.imageUrl }}
+                                            style={styles.serviceImage}
+                                            resizeMode="cover"
+                                        />
+                                    ) : null}
+
+                                    <View style={styles.serviceCardBody}>
+                                        <View style={[styles.serviceIconCircle, { backgroundColor: catColors.color }]}>
+                                            <MaterialCommunityIcons name={iconName} size={28} color="#fff" />
+                                        </View>
+
+                                        {/* Category badge */}
+                                        <View style={styles.categoryBadge}>
+                                            <Text style={styles.categoryBadgeText}>{service.category}</Text>
+                                        </View>
+
+                                        <Text style={styles.serviceType}>{service.name}</Text>
+                                        <Text style={styles.serviceDesc} numberOfLines={3}>{service.description}</Text>
+
+                                        {/* Price */}
+                                        <View style={styles.priceRow}>
+                                            <Text style={styles.priceText}>${service.price?.toFixed(2)}</Text>
+                                            <Text style={styles.priceLabel}> / session</Text>
+                                        </View>
+
+                                        <TouchableOpacity
+                                            style={styles.serviceCta}
+                                            onPress={() => navigation.navigate('BookAService', {
+                                                serviceType: service.category,
+                                                serviceName: service.name,
+                                                serviceId: service._id,
+                                            })}
+                                        >
+                                            <Text style={styles.serviceCtaText}>Book Now  →</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            );
+                        })
+                    )}
                 </View>
 
                 {/* My Bookings Button */}
@@ -140,7 +220,7 @@ const styles = StyleSheet.create({
     header: {
         backgroundColor: COLORS.primary,
         paddingHorizontal: 20,
-        paddingTop: 50,
+        paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 10 : 50,
         paddingBottom: 25,
         borderBottomLeftRadius: 30,
         borderBottomRightRadius: 30,
@@ -185,18 +265,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: COLORS.textPrimary,
     },
-    searchBtn: {
-        backgroundColor: COLORS.primary,
-        paddingVertical: 10,
-        paddingHorizontal: 30,
-        borderRadius: 20,
-        marginTop: 12,
-    },
-    searchBtnText: {
-        color: '#fff',
-        fontWeight: '600',
-        fontSize: 14,
-    },
 
     // ── Service Cards ──
     cardsContainer: {
@@ -205,9 +273,16 @@ const styles = StyleSheet.create({
     },
     serviceCard: {
         borderRadius: 20,
-        padding: 22,
         marginBottom: 16,
+        overflow: 'hidden',
         ...SHADOWS.card,
+    },
+    serviceImage: {
+        width: '100%',
+        height: 150,
+    },
+    serviceCardBody: {
+        padding: 22,
     },
     serviceIconCircle: {
         width: 52,
@@ -216,6 +291,21 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 14,
+    },
+    categoryBadge: {
+        alignSelf: 'flex-start',
+        backgroundColor: 'rgba(0,0,0,0.06)',
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 10,
+        marginBottom: 10,
+    },
+    categoryBadgeText: {
+        fontSize: 10,
+        fontWeight: '800',
+        color: COLORS.textMuted,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
     },
     serviceType: {
         fontSize: 22,
@@ -230,13 +320,59 @@ const styles = StyleSheet.create({
         lineHeight: 19,
         marginBottom: 14,
     },
+    priceRow: {
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        marginBottom: 14,
+    },
+    priceText: {
+        fontSize: 22,
+        fontWeight: '800',
+        color: COLORS.secondary,
+    },
+    priceLabel: {
+        fontSize: 13,
+        fontWeight: '500',
+        color: COLORS.textMuted,
+    },
     serviceCta: {
         alignSelf: 'flex-start',
+        backgroundColor: COLORS.secondary,
+        paddingVertical: 10,
+        paddingHorizontal: 24,
+        borderRadius: 20,
     },
     serviceCtaText: {
         fontSize: 14,
         fontWeight: 'bold',
-        color: COLORS.primary,
+        color: '#fff',
+    },
+
+    // ── Loading & Empty ──
+    loadingState: {
+        alignItems: 'center',
+        paddingVertical: 60,
+    },
+    loadingText: {
+        fontSize: 14,
+        color: COLORS.textMuted,
+        marginTop: 12,
+    },
+    emptyState: {
+        alignItems: 'center',
+        paddingVertical: 40,
+    },
+    emptyTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: COLORS.textPrimary,
+        marginTop: 12,
+    },
+    emptySubtitle: {
+        fontSize: 13,
+        color: COLORS.textMuted,
+        marginTop: 6,
+        textAlign: 'center',
     },
 
     // ── My Bookings Button ──

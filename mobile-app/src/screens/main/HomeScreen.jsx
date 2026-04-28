@@ -1,7 +1,8 @@
 import React, { useCallback, useState } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity,
-    ScrollView, SafeAreaView, ActivityIndicator, Image, RefreshControl
+    ScrollView, SafeAreaView, ActivityIndicator, Image, RefreshControl,
+    Platform, StatusBar
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -251,7 +252,7 @@ const styles = StyleSheet.create({
     headerWrapper: {
         backgroundColor: '#a2d2ff',
         borderBottomLeftRadius: 40, borderBottomRightRadius: 40,
-        paddingHorizontal: 28, paddingTop: 50, paddingBottom: 30,
+        paddingHorizontal: 28, paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 10 : 50, paddingBottom: 30,
         overflow: 'hidden',
     },
     glowTopRight: { position: 'absolute', top: -40, right: -40, width: 150, height: 150, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 75 },

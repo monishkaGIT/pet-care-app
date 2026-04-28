@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
-    ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform
+    ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, StatusBar
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     // Header
     header: {
         backgroundColor: COLORS.primary,
-        paddingHorizontal: 20, paddingTop: 50, paddingBottom: 25,
+        paddingHorizontal: 20, paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 10 : 50, paddingBottom: 25,
         borderBottomLeftRadius: 30, borderBottomRightRadius: 30,
         ...SHADOWS.header,
     },

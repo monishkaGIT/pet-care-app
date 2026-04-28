@@ -8,6 +8,8 @@ import {
     ActivityIndicator,
     RefreshControl,
     TouchableOpacity,
+    Platform,
+    StatusBar,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
@@ -156,7 +158,7 @@ const styles = StyleSheet.create({
     header: {
         backgroundColor: COLORS.primary,
         padding: 25,
-        paddingTop: 50,
+        paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 10 : 50,
         borderBottomLeftRadius: 30,
         borderBottomRightRadius: 30,
         alignItems: 'center',

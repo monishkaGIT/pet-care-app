@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
-    ScrollView, Alert, KeyboardAvoidingView, Platform
+    ScrollView, Alert, KeyboardAvoidingView, Platform, StatusBar
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -195,14 +195,14 @@ const styles = StyleSheet.create({
     // Header
     header: {
         backgroundColor: COLORS.primary,
-        paddingHorizontal: 20, paddingTop: 50, paddingBottom: 25,
+        paddingHorizontal: 20, paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 10 : 50, paddingBottom: 25,
         borderBottomLeftRadius: 30, borderBottomRightRadius: 30,
         alignItems: 'center', ...SHADOWS.header,
     },
-    backBtn: { position: 'absolute', left: 20, top: 50 },
+    backBtn: { position: 'absolute', left: 20, top: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 10 : 50 },
     headerTitle: { fontSize: 22, fontWeight: 'bold', color: COLORS.secondary, textAlign: 'center', lineHeight: 30 },
     profileIcon: {
-        position: 'absolute', right: 20, top: 50,
+        position: 'absolute', right: 20, top: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 10 : 50,
         width: 36, height: 36, borderRadius: 18,
         backgroundColor: COLORS.secondary, justifyContent: 'center', alignItems: 'center',
     },

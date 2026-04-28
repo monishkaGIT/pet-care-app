@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Image, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Image, ScrollView, SafeAreaView, Platform, StatusBar } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { AuthContext } from '../../context/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     header: {
         backgroundColor: '#a2d2ff',
         borderBottomLeftRadius: 30, borderBottomRightRadius: 30,
-        paddingHorizontal: 24, paddingTop: 10, paddingBottom: 18,
+        paddingHorizontal: 24, paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 10 : 10, paddingBottom: 18,
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
         shadowColor: 'rgba(111,78,55,0.08)', shadowOffset: { width: 0, height: 8 }, shadowRadius: 24, shadowOpacity: 1, elevation: 4,
     },
