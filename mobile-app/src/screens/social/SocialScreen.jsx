@@ -147,18 +147,35 @@ function PostCard({ post, currentUserId, onLike, onDelete, onEdit }) {
     );
 }
 
-// ─── Mock Story Row (static for now) ───────────────────────────────────────
+// ─── Story Row (derived from real post authors) ────────────────────────────
 
-function StoryRow() {
-    const STORIES = [
+function StoryRow({ posts, currentUserId }) {
+    // Build stories from unique post authors
+    const stories = [
         { key: 'your', icon: 'person-add', label: 'YOUR STORY', ringColor: '#fcd34d', bgColor: '#ffffff', iconColor: '#30628a' },
-        { key: 's1', icon: 'pets', label: 'COOPER', ringColor: '#f59e0b', bgColor: '#faf3e0', iconColor: '#79573f' },
-        { key: 's2', icon: 'directions-run', label: 'LUNA', ringColor: '#f59e0b', bgColor: '#faf3e0', iconColor: '#79573f' },
-        { key: 's3', icon: 'cruelty-free', label: 'BINKY', ringColor: '#f59e0b', bgColor: '#faf3e0', iconColor: '#79573f' },
     ];
+
+    const seenAuthors = new Set();
+    posts.forEach((post) => {
+        const authorId = post.author?._id;
+        if (authorId && authorId !== currentUserId && !seenAuthors.has(authorId)) {
+            seenAuthors.add(authorId);
+            const petName = post.pet?.name || post.author?.name || 'Pet';
+            stories.push({
+                key: authorId,
+                icon: 'pets',
+                label: petName.toUpperCase().slice(0, 10),
+                ringColor: '#f59e0b',
+                bgColor: '#faf3e0',
+                iconColor: '#79573f',
+                image: post.author?.profileImage || null,
+            });
+        }
+    });
+
     return (
         <FlatList
-            data={STORIES}
+            data={stories.slice(0, 8)}
             keyExtractor={i => i.key}
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -168,7 +185,11 @@ function StoryRow() {
                     <View style={[styles.storyRing, { backgroundColor: item.ringColor }]}>
                         <View style={styles.storyIconWrapper}>
                             <View style={[styles.storyIconInner, { backgroundColor: item.bgColor }]}>
-                                <MaterialIcons name={item.icon} size={26} color={item.iconColor} />
+                                {item.image ? (
+                                    <Image source={{ uri: item.image }} style={{ width: '100%', height: '100%', borderRadius: 29 }} />
+                                ) : (
+                                    <MaterialIcons name={item.icon} size={26} color={item.iconColor} />
+                                )}
                             </View>
                         </View>
                     </View>
@@ -280,7 +301,7 @@ export default function SocialScreen({ navigation }) {
 
             {/* Stories */}
             <View style={styles.storiesSection}>
-                <StoryRow />
+                <StoryRow posts={posts} currentUserId={user?._id} />
             </View>
         </>
     );

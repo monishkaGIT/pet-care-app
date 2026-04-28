@@ -1,18 +1,78 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
+import {
+    View, Text, StyleSheet, TouchableOpacity, ScrollView,
+    SafeAreaView, ActivityIndicator, RefreshControl
+} from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { postApi } from '../../api/axiosConfig';
+import { AuthContext } from '../../context/AuthContext';
 
-const TODAY_ALERTS = [
-    { id: 1, icon: 'favorite', iconColor: '#30628a', iconBg: 'rgba(162,210,255,0.3)', message: ["Milo's", " post was liked by ", "Cooper's", " parent."], time: '2h ago', unread: true },
-    { id: 2, icon: 'comment', iconColor: '#79573f', iconBg: 'rgba(255,209,179,0.3)', message: ["Bella", ' commented: "Such a good boy! Let\'s play soon!"'], time: '5h ago', unread: false },
-    { id: 3, icon: 'person-add', iconColor: '#8e4e14', iconBg: 'rgba(255,192,146,0.3)', message: ["Luna the Lab", " started following you."], time: '8h ago', unread: false },
-];
+// ─── Derive notification-like items from real post activity ─────────────────
 
-const WEEK_ALERTS = [
-    { id: 4, icon: 'celebration', iconColor: '#72787f', iconBg: '#e9e2d0', message: ["It's ", "Max's", " 3rd birthday! Send a treat."], time: '2 days ago' },
-    { id: 5, icon: 'location-on', iconColor: '#72787f', iconBg: '#e9e2d0', message: ["Oliver", " is near Central Park. Want to meet up?"], time: '4 days ago' },
-    { id: 6, icon: 'stars', iconColor: '#72787f', iconBg: '#e9e2d0', message: ['Your photo "Beach Day" was featured in ', "Pups of the Week!"], time: '1 week ago' },
-];
+function deriveNotifications(posts, currentUserId) {
+    const items = [];
+
+    posts.forEach((post) => {
+        // Likes from other users
+        if (post.likes?.length > 0) {
+            const othersWhoLiked = post.likes.filter(
+                (id) => id !== currentUserId
+            );
+            if (othersWhoLiked.length > 0 && post.author?._id === currentUserId) {
+                items.push({
+                    id: `like-${post._id}`,
+                    icon: 'favorite',
+                    iconColor: '#30628a',
+                    iconBg: 'rgba(162,210,255,0.3)',
+                    message: `Your post "${(post.caption || '').slice(0, 30)}${post.caption?.length > 30 ? '…' : ''}" received ${othersWhoLiked.length} like${othersWhoLiked.length > 1 ? 's' : ''}.`,
+                    time: timeAgo(post.updatedAt || post.createdAt),
+                });
+            }
+        }
+
+        // Comments from other users on your posts
+        if (post.comments?.length > 0 && post.author?._id === currentUserId) {
+            const otherComments = post.comments.filter(
+                (c) => c.author?._id !== currentUserId && c.author !== currentUserId
+            );
+            otherComments.forEach((comment) => {
+                items.push({
+                    id: `comment-${post._id}-${comment._id}`,
+                    icon: 'comment',
+                    iconColor: '#79573f',
+                    iconBg: 'rgba(255,209,179,0.3)',
+                    message: `${comment.author?.name || 'Someone'} commented: "${(comment.text || '').slice(0, 40)}${comment.text?.length > 40 ? '…' : ''}"`,
+                    time: timeAgo(comment.createdAt || post.updatedAt || post.createdAt),
+                });
+            });
+        }
+
+        // Your own new posts (activity log)
+        if (post.author?._id === currentUserId) {
+            items.push({
+                id: `post-${post._id}`,
+                icon: 'photo-camera',
+                iconColor: '#72787f',
+                iconBg: '#e9e2d0',
+                message: `You shared a new post: "${(post.caption || '').slice(0, 40)}${post.caption?.length > 40 ? '…' : ''}"`,
+                time: timeAgo(post.createdAt),
+            });
+        }
+    });
+
+    // Sort by recency (items derived from more recent posts first)
+    return items;
+}
+
+function timeAgo(dateStr) {
+    if (!dateStr) return '';
+    const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+    return `${Math.floor(diff / 604800)}w ago`;
+}
 
 function AlertItem({ item, faded = false }) {
     return (
@@ -21,19 +81,49 @@ function AlertItem({ item, faded = false }) {
                 <MaterialIcons name={item.icon} size={22} color={item.iconColor} />
             </View>
             <View style={styles.alertContent}>
-                <Text style={styles.alertMessage}>
-                    {item.message.map((part, i) =>
-                        i % 2 === 0 ? part : <Text key={i} style={styles.alertBold}>{part}</Text>
-                    )}
-                </Text>
+                <Text style={styles.alertMessage}>{item.message}</Text>
                 <Text style={styles.alertTime}>{item.time}</Text>
             </View>
-            {item.unread && <View style={styles.unreadDot} />}
         </View>
     );
 }
 
 export default function NotificationsScreen() {
+    const { user } = useContext(AuthContext);
+    const [notifications, setNotifications] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const fetchNotifications = useCallback(async () => {
+        try {
+            const { data } = await postApi.get('/');
+            const derived = deriveNotifications(data, user?._id);
+            setNotifications(derived);
+        } catch (err) {
+            console.error('Failed to load notifications:', err);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    }, [user]);
+
+    useEffect(() => {
+        fetchNotifications();
+    }, [fetchNotifications]);
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchNotifications();
+    };
+
+    // Separate today vs earlier
+    const now = Date.now();
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const todayItems = notifications.slice(0, Math.min(3, notifications.length));
+    const earlierItems = notifications.slice(3);
+
     return (
         <SafeAreaView style={styles.safeArea}>
             {/* Header */}
@@ -47,24 +137,66 @@ export default function NotificationsScreen() {
                 </TouchableOpacity>
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                <Text style={styles.pageTitle}>Alerts</Text>
-                <Text style={styles.pageSub}>Keep track of your furry friend's social life.</Text>
-
-                {/* Today */}
-                <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Today</Text>
-                    <View style={styles.dividerLine} />
+            {loading ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#a2d2ff" />
+                    <Text style={styles.loadingText}>Loading alerts...</Text>
                 </View>
-                {TODAY_ALERTS.map(item => <AlertItem key={item.id} item={item} />)}
+            ) : (
+                <ScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={['#a2d2ff']}
+                            tintColor="#a2d2ff"
+                        />
+                    }
+                >
+                    <Text style={styles.pageTitle}>Alerts</Text>
+                    <Text style={styles.pageSub}>Keep track of your furry friend's social life.</Text>
 
-                {/* This Week */}
-                <View style={[styles.sectionHeader, { marginTop: 32 }]}>
-                    <Text style={styles.sectionTitle}>This Week</Text>
-                    <View style={styles.dividerLine} />
-                </View>
-                {WEEK_ALERTS.map(item => <AlertItem key={item.id} item={item} faded />)}
-            </ScrollView>
+                    {notifications.length === 0 ? (
+                        <View style={styles.emptyState}>
+                            <MaterialIcons name="notifications-none" size={64} color="rgba(162,210,255,0.5)" />
+                            <Text style={styles.emptyTitle}>No notifications yet</Text>
+                            <Text style={styles.emptySub}>
+                                Start posting and interacting to see activity here!
+                            </Text>
+                        </View>
+                    ) : (
+                        <>
+                            {/* Recent */}
+                            {todayItems.length > 0 && (
+                                <>
+                                    <View style={styles.sectionHeader}>
+                                        <Text style={styles.sectionTitle}>Recent</Text>
+                                        <View style={styles.dividerLine} />
+                                    </View>
+                                    {todayItems.map((item) => (
+                                        <AlertItem key={item.id} item={item} />
+                                    ))}
+                                </>
+                            )}
+
+                            {/* Earlier */}
+                            {earlierItems.length > 0 && (
+                                <>
+                                    <View style={[styles.sectionHeader, { marginTop: 32 }]}>
+                                        <Text style={styles.sectionTitle}>Earlier</Text>
+                                        <View style={styles.dividerLine} />
+                                    </View>
+                                    {earlierItems.map((item) => (
+                                        <AlertItem key={item.id} item={item} faded />
+                                    ))}
+                                </>
+                            )}
+                        </>
+                    )}
+                </ScrollView>
+            )}
         </SafeAreaView>
     );
 }
@@ -106,7 +238,14 @@ const styles = StyleSheet.create({
     alertIconWrap: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
     alertContent: { flex: 1 },
     alertMessage: { fontSize: 14, color: '#41474e', lineHeight: 20 },
-    alertBold: { fontWeight: 'bold', color: '#1e1c10' },
     alertTime: { fontSize: 13, fontWeight: '600', color: 'rgba(48,98,138,0.7)', marginTop: 4 },
-    unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#30628a', marginTop: 4 },
+
+    // Loading
+    loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+    loadingText: { fontSize: 14, color: '#72787f' },
+
+    // Empty state
+    emptyState: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 20 },
+    emptyTitle: { fontSize: 20, fontWeight: 'bold', color: '#79573f', marginTop: 20 },
+    emptySub: { fontSize: 14, color: '#72787f', marginTop: 8, textAlign: 'center' },
 });

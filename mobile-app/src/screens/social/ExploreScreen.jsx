@@ -1,22 +1,91 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, SafeAreaView } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+    View, Text, StyleSheet, TouchableOpacity, ScrollView,
+    TextInput, SafeAreaView, Image, ActivityIndicator, RefreshControl
+} from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { postApi } from '../../api/axiosConfig';
 
-const TRENDING_TAGS = [
-    { id: 1, tag: '#PuppyLove', posts: '12.5k posts', icon: 'pets', bg: '#ffffff', iconBg: '#a2d2ff', iconColor: '#275b82' },
-    { id: 2, tag: '#CatNap', posts: '8.2k posts', icon: 'hotel', bg: 'rgba(162,210,255,0.3)', iconBg: '#ffffff', iconColor: '#79573f' },
-    { id: 3, tag: '#TreatsOnly', posts: '4.1k posts', icon: 'restaurant', bg: '#ffffff', iconBg: 'rgba(255,192,146,0.4)', iconColor: '#8e4e14' },
-    { id: 4, tag: '#ParkLife', posts: '15.9k posts', icon: 'park', bg: '#faf3e0', iconBg: '#ffffff', iconColor: '#30628a' },
-];
+// ─── Derive trending tags from real post data ──────────────────────────────
 
-const POST_GRID_COLORS = [
-    ['rgba(162,210,255,0.4)', '#e9e2d0', 'rgba(162,210,255,0.2)'],
-    ['#faf3e0', '#a2d2ff', '#e9e2d0'],
-    ['rgba(162,210,255,0.3)', '#faf3e0', 'rgba(162,210,255,0.1)'],
-    ['#e9e2d0', 'rgba(162,210,255,0.6)', '#faf3e0'],
-];
+function deriveTrendingTags(posts) {
+    const tagCounts = {};
+
+    posts.forEach((post) => {
+        if (post.label) {
+            const label = post.label.trim();
+            if (label) {
+                const tag = label.startsWith('#') ? label : `#${label}`;
+                tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+            }
+        }
+    });
+
+    // Also count by pet type
+    posts.forEach((post) => {
+        if (post.pet?.type) {
+            const tag = `#${post.pet.type}Life`;
+            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        }
+    });
+
+    const TAG_STYLES = [
+        { icon: 'pets', bg: '#ffffff', iconBg: '#a2d2ff', iconColor: '#275b82' },
+        { icon: 'hotel', bg: 'rgba(162,210,255,0.3)', iconBg: '#ffffff', iconColor: '#79573f' },
+        { icon: 'restaurant', bg: '#ffffff', iconBg: 'rgba(255,192,146,0.4)', iconColor: '#8e4e14' },
+        { icon: 'park', bg: '#faf3e0', iconBg: '#ffffff', iconColor: '#30628a' },
+    ];
+
+    return Object.entries(tagCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([tag, count], index) => ({
+            id: index + 1,
+            tag,
+            posts: `${count} post${count > 1 ? 's' : ''}`,
+            ...TAG_STYLES[index % TAG_STYLES.length],
+        }));
+}
 
 export default function ExploreScreen() {
+    const [posts, setPosts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const fetchPosts = useCallback(async () => {
+        try {
+            const { data } = await postApi.get('/');
+            setPosts(data);
+        } catch (err) {
+            console.error('Failed to load explore posts:', err);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchPosts();
+    }, [fetchPosts]);
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchPosts();
+    };
+
+    const trendingTags = deriveTrendingTags(posts);
+
+    // Filter posts by search query (caption or label)
+    const filteredPosts = searchQuery.trim()
+        ? posts.filter(
+            (p) =>
+                (p.caption || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (p.label || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (p.pet?.name || '').toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        : posts;
+
     return (
         <SafeAreaView style={styles.safeArea}>
             {/* Header */}
@@ -32,53 +101,121 @@ export default function ExploreScreen() {
                 </TouchableOpacity>
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                {/* Search */}
-                <View style={styles.searchWrapper}>
-                    <MaterialIcons name="search" size={22} color="#79573f" style={styles.searchIcon} />
-                    <TextInput
-                        style={styles.searchInput}
-                        placeholder="Find your favorite paws..."
-                        placeholderTextColor="#72787f"
-                    />
+            {loading ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#a2d2ff" />
+                    <Text style={styles.loadingText}>Discovering posts...</Text>
                 </View>
+            ) : (
+                <ScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={['#a2d2ff']}
+                            tintColor="#a2d2ff"
+                        />
+                    }
+                >
+                    {/* Search */}
+                    <View style={styles.searchWrapper}>
+                        <MaterialIcons name="search" size={22} color="#79573f" style={styles.searchIcon} />
+                        <TextInput
+                            style={styles.searchInput}
+                            placeholder="Find your favorite paws..."
+                            placeholderTextColor="#72787f"
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                        />
+                        {searchQuery.length > 0 && (
+                            <TouchableOpacity onPress={() => setSearchQuery('')}>
+                                <MaterialIcons name="close" size={20} color="#72787f" />
+                            </TouchableOpacity>
+                        )}
+                    </View>
 
-                {/* Trending Tags */}
-                <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionPreTitle}>WHAT'S BARKING</Text>
-                    <Text style={styles.sectionTitle}>Trending Tags</Text>
-                </View>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tagsScroll}>
-                    {TRENDING_TAGS.map((tag) => (
-                        <TouchableOpacity key={tag.id} style={[styles.tagCard, { backgroundColor: tag.bg }]} activeOpacity={0.8}>
-                            <View style={[styles.tagIconWrap, { backgroundColor: tag.iconBg }]}>
-                                <MaterialIcons name={tag.icon} size={22} color={tag.iconColor} />
+                    {/* Trending Tags — only show if there are labels */}
+                    {trendingTags.length > 0 && (
+                        <>
+                            <View style={styles.sectionHeader}>
+                                <Text style={styles.sectionPreTitle}>WHAT'S BARKING</Text>
+                                <Text style={styles.sectionTitle}>Trending Tags</Text>
                             </View>
-                            <Text style={styles.tagName}>{tag.tag}</Text>
-                            <Text style={styles.tagCount}>{tag.posts}</Text>
-                        </TouchableOpacity>
-                    ))}
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tagsScroll}>
+                                {trendingTags.map((tag) => (
+                                    <TouchableOpacity
+                                        key={tag.id}
+                                        style={[styles.tagCard, { backgroundColor: tag.bg }]}
+                                        activeOpacity={0.8}
+                                        onPress={() => setSearchQuery(tag.tag.replace('#', ''))}
+                                    >
+                                        <View style={[styles.tagIconWrap, { backgroundColor: tag.iconBg }]}>
+                                            <MaterialIcons name={tag.icon} size={22} color={tag.iconColor} />
+                                        </View>
+                                        <Text style={styles.tagName}>{tag.tag}</Text>
+                                        <Text style={styles.tagCount}>{tag.posts}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </ScrollView>
+                        </>
+                    )}
+
+                    {/* Divider */}
+                    <View style={styles.dividerRow}>
+                        <View style={styles.dividerLine} />
+                        <Text style={styles.dividerLabel}>
+                            {searchQuery ? 'SEARCH RESULTS' : 'RECENT POSTS'}
+                        </Text>
+                        <View style={styles.dividerLine} />
+                    </View>
+
+                    {/* Post Grid — built from real posts */}
+                    {filteredPosts.length === 0 ? (
+                        <View style={styles.emptyState}>
+                            <MaterialIcons name="search-off" size={48} color="rgba(121,87,63,0.2)" />
+                            <Text style={styles.emptyTitle}>
+                                {searchQuery ? 'No matching posts' : 'No posts yet'}
+                            </Text>
+                            <Text style={styles.emptySub}>
+                                {searchQuery
+                                    ? 'Try a different search term.'
+                                    : 'Be the first to share a pet moment!'}
+                            </Text>
+                        </View>
+                    ) : (
+                        <View style={styles.postGrid}>
+                            {filteredPosts.map((post, index) => (
+                                <TouchableOpacity
+                                    key={post._id || index}
+                                    style={[styles.postCell, !post.image && { backgroundColor: POST_GRID_FALLBACK_COLORS[index % POST_GRID_FALLBACK_COLORS.length] }]}
+                                    activeOpacity={0.8}
+                                >
+                                    {post.image ? (
+                                        <Image
+                                            source={{ uri: post.image }}
+                                            style={styles.postCellImage}
+                                            resizeMode="cover"
+                                        />
+                                    ) : (
+                                        <MaterialIcons name="pets" size={36} color="rgba(121,87,63,0.15)" />
+                                    )}
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    )}
                 </ScrollView>
-
-                {/* Divider */}
-                <View style={styles.dividerRow}>
-                    <View style={styles.dividerLine} />
-                    <Text style={styles.dividerLabel}>CURATED FEED</Text>
-                    <View style={styles.dividerLine} />
-                </View>
-
-                {/* Post Grid */}
-                <View style={styles.postGrid}>
-                    {POST_GRID_COLORS.flat().map((color, index) => (
-                        <TouchableOpacity key={index} style={[styles.postCell, { backgroundColor: color }]} activeOpacity={0.8}>
-                            <MaterialIcons name="image" size={36} color="rgba(121,87,63,0.15)" />
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            </ScrollView>
+            )}
         </SafeAreaView>
     );
 }
+
+// Fallback colors for posts without images
+const POST_GRID_FALLBACK_COLORS = [
+    'rgba(162,210,255,0.4)', '#e9e2d0', 'rgba(162,210,255,0.2)',
+    '#faf3e0', 'rgba(162,210,255,0.3)', '#e9e2d0',
+];
 
 const styles = StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: '#faf3e0' },
@@ -132,4 +269,17 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         overflow: 'hidden',
     },
+    postCellImage: {
+        width: '100%',
+        height: '100%',
+    },
+
+    // Loading
+    loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+    loadingText: { fontSize: 14, color: '#72787f' },
+
+    // Empty state
+    emptyState: { alignItems: 'center', paddingVertical: 40 },
+    emptyTitle: { fontSize: 18, fontWeight: 'bold', color: '#79573f', marginTop: 16 },
+    emptySub: { fontSize: 14, color: '#72787f', marginTop: 8, textAlign: 'center' },
 });
