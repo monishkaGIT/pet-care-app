@@ -84,7 +84,7 @@ function ServiceCard({ item, onPress }) {
             <View style={styles.cardFooter}>
                 <View>
                     <Text style={styles.priceLabel}>Price</Text>
-                    <Text style={styles.priceValue}>${item.price?.toFixed(2)}</Text>
+                    <Text style={styles.priceValue}>Rs. {item.price?.toFixed(2)}</Text>
                 </View>
                 <MaterialIcons name="chevron-right" size={24} color={COLORS.outline} />
             </View>
@@ -162,9 +162,6 @@ export default function ManageServicesScreen({ navigation }) {
                     </View>
                     <Text style={styles.topBarTitle}>PetCare Admin</Text>
                 </View>
-                <TouchableOpacity activeOpacity={0.7}>
-                    <MaterialIcons name="settings" size={22} color={COLORS.onSurfaceVariant} />
-                </TouchableOpacity>
             </View>
 
             <ScrollView

@@ -117,14 +117,6 @@ export default function ServiceDetailsScreen({ navigation, route }) {
                     </TouchableOpacity>
                     <Text style={styles.topBarTitle}>PetCare Admin</Text>
                 </View>
-                <View style={styles.topBarRight}>
-                    <View style={styles.avatarCircle}>
-                        <Text style={styles.avatarText}>AD</Text>
-                    </View>
-                    <TouchableOpacity activeOpacity={0.7}>
-                        <MaterialIcons name="settings" size={22} color={COLORS.primary} />
-                    </TouchableOpacity>
-                </View>
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -158,7 +150,7 @@ export default function ServiceDetailsScreen({ navigation, route }) {
                     <View style={[styles.infoCard, { borderLeftColor: COLORS.primary }]}>
                         <Text style={styles.infoCardLabel}>Price per Session</Text>
                         <Text style={styles.infoCardValue}>
-                            ${service.price?.toFixed(2)}
+                            Rs. {service.price?.toFixed(2)}
                             <Text style={styles.infoCardUnit}> / session</Text>
                         </Text>
                     </View>

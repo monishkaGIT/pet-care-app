@@ -61,14 +61,9 @@ export default function AdminDashboardScreen({ navigation }) {
                 </View>
             )}
 
-            <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('UserList')}>
+            <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('ManageUsers')}>
                 <Text style={styles.cardTitle}>Manage Users</Text>
-                <Text style={styles.cardDesc}>View, edit, or delete registered user accounts</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('CreateUser')}>
-                <Text style={styles.cardTitle}>Create New User</Text>
-                <Text style={styles.cardDesc}>Manually register a user or assign admin privileges</Text>
+                <Text style={styles.cardDesc}>View registered users and remove accounts</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.card, { borderLeftColor: COLORS.primary }]} onPress={() => navigation.navigate('ManageServices')}>

@@ -32,9 +32,8 @@ import EditPostScreen from '../screens/social/EditPostScreen';
 
 // Admin Screens
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
-import UserListScreen from '../screens/admin/UserListScreen';
-import CreateUserScreen from '../screens/admin/CreateUserScreen';
-import EditUserScreen from '../screens/admin/EditUserScreen';
+import ManageUsersScreen from '../screens/admin/ManageUsersScreen';
+import UserDetailsScreen from '../screens/admin/UserDetailsScreen';
 import ManageServicesScreen from '../screens/admin/ManageServicesScreen';
 import AddNewServiceScreen from '../screens/admin/AddNewServiceScreen';
 import ServiceDetailsScreen from '../screens/admin/ServiceDetailsScreen';
@@ -65,9 +64,8 @@ export default function AppNavigator() {
                 ) : user.role === 'admin' ? (
                     <>
                         <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} options={{ headerShown: true, title: 'Admin Home', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary }} />
-                        <Stack.Screen name="UserList" component={UserListScreen} options={{ headerShown: true, title: 'Manage Users', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary }} />
-                        <Stack.Screen name="CreateUser" component={CreateUserScreen} options={{ headerShown: true, title: 'Create User', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary }} />
-                        <Stack.Screen name="EditUser" component={EditUserScreen} options={{ headerShown: true, title: 'Edit User', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary }} />
+                        <Stack.Screen name="ManageUsers" component={ManageUsersScreen} options={{ headerShown: false }} />
+                        <Stack.Screen name="UserDetails" component={UserDetailsScreen} options={{ headerShown: false }} />
                         <Stack.Screen name="ManageServices" component={ManageServicesScreen} options={{ headerShown: false }} />
                         <Stack.Screen name="AddNewService" component={AddNewServiceScreen} options={{ headerShown: false }} />
                         <Stack.Screen name="ServiceDetails" component={ServiceDetailsScreen} options={{ headerShown: false }} />
