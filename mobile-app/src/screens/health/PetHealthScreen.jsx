@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import {
     View, Text, StyleSheet, ScrollView, TouchableOpacity,
-    ActivityIndicator, RefreshControl, StatusBar,
+    ActivityIndicator, RefreshControl, StatusBar, Alert,
 } from 'react-native';
 import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -13,6 +13,7 @@ import {
     fetchHealthRecords,
     fetchVaccinations,
 } from '../../api/healthApi';
+import { generateVaccinationPassportPDF } from '../../utils/generateVaccinationPDF';
 
 export default function PetHealthScreen() {
     const navigation = useNavigation();
@@ -26,6 +27,7 @@ export default function PetHealthScreen() {
     const [vaccinations, setVaccinations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [pdfLoading, setPdfLoading] = useState(false);
 
     // Load user's pets
     const loadPets = async () => {
@@ -337,8 +339,28 @@ export default function PetHealthScreen() {
                                 <Ionicons name="shield-checkmark" size={18} color={COLORS.success} />
                                 <Text style={styles.verifiedText}>VERIFIED DIGITAL RECORD</Text>
                             </View>
-                            <TouchableOpacity>
-                                <Text style={styles.downloadLink}>Download PDF</Text>
+                            <TouchableOpacity
+                                style={styles.downloadBtn}
+                                onPress={async () => {
+                                    if (pdfLoading) return;
+                                    setPdfLoading(true);
+                                    await generateVaccinationPassportPDF(
+                                        selectedPet,
+                                        vaccinations,
+                                        user?.name || 'Pet Owner'
+                                    );
+                                    setPdfLoading(false);
+                                }}
+                                disabled={pdfLoading}
+                            >
+                                {pdfLoading ? (
+                                    <ActivityIndicator size="small" color={COLORS.primary} />
+                                ) : (
+                                    <>
+                                        <Ionicons name="download-outline" size={16} color={COLORS.primary} />
+                                        <Text style={styles.downloadLink}>Download PDF</Text>
+                                    </>
+                                )}
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -703,6 +725,15 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: COLORS.textMuted,
         letterSpacing: 0.5,
+    },
+    downloadBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        backgroundColor: COLORS.primaryContainer + '30',
+        borderRadius: 16,
     },
     downloadLink: {
         fontSize: 13,
