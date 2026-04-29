@@ -82,14 +82,14 @@ export default function ServicesScreen() {
                 <View style={styles.header}>
                     <View style={styles.headerTopRow}>
                         <TouchableOpacity onPress={() => navigation.navigate('UserProfile')}>
-                            <Ionicons name="person-circle-outline" size={36} color={COLORS.secondary} />
-                        </TouchableOpacity>
-                        <View style={{ flex: 1, alignItems: 'center' }}>
-                            <Text style={styles.headerBrand}>PetCare</Text>
-                            <Text style={styles.headerTitle}>Services</Text>
-                        </View>
-                        <TouchableOpacity onPress={() => navigation.navigate('MyBookings')}>
-                            <Ionicons name="notifications" size={24} color={COLORS.secondary} />
+                        <Ionicons name="person-circle-outline" size={36} color="#fff" />
+                    </TouchableOpacity>
+                    <View style={{ flex: 1, alignItems: 'center' }}>
+                        <Text style={styles.headerBrand}>PetCare</Text>
+                        <Text style={styles.headerTitle}>Services</Text>
+                    </View>
+                    <TouchableOpacity onPress={() => navigation.navigate('MyBookings')}>
+                        <Ionicons name="notifications" size={24} color="#fff" />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -163,7 +163,7 @@ export default function ServicesScreen() {
 
                                         {/* Price */}
                                         <View style={styles.priceRow}>
-                                            <Text style={styles.priceText}>${service.price?.toFixed(2)}</Text>
+                                            <Text style={styles.priceText}>Rs. {service.price?.toFixed(2)}</Text>
                                             <Text style={styles.priceLabel}> / session</Text>
                                         </View>
 
@@ -234,13 +234,13 @@ const styles = StyleSheet.create({
     headerBrand: {
         fontSize: 14,
         fontWeight: '600',
-        color: COLORS.secondary,
+        color: '#fff',
         fontStyle: 'italic',
     },
     headerTitle: {
         fontSize: 26,
         fontWeight: 'bold',
-        color: COLORS.secondary,
+        color: '#fff',
     },
 
     // ── Search ──
