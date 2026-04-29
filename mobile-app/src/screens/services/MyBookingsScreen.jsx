@@ -123,14 +123,14 @@ export default function MyBookingsScreen() {
                 <View style={styles.header}>
                     <View style={styles.headerTopRow}>
                         <TouchableOpacity onPress={() => navigation.goBack()}>
-                            <Ionicons name="person-circle-outline" size={36} color={COLORS.secondary} />
+                            <Ionicons name="person-circle-outline" size={36} color="#fff" />
                         </TouchableOpacity>
                         <View style={{ flex: 1, marginLeft: 12 }}>
                             <Text style={styles.headerTitle}>My Bookings</Text>
                             <Text style={styles.headerSubtitle}>PetCare Services</Text>
                         </View>
                         <TouchableOpacity>
-                            <Ionicons name="notifications" size={24} color={COLORS.secondary} />
+                            <Ionicons name="notifications" size={24} color="#fff" />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -290,13 +290,12 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: COLORS.secondary,
+        color: '#fff',
         fontStyle: 'italic',
     },
     headerSubtitle: {
         fontSize: 12,
-        color: COLORS.secondary,
-        opacity: 0.8,
+        color: 'rgba(255,255,255,0.8)',
     },
 
     // ── Content ──

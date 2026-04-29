@@ -164,12 +164,12 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 22,
         fontWeight: 'bold',
-        color: COLORS.secondary,
+        color: '#fff',
     },
     headerSub: {
         marginTop: 2,
         fontSize: 13,
-        color: COLORS.secondary,
+        color: 'rgba(255,255,255,0.85)',
         opacity: 0.9,
     },
     chatContent: {

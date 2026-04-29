@@ -83,7 +83,7 @@ export default function AppNavigator() {
 
                         {/* User Profile */}
                         <Stack.Screen name="UserProfile" component={ProfileScreen} />
-                        <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: true, title: 'Change Password', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary }} />
+                        <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: true, title: 'Change Password', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: '#fff' }} />
 
                         {/* Pet CRUD Flow */}
                         <Stack.Screen name="AddPet" component={AddPetScreen} />
@@ -105,7 +105,7 @@ export default function AppNavigator() {
                                 headerShown: true,
                                 title: 'Ask Pawly',
                                 headerStyle: { backgroundColor: COLORS.primary },
-                                headerTintColor: COLORS.secondary,
+                                headerTintColor: '#fff',
                                 headerTitleAlign: 'center',
                             }}
                         />

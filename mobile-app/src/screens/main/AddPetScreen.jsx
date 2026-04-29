@@ -52,7 +52,7 @@ export default function AddPetScreen() {
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-                        <Ionicons name="arrow-back" size={24} color={COLORS.secondary} />
+                        <Ionicons name="arrow-back" size={24} color="#fff" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>
                         Tell us about{'\n'}
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
         alignItems: 'center', ...SHADOWS.header,
     },
     backBtn: { position: 'absolute', left: 20, top: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 10 : 50 },
-    headerTitle: { fontSize: 22, fontWeight: 'bold', color: COLORS.secondary, textAlign: 'center', lineHeight: 30 },
+    headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#fff', textAlign: 'center', lineHeight: 30 },
     profileIcon: {
         position: 'absolute', right: 20, top: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 10 : 50,
         width: 36, height: 36, borderRadius: 18,

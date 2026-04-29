@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
     membershipTitle: {
         fontSize: 22,
         fontWeight: 'bold',
-        color: COLORS.secondary,
+        color: '#fff',
         textAlign: 'center',
         marginBottom: 10,
     },
