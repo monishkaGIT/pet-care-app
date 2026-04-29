@@ -30,6 +30,9 @@ import HealthRecordDetailScreen from '../screens/main/HealthRecordDetailScreen';
 // Social Screens
 import EditPostScreen from '../screens/social/EditPostScreen';
 
+// Public Screens (no auth)
+import PublicFeedbackScreen from '../screens/feedback/PublicFeedbackScreen';
+
 // Admin Screens
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 import ManageUsersScreen from '../screens/admin/ManageUsersScreen';
@@ -60,6 +63,7 @@ export default function AppNavigator() {
                         <Stack.Screen name="Landing" component={LandingScreen} />
                         <Stack.Screen name="Login" component={LoginScreen} />
                         <Stack.Screen name="Register" component={RegisterScreen} />
+                        <Stack.Screen name="PublicFeedback" component={PublicFeedbackScreen} />
                     </>
                 ) : user.role === 'admin' ? (
                     <>

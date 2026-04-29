@@ -22,6 +22,12 @@ export const fetchUserFeedbacks = async () => {
     return res.data;
 };
 
+// Public endpoint — no auth required
+export const fetchPublicFeedbacks = async () => {
+    const res = await axios.get(`${FEEDBACKS_URL}/public`);
+    return res.data;
+};
+
 export const fetchFeedbackById = async (feedbackId) => {
     const headers = await getHeaders();
     const res = await axios.get(`${FEEDBACKS_URL}/${feedbackId}`, { headers });

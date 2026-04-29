@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS } from '../../constants/theme';
 
@@ -8,7 +9,11 @@ const { width, height } = Dimensions.get('window');
 const LandingScreen = ({ navigation }) => {
     return (
         <SafeAreaView style={styles.safeArea}>
-            <View style={styles.container}>
+            <ScrollView
+                contentContainerStyle={styles.container}
+                showsVerticalScrollIndicator={false}
+                bounces={false}
+            >
                 {/* Decorative Background Blur */}
                 <View style={styles.decorativeCircle} />
 
@@ -61,12 +66,20 @@ const LandingScreen = ({ navigation }) => {
                         <Text style={styles.buttonSecondaryText}>Login</Text>
                     </TouchableOpacity>
 
-                    {/* Bento Features */}
-                    <View style={styles.bentoContainer}>
+                    {/* Bottom row: Bento + Reviews */}
+                    <View style={styles.bottomRow}>
                         <View style={styles.bentoItem}>
                             <MaterialIcons name="health-and-safety" size={20} color="#30628a" />
                             <Text style={styles.bentoText}>Pro Health</Text>
                         </View>
+                        <TouchableOpacity
+                            style={styles.reviewsBtn}
+                            onPress={() => navigation.navigate('PublicFeedback')}
+                            activeOpacity={0.7}
+                        >
+                            <MaterialIcons name="star" size={16} color="#f59e0b" />
+                            <Text style={styles.reviewsBtnText}>Reviews</Text>
+                        </TouchableOpacity>
                         <View style={styles.bentoItem}>
                             <MaterialIcons name="event" size={20} color="#30628a" />
                             <Text style={styles.bentoText}>Auto-Sched</Text>
@@ -76,7 +89,7 @@ const LandingScreen = ({ navigation }) => {
 
                 {/* Footer Visual */}
                 <View style={styles.footerCircle} />
-            </View>
+            </ScrollView>
         </SafeAreaView>
     );
 };
@@ -87,10 +100,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff9ec',
     },
     container: {
-        flex: 1,
+        flexGrow: 1,
         paddingHorizontal: 30,
-        paddingTop: 60,
-        paddingBottom: 40,
+        paddingTop: 40,
+        paddingBottom: 30,
         alignItems: 'center',
     },
     decorativeCircle: {
@@ -227,31 +240,45 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 30,
+        marginBottom: 16,
     },
     buttonSecondaryText: {
         color: '#79573f',
         fontSize: 18,
         fontWeight: 'bold',
     },
-    bentoContainer: {
+    bottomRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        opacity: 0.8,
+        alignItems: 'center',
+        opacity: 0.9,
     },
     bentoItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#faf3e0', // surface-container-low
-        paddingVertical: 12,
-        paddingHorizontal: 15,
+        backgroundColor: '#faf3e0',
+        paddingVertical: 10,
+        paddingHorizontal: 12,
         borderRadius: 12,
-        width: '47%',
     },
     bentoText: {
-        marginLeft: 10,
-        fontSize: 13,
+        marginLeft: 8,
+        fontSize: 12,
         fontWeight: '600',
+        color: '#79573f',
+    },
+    reviewsBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#faf3e0',
+        paddingVertical: 10,
+        paddingHorizontal: 14,
+        borderRadius: 12,
+        gap: 5,
+    },
+    reviewsBtnText: {
+        fontSize: 12,
+        fontWeight: '700',
         color: '#79573f',
     },
     footerCircle: {

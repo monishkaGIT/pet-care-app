@@ -130,9 +130,21 @@ const deleteFeedback = async (req, res) => {
     }
 };
 
+// @desc    Get ALL feedbacks (public, no auth)
+// @route   GET /api/feedbacks/public
+const getAllFeedbacks = async (req, res) => {
+    try {
+        const feedbacks = await Feedback.find({}).sort({ createdAt: -1 });
+        res.json(feedbacks);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     createFeedback,
     getUserFeedbacks,
+    getAllFeedbacks,
     getFeedbackById,
     updateFeedback,
     deleteFeedback,
