@@ -41,3 +41,17 @@ export const deleteBooking = async (bookingId) => {
     const res = await axios.delete(`${BASE_URL}/${bookingId}`, { headers });
     return res.data;
 };
+
+// ── Admin APIs ──
+
+export const fetchAllBookings = async () => {
+    const headers = await getHeaders();
+    const res = await axios.get(`${BASE_URL}/admin/all`, { headers });
+    return res.data;
+};
+
+export const updateBookingStatus = async (bookingId, status) => {
+    const headers = await getHeaders();
+    const res = await axios.put(`${BASE_URL}/admin/${bookingId}/status`, { status }, { headers });
+    return res.data;
+};

@@ -123,15 +123,12 @@ export default function MyBookingsScreen() {
                 <View style={styles.header}>
                     <View style={styles.headerTopRow}>
                         <TouchableOpacity onPress={() => navigation.goBack()}>
-                            <Ionicons name="person-circle-outline" size={36} color={COLORS.secondary} />
+                            <Ionicons name="person-circle-outline" size={36} color="#fff" />
                         </TouchableOpacity>
                         <View style={{ flex: 1, marginLeft: 12 }}>
                             <Text style={styles.headerTitle}>My Bookings</Text>
                             <Text style={styles.headerSubtitle}>PetCare Services</Text>
                         </View>
-                        <TouchableOpacity>
-                            <Ionicons name="notifications" size={24} color={COLORS.secondary} />
-                        </TouchableOpacity>
                     </View>
                 </View>
 
@@ -210,7 +207,8 @@ export default function MyBookingsScreen() {
                                     </Text>
                                 ) : null}
 
-                                {/* Action Buttons */}
+                                {/* Action Buttons — only for Pending bookings */}
+                                {booking.status === 'Pending' && (
                                 <View style={styles.actionRow}>
                                     <TouchableOpacity
                                         style={styles.cancelBtn}
@@ -225,6 +223,7 @@ export default function MyBookingsScreen() {
                                         <Text style={styles.rescheduleBtnText}>Reschedule</Text>
                                     </TouchableOpacity>
                                 </View>
+                                )}
                             </View>
                         );
                     })}
@@ -290,13 +289,12 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: COLORS.secondary,
+        color: '#fff',
         fontStyle: 'italic',
     },
     headerSubtitle: {
         fontSize: 12,
-        color: COLORS.secondary,
-        opacity: 0.8,
+        color: 'rgba(255,255,255,0.8)',
     },
 
     // ── Content ──
@@ -484,5 +482,23 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: COLORS.textPrimary,
         marginTop: 2,
+    },
+
+    // ── Notification Badge ──
+    notifBadge: {
+        position: 'absolute',
+        top: -4,
+        right: -6,
+        backgroundColor: '#dc2626',
+        width: 18,
+        height: 18,
+        borderRadius: 9,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    notifBadgeText: {
+        fontSize: 10,
+        fontWeight: '800',
+        color: '#fff',
     },
 });

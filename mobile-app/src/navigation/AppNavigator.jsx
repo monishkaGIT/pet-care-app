@@ -42,6 +42,7 @@ import UserDetailsScreen from '../screens/admin/UserDetailsScreen';
 import ManageServicesScreen from '../screens/admin/ManageServicesScreen';
 import AddNewServiceScreen from '../screens/admin/AddNewServiceScreen';
 import ServiceDetailsScreen from '../screens/admin/ServiceDetailsScreen';
+import AdminBookingsScreen from '../screens/admin/AdminBookingsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -93,6 +94,7 @@ export default function AppNavigator() {
                         <Stack.Screen name="AddNewService" component={AddNewServiceScreen} options={{ headerShown: false }} />
                         <Stack.Screen name="ServiceDetails" component={ServiceDetailsScreen} options={{ headerShown: false }} />
                         <Stack.Screen name="AdminChangePassword" component={ChangePasswordScreen} options={{ headerShown: true, title: 'Change Password', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: '#fff' }} />
+                        <Stack.Screen name="AdminBookings" component={AdminBookingsScreen} options={{ headerShown: false }} />
                     </>
                 ) : (
                     <>

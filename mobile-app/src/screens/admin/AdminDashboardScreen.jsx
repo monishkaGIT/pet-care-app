@@ -71,6 +71,11 @@ export default function AdminDashboardScreen({ navigation }) {
                 <Text style={styles.cardDesc}>View, add, or edit pet care services and pricing</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={[styles.card, { borderLeftColor: '#f59e0b' }]} onPress={() => navigation.navigate('AdminBookings')}>
+                <Text style={styles.cardTitle}>Manage Bookings</Text>
+                <Text style={styles.cardDesc}>Review, confirm, or cancel user service bookings</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={[styles.btn, styles.logoutBtn]} onPress={logout}>
                 <Text style={styles.btnText}>Logout</Text>
             </TouchableOpacity>

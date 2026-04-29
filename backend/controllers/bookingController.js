@@ -1,4 +1,6 @@
 const Booking = require('../models/Booking');
+const User = require('../models/User');
+const Pet = require('../models/Pet');
 
 // @desc    Create a new booking
 // @route   POST /api/bookings
@@ -124,10 +126,70 @@ const deleteBooking = async (req, res) => {
     }
 };
 
+// @desc    Get ALL bookings (admin only)
+// @route   GET /api/bookings/admin/all
+const getAllBookings = async (req, res) => {
+    try {
+        const bookings = await Booking.find()
+            .sort({ createdAt: -1 });
+
+        // Populate user and pet info manually
+        const populated = await Promise.all(
+            bookings.map(async (booking) => {
+                const bookingObj = booking.toObject();
+                try {
+                    const user = await User.findById(booking.userId).select('name email');
+                    bookingObj.user = user || { name: 'Unknown', email: '' };
+                } catch {
+                    bookingObj.user = { name: 'Unknown', email: '' };
+                }
+                try {
+                    const pet = await Pet.findById(booking.petId).select('name breed');
+                    bookingObj.pet = pet || { name: 'Unknown', breed: '' };
+                } catch {
+                    bookingObj.pet = { name: 'Unknown', breed: '' };
+                }
+                return bookingObj;
+            })
+        );
+
+        res.json(populated);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Admin update booking status (confirm/complete/cancel)
+// @route   PUT /api/bookings/admin/:id/status
+const adminUpdateBookingStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        if (!['Pending', 'Confirmed', 'Completed', 'Cancelled'].includes(status)) {
+            return res.status(400).json({ message: 'Invalid status' });
+        }
+
+        const booking = await Booking.findByIdAndUpdate(
+            req.params.id,
+            { status },
+            { new: true, runValidators: true }
+        );
+
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+
+        res.json(booking);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     createBooking,
     getUserBookings,
     getBookingById,
     updateBooking,
     deleteBooking,
+    getAllBookings,
+    adminUpdateBookingStatus,
 };

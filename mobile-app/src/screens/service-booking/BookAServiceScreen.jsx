@@ -119,16 +119,13 @@ export default function BookAServiceScreen() {
                 <View style={styles.header}>
                     <View style={styles.headerTopRow}>
                         <TouchableOpacity onPress={() => navigation.goBack()}>
-                            <Ionicons name="person-circle-outline" size={36} color={COLORS.secondary} />
+                            <Ionicons name="person-circle-outline" size={36} color="#fff" />
                         </TouchableOpacity>
                         <View style={{ flex: 1, marginLeft: 12 }}>
                             <Text style={styles.headerTitle}>
                                 {isEditMode ? 'Edit Booking' : 'Book Service'}
                             </Text>
                         </View>
-                        <TouchableOpacity onPress={() => navigation.navigate('MyBookings')}>
-                            <Ionicons name="notifications" size={24} color={COLORS.secondary} />
-                        </TouchableOpacity>
                     </View>
                 </View>
 
@@ -278,7 +275,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: COLORS.secondary,
+        color: '#fff',
         fontStyle: 'italic',
     },
 

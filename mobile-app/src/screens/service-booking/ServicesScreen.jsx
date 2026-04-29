@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput,
-    ActivityIndicator, RefreshControl, Image, Platform, StatusBar
+    ActivityIndicator, RefreshControl, Image, Platform, StatusBar, Alert
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
 import { fetchServices } from '../../api/serviceApi';
+import { fetchBookings } from '../../api/bookingApi';
 
 // Map category names to MaterialCommunityIcons
 const CATEGORY_ICONS = {
@@ -31,6 +32,7 @@ const DEFAULT_CATEGORY_COLOR = { color: '#a2d2ff', bgColor: '#eaf4ff' };
 export default function ServicesScreen() {
     const navigation = useNavigation();
     const [services, setServices] = useState([]);
+    const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [searchText, setSearchText] = useState('');
@@ -48,16 +50,56 @@ export default function ServicesScreen() {
         }
     }, []);
 
+    const loadBookings = useCallback(async () => {
+        try {
+            const data = await fetchBookings();
+            setBookings(data);
+        } catch (e) {
+            // silently ignore
+        }
+    }, []);
+
     // Refetch when the screen comes into focus (e.g. after admin adds a new service)
     useFocusEffect(
         useCallback(() => {
             loadServices();
-        }, [loadServices])
+            loadBookings();
+        }, [loadServices, loadBookings])
     );
 
     const onRefresh = () => {
         setRefreshing(true);
         loadServices();
+        loadBookings();
+    };
+
+    // Notification counts
+    const confirmedCount = bookings.filter(b => b.status === 'Confirmed').length;
+    const cancelledCount = bookings.filter(b => b.status === 'Cancelled').length;
+    const pendingCount = bookings.filter(b => b.status === 'Pending').length;
+    const completedCount = bookings.filter(b => b.status === 'Completed').length;
+    const notifCount = confirmedCount + cancelledCount;
+
+    const showNotifications = () => {
+        if (bookings.length === 0) {
+            Alert.alert('🔔 No Notifications', 'You have no booking updates yet. Book a service to get started!');
+            return;
+        }
+
+        const lines = [];
+        if (confirmedCount > 0) lines.push(`✅ ${confirmedCount} booking${confirmedCount > 1 ? 's' : ''} confirmed by admin`);
+        if (cancelledCount > 0) lines.push(`❌ ${cancelledCount} booking${cancelledCount > 1 ? 's' : ''} declined by admin`);
+        if (pendingCount > 0) lines.push(`⏳ ${pendingCount} booking${pendingCount > 1 ? 's' : ''} waiting for approval`);
+        if (completedCount > 0) lines.push(`🎉 ${completedCount} booking${completedCount > 1 ? 's' : ''} completed`);
+
+        Alert.alert(
+            '🔔 Booking Notifications',
+            lines.join('\n'),
+            [
+                { text: 'View Bookings', onPress: () => navigation.navigate('MyBookings') },
+                { text: 'OK' },
+            ]
+        );
     };
 
     // Filter services by search text
@@ -88,8 +130,15 @@ export default function ServicesScreen() {
                         <Text style={styles.headerBrand}>PetCare</Text>
                         <Text style={styles.headerTitle}>Services</Text>
                     </View>
-                    <TouchableOpacity onPress={() => navigation.navigate('MyBookings')}>
-                        <Ionicons name="notifications" size={24} color="#fff" />
+                    <TouchableOpacity onPress={showNotifications}>
+                        <View>
+                            <Ionicons name="notifications" size={24} color="#fff" />
+                            {notifCount > 0 && (
+                                <View style={styles.notifBadge}>
+                                    <Text style={styles.notifBadgeText}>{notifCount}</Text>
+                                </View>
+                            )}
+                        </View>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -193,16 +242,6 @@ export default function ServicesScreen() {
                     <Text style={styles.myBookingsBtnText}>View My Bookings</Text>
                 </TouchableOpacity>
 
-                {/* Membership Banner */}
-                <View style={styles.membershipBanner}>
-                    <Text style={styles.membershipTitle}>Preferred{'\n'}Membership</Text>
-                    <Text style={styles.membershipDesc}>
-                        Save 15% on all services and get priority booking with our PetCare Plus+ membership plan.
-                    </Text>
-                    <TouchableOpacity style={styles.learnMoreBtn}>
-                        <Text style={styles.learnMoreText}>Learn More</Text>
-                    </TouchableOpacity>
-                </View>
 
                 <View style={{ height: 30 }} />
             </ScrollView>
@@ -427,5 +466,23 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: 'bold',
         color: COLORS.primary,
+    },
+
+    // ── Notification Badge ──
+    notifBadge: {
+        position: 'absolute',
+        top: -4,
+        right: -6,
+        backgroundColor: '#dc2626',
+        width: 18,
+        height: 18,
+        borderRadius: 9,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    notifBadgeText: {
+        fontSize: 10,
+        fontWeight: '800',
+        color: '#fff',
     },
 });

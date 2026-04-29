@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 
 import HomeScreen from '../screens/main/HomeScreen';
@@ -7,6 +9,7 @@ import ServicesScreen from '../screens/service-booking/ServicesScreen';
 import SocialTabNavigator from './SocialTabNavigator';
 import PetHealthScreen from '../screens/main/PetHealthScreen';
 import FeedbackScreen from '../screens/user/FeedbackScreen';
+import { fetchBookings } from '../api/bookingApi';
 
 const Tab = createBottomTabNavigator();
 
@@ -19,6 +22,23 @@ const TAB_ICONS = {
 };
 
 export default function MainTabNavigator() {
+    const [confirmedCount, setConfirmedCount] = useState(0);
+
+    useFocusEffect(
+        useCallback(() => {
+            const loadBookingCount = async () => {
+                try {
+                    const bookings = await fetchBookings();
+                    const confirmed = bookings.filter(b => b.status === 'Confirmed').length;
+                    setConfirmedCount(confirmed);
+                } catch (e) {
+                    // silently ignore
+                }
+            };
+            loadBookingCount();
+        }, [])
+    );
+
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
@@ -51,7 +71,15 @@ export default function MainTabNavigator() {
             })}
         >
             <Tab.Screen name="MyPets" component={HomeScreen} options={{ tabBarLabel: 'MyPets' }} />
-            <Tab.Screen name="Services" component={ServicesScreen} options={{ tabBarLabel: 'Services' }} />
+            <Tab.Screen
+                name="Services"
+                component={ServicesScreen}
+                options={{
+                    tabBarLabel: 'Services',
+                    tabBarBadge: confirmedCount > 0 ? confirmedCount : undefined,
+                    tabBarBadgeStyle: confirmedCount > 0 ? styles.tabBadge : undefined,
+                }}
+            />
             {/* Social routes into its own nested tab flow (Feed/Explore/Create/Alerts/Profile) */}
             <Tab.Screen
                 name="Social"
@@ -63,3 +91,14 @@ export default function MainTabNavigator() {
         </Tab.Navigator>
     );
 }
+
+const styles = StyleSheet.create({
+    tabBadge: {
+        backgroundColor: '#dc2626',
+        fontSize: 10,
+        fontWeight: '800',
+        minWidth: 18,
+        height: 18,
+        borderRadius: 9,
+    },
+});

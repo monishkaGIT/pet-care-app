@@ -6,7 +6,13 @@ const {
     getBookingById,
     updateBooking,
     deleteBooking,
+    getAllBookings,
+    adminUpdateBookingStatus,
 } = require('../controllers/bookingController');
+
+// Admin routes (must be before /:id to avoid conflicts)
+router.get('/admin/all', getAllBookings);
+router.put('/admin/:id/status', adminUpdateBookingStatus);
 
 router.route('/')
     .get(getUserBookings)

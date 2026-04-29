@@ -129,9 +129,6 @@ export default function MyBookingsScreen() {
                             <Text style={styles.headerTitle}>My Bookings</Text>
                             <Text style={styles.headerSubtitle}>PetCare Services</Text>
                         </View>
-                        <TouchableOpacity>
-                            <Ionicons name="notifications" size={24} color="#fff" />
-                        </TouchableOpacity>
                     </View>
                 </View>
 
@@ -210,7 +207,8 @@ export default function MyBookingsScreen() {
                                     </Text>
                                 ) : null}
 
-                                {/* Action Buttons */}
+                                {/* Action Buttons — only for Pending bookings */}
+                                {booking.status === 'Pending' && (
                                 <View style={styles.actionRow}>
                                     <TouchableOpacity
                                         style={styles.cancelBtn}
@@ -225,6 +223,7 @@ export default function MyBookingsScreen() {
                                         <Text style={styles.rescheduleBtnText}>Reschedule</Text>
                                     </TouchableOpacity>
                                 </View>
+                                )}
                             </View>
                         );
                     })}
@@ -483,5 +482,23 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: COLORS.textPrimary,
         marginTop: 2,
+    },
+
+    // ── Notification Badge ──
+    notifBadge: {
+        position: 'absolute',
+        top: -4,
+        right: -6,
+        backgroundColor: '#dc2626',
+        width: 18,
+        height: 18,
+        borderRadius: 9,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    notifBadgeText: {
+        fontSize: 10,
+        fontWeight: '800',
+        color: '#fff',
     },
 });
