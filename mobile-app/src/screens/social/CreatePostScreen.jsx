@@ -224,20 +224,7 @@ export default function CreatePostScreen({ navigation }) {
                     )}
                 </View>
 
-                {/* Extra options */}
-                <View style={styles.toolSection}>
-                    {[
-                        { icon: 'location-on', label: 'Add Location' },
-                        { icon: 'person-add', label: 'Tag Friends' },
-                        { icon: 'public', label: 'Audience: Everyone' },
-                    ].map((item, i) => (
-                        <TouchableOpacity key={i} style={styles.toolRow} activeOpacity={0.8}>
-                            <MaterialIcons name={item.icon} size={22} color="#30628a" />
-                            <Text style={styles.toolLabel}>{item.label}</Text>
-                            <MaterialIcons name="chevron-right" size={20} color="#c1c7cf" style={{ marginLeft: 'auto' }} />
-                        </TouchableOpacity>
-                    ))}
-                </View>
+
 
                 <View style={{ height: 60 }} />
             </ScrollView>
@@ -340,13 +327,5 @@ const styles = StyleSheet.create({
     petChipText: { fontSize: 14, fontWeight: '600', color: '#79573f' },
     petChipTextActive: { color: '#ffffff' },
 
-    // Tools
-    toolSection: { marginHorizontal: 16, marginTop: 20, gap: 8 },
-    toolRow: {
-        flexDirection: 'row', alignItems: 'center', gap: 14,
-        backgroundColor: '#ffffff', paddingVertical: 14, paddingHorizontal: 18, borderRadius: 16,
-        shadowColor: 'rgba(111,78,55,0.04)',
-        shadowOffset: { width: 0, height: 4 }, shadowRadius: 10, shadowOpacity: 1, elevation: 1,
-    },
-    toolLabel: { fontSize: 14, fontWeight: 'bold', color: '#79573f' },
+
 });

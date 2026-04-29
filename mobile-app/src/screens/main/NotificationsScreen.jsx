@@ -131,11 +131,8 @@ export default function NotificationsScreen() {
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
                     <MaterialIcons name="pets" size={22} color="#30628a" />
-                    <Text style={styles.headerTitle}>Pet-stagram</Text>
+                    <Text style={styles.headerTitle}>Activity</Text>
                 </View>
-                <TouchableOpacity style={styles.headerBtn}>
-                    <MaterialIcons name="add-circle" size={24} color="#30628a" />
-                </TouchableOpacity>
             </View>
 
             {loading ? (

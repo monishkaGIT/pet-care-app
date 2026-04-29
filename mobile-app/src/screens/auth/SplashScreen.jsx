@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
+import LottieView from 'lottie-react-native';
 import { COLORS } from '../../constants/theme';
-import BeagleLottie from '../../components/BeagleLottie';
 
 export default function SplashScreen({ navigation }) {
     useEffect(() => {
@@ -14,8 +14,15 @@ export default function SplashScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <BeagleLottie type="loading" />
-            <Text style={styles.loadingText}>Waking up your pets...</Text>
+            <View style={styles.content}>
+                <LottieView
+                    source={{ uri: 'https://assets3.lottiefiles.com/packages/lf20_syqnfe7c.json' }}
+                    autoPlay
+                    loop
+                    style={styles.lottie}
+                />
+                <Text style={styles.loadingText}>Waking up your pets...</Text>
+            </View>
         </View>
     );
 }
@@ -25,12 +32,21 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: COLORS.background,
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+    },
+    content: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    lottie: {
+        width: 220,
+        height: 220,
     },
     loadingText: {
-        marginTop: -40,
+        marginTop: 12,
         color: COLORS.secondary,
-        fontSize: 22,
-        fontWeight: 'bold'
-    }
+        fontSize: 20,
+        fontWeight: 'bold',
+        fontStyle: 'italic',
+    },
 });
