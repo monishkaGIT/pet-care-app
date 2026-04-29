@@ -29,6 +29,7 @@ import HealthRecordDetailScreen from '../screens/main/HealthRecordDetailScreen';
 
 // Social Screens
 import EditPostScreen from '../screens/social/EditPostScreen';
+import MyPostsScreen from '../screens/social/MyPostsScreen';
 
 // Public Screens (no auth)
 import PublicFeedbackScreen from '../screens/feedback/PublicFeedbackScreen';
@@ -94,8 +95,9 @@ export default function AppNavigator() {
                         <Stack.Screen name="NewHealthRecord" component={NewHealthRecordScreen} />
                         <Stack.Screen name="HealthRecordDetail" component={HealthRecordDetailScreen} />
 
-                        {/* Social detail screen */}
+                        {/* Social detail screens */}
                         <Stack.Screen name="EditPost" component={EditPostScreen} />
+                        <Stack.Screen name="MyPosts" component={MyPostsScreen} />
                         <Stack.Screen
                             name="AskPawly"
                             component={AskPawlyScreen}

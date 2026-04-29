@@ -294,9 +294,16 @@ export default function SocialScreen({ navigation }) {
                 <TouchableOpacity
                     style={styles.headerBtn}
                     activeOpacity={0.8}
-                    onPress={() => navigation.navigate('Create')}
+                    onPress={() => {
+                        const parentNav = navigation.getParent();
+                        if (parentNav) {
+                            parentNav.navigate('MyPosts');
+                        } else {
+                            navigation.navigate('MyPosts');
+                        }
+                    }}
                 >
-                    <MaterialIcons name="add-circle" size={24} color="#30628a" />
+                    <MaterialIcons name="article" size={24} color="#30628a" />
                 </TouchableOpacity>
             </View>
 
