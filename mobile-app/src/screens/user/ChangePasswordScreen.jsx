@@ -11,10 +11,16 @@ export default function ChangePasswordScreen({ navigation }) {
 
     const handleChangePassword = async () => {
         if (!oldPassword || !newPassword || !confirmPassword) {
-            return Alert.alert('Error', 'All fields are required');
+            return Alert.alert('Missing Fields', 'All fields are required.');
+        }
+        if (newPassword.length < 6) {
+            return Alert.alert('Weak Password', 'New password must be at least 6 characters.');
         }
         if (newPassword !== confirmPassword) {
-            return Alert.alert('Error', 'New passwords do not match');
+            return Alert.alert('Mismatch', 'New passwords do not match.');
+        }
+        if (oldPassword === newPassword) {
+            return Alert.alert('Same Password', 'New password must be different from old password.');
         }
         setLoading(true);
         try {

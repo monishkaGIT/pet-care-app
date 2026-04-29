@@ -29,10 +29,18 @@ export default function ProfileScreen({ navigation }) {
     };
 
     const handleUpdate = async () => {
-        if (!name) return Alert.alert('Error', 'Name cannot be empty');
+        if (!name.trim()) return Alert.alert('Missing Name', 'Name cannot be empty.');
+        if (name.trim().length < 2) return Alert.alert('Invalid Name', 'Name must be at least 2 characters.');
+        if (phone.trim()) {
+            const phoneDigits = phone.replace(/\D/g, '');
+            if (phoneDigits.length < 10) return Alert.alert('Invalid Phone', 'Please enter a valid phone number (at least 10 digits).');
+        }
+        if (address.trim() && address.trim().length < 5) {
+            return Alert.alert('Invalid Address', 'Address must be at least 5 characters.');
+        }
         setLoading(true);
         try {
-            const { data } = await api.put('/profile', { name, phone, address, profileImage });
+            const { data } = await api.put('/profile', { name: name.trim(), phone: phone.trim(), address: address.trim(), profileImage });
             setUser(data);
             Alert.alert('Success', 'Profile updated successfully!');
         } catch (error) {
@@ -74,14 +82,6 @@ export default function ProfileScreen({ navigation }) {
                         <MaterialIcons name="arrow-back" size={22} color="#30628a" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>User Profile</Text>
-                </View>
-                <View style={styles.headerRight}>
-                    <TouchableOpacity style={styles.headerBtn}>
-                        <MaterialIcons name="add-circle" size={22} color="#30628a" />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.headerBtn}>
-                        <MaterialIcons name="settings" size={22} color="#30628a" />
-                    </TouchableOpacity>
                 </View>
             </View>
 

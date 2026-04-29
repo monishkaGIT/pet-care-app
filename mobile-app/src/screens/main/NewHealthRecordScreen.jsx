@@ -53,12 +53,31 @@ export default function NewHealthRecordScreen() {
     };
 
     const handleSave = async () => {
+        const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/\d{4}$/;
+
         try {
             setSaving(true);
 
+            // Validate date if provided
+            if (visitDate.trim() && !dateRegex.test(visitDate.trim())) {
+                Alert.alert('Invalid Date', 'Please enter date in mm/dd/yyyy format (e.g. 01/15/2026).');
+                setSaving(false);
+                return;
+            }
+
             if (recordType === 'medical') {
                 if (!title.trim()) {
-                    Alert.alert('Error', 'Please enter a title/diagnosis');
+                    Alert.alert('Missing Title', 'Please enter a title or diagnosis.');
+                    setSaving(false);
+                    return;
+                }
+                if (title.trim().length < 3) {
+                    Alert.alert('Title Too Short', 'Title must be at least 3 characters.');
+                    setSaving(false);
+                    return;
+                }
+                if (!visitDate.trim()) {
+                    Alert.alert('Missing Date', 'Please enter the visit date.');
                     setSaving(false);
                     return;
                 }
@@ -74,7 +93,17 @@ export default function NewHealthRecordScreen() {
                 });
             } else if (recordType === 'vaccination') {
                 if (!vaccineName.trim()) {
-                    Alert.alert('Error', 'Please enter the vaccine name');
+                    Alert.alert('Missing Vaccine', 'Please enter the vaccine name.');
+                    setSaving(false);
+                    return;
+                }
+                if (!visitDate.trim()) {
+                    Alert.alert('Missing Date', 'Please enter the administered date.');
+                    setSaving(false);
+                    return;
+                }
+                if (nextDueDate.trim() && !dateRegex.test(nextDueDate.trim())) {
+                    Alert.alert('Invalid Due Date', 'Next due date must be in mm/dd/yyyy format.');
                     setSaving(false);
                     return;
                 }
@@ -88,7 +117,12 @@ export default function NewHealthRecordScreen() {
                 });
             } else if (recordType === 'weight') {
                 if (!weight.trim() || isNaN(parseFloat(weight))) {
-                    Alert.alert('Error', 'Please enter a valid weight');
+                    Alert.alert('Invalid Weight', 'Please enter a valid numeric weight.');
+                    setSaving(false);
+                    return;
+                }
+                if (parseFloat(weight) <= 0 || parseFloat(weight) > 200) {
+                    Alert.alert('Weight Out of Range', 'Please enter a weight between 0.1 and 200.');
                     setSaving(false);
                     return;
                 }

@@ -11,10 +11,13 @@ export default function LoginScreen({ navigation }) {
     const [loading, setLoading] = useState(false);
 
     const handleLogin = async () => {
-        if (!email || !password) return Alert.alert('Error', 'Please fill all fields');
+        if (!email.trim() || !password.trim()) return Alert.alert('Missing Fields', 'Please enter both email and password.');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.trim())) return Alert.alert('Invalid Email', 'Please enter a valid email address.');
+        if (password.length < 6) return Alert.alert('Weak Password', 'Password must be at least 6 characters.');
         setLoading(true);
         try {
-            await login(email, password);
+            await login(email.trim(), password);
         } catch (error) {
             Alert.alert('Login Failed', error.response?.data?.message || 'Invalid credentials');
         } finally {

@@ -47,8 +47,24 @@ export default function EditPetScreen() {
     };
 
     const handleUpdate = async () => {
-        if (!form.name.trim() || !form.breed.trim()) {
-            Alert.alert('Missing Info', 'Please enter at least a name and breed.');
+        if (!form.name.trim()) {
+            Alert.alert('Missing Name', 'Please enter your pet\'s name.');
+            return;
+        }
+        if (form.name.trim().length < 2) {
+            Alert.alert('Invalid Name', 'Pet name must be at least 2 characters.');
+            return;
+        }
+        if (!form.breed.trim()) {
+            Alert.alert('Missing Breed', 'Please enter your pet\'s breed.');
+            return;
+        }
+        if (form.age && (isNaN(parseFloat(form.age)) || parseFloat(form.age) < 0 || parseFloat(form.age) > 30)) {
+            Alert.alert('Invalid Age', 'Please enter a valid age between 0 and 30 years.');
+            return;
+        }
+        if (form.weight && (isNaN(parseFloat(form.weight)) || parseFloat(form.weight) < 0 || parseFloat(form.weight) > 200)) {
+            Alert.alert('Invalid Weight', 'Please enter a valid weight between 0 and 200 kg.');
             return;
         }
         setSaving(true);

@@ -42,7 +42,15 @@ export default function EditPostScreen({ navigation, route }) {
 
     const handleSave = async () => {
         if (!caption.trim()) {
-            Alert.alert('Missing caption', 'Please write something for your post.');
+            Alert.alert('Missing Caption', 'Please write something for your post.');
+            return;
+        }
+        if (caption.trim().length < 3) {
+            Alert.alert('Caption Too Short', 'Caption must be at least 3 characters.');
+            return;
+        }
+        if (caption.trim().length > 500) {
+            Alert.alert('Caption Too Long', 'Caption must be under 500 characters.');
             return;
         }
 

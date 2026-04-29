@@ -70,8 +70,21 @@ export default function BookAServiceScreen() {
     };
 
     const handleSubmit = async () => {
-        if (!bookingDate.trim() || !bookingTime.trim()) {
-            Alert.alert('Missing Fields', 'Please enter both a date and time for your booking.');
+        if (!selectedPetId) {
+            Alert.alert('No Pet Selected', 'Please select a pet for this booking.');
+            return;
+        }
+        if (!bookingDate.trim()) {
+            Alert.alert('Missing Date', 'Please enter a booking date.');
+            return;
+        }
+        const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/\d{4}$/;
+        if (!dateRegex.test(bookingDate.trim())) {
+            Alert.alert('Invalid Date', 'Please enter date in mm/dd/yyyy format (e.g. 01/15/2026).');
+            return;
+        }
+        if (!bookingTime.trim()) {
+            Alert.alert('Missing Time', 'Please enter a booking time.');
             return;
         }
 

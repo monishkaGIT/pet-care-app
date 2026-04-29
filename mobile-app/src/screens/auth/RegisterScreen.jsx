@@ -30,13 +30,30 @@ export default function RegisterScreen({ navigation }) {
     };
 
     const handleRegister = async () => {
-        if (!name || !email || !password || !phone || !address) {
-            return Alert.alert('Error', 'Please fill all required fields');
+        if (!name.trim() || !email.trim() || !password || !phone.trim() || !address.trim()) {
+            return Alert.alert('Missing Fields', 'Please fill all required fields.');
+        }
+        if (name.trim().length < 2) {
+            return Alert.alert('Invalid Name', 'Name must be at least 2 characters.');
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.trim())) {
+            return Alert.alert('Invalid Email', 'Please enter a valid email address (e.g. user@example.com).');
+        }
+        if (password.length < 6) {
+            return Alert.alert('Weak Password', 'Password must be at least 6 characters.');
+        }
+        const phoneDigits = phone.replace(/\D/g, '');
+        if (phoneDigits.length < 10) {
+            return Alert.alert('Invalid Phone', 'Please enter a valid phone number (at least 10 digits).');
+        }
+        if (address.trim().length < 5) {
+            return Alert.alert('Invalid Address', 'Please enter a valid address (at least 5 characters).');
         }
 
         setLoading(true);
         try {
-            await register({ name, email, password, phone, address, profileImage, role: 'user' });
+            await register({ name: name.trim(), email: email.trim(), password, phone: phone.trim(), address: address.trim(), profileImage, role: 'user' });
         } catch (error) {
             Alert.alert('Registration Failed', error.response?.data?.message || 'Error occurred');
         } finally {
