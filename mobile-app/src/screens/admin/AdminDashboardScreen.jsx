@@ -71,6 +71,11 @@ export default function AdminDashboardScreen({ navigation }) {
                 <Text style={styles.cardDesc}>View, add, or edit pet care services and pricing</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={[styles.card, { borderLeftColor: '#f59e0b' }]} onPress={() => navigation.navigate('AdminChangePassword')}>
+                <Text style={styles.cardTitle}>Change Password</Text>
+                <Text style={styles.cardDesc}>Update your admin account password</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={[styles.btn, styles.logoutBtn]} onPress={logout}>
                 <Text style={styles.btnText}>Logout</Text>
             </TouchableOpacity>

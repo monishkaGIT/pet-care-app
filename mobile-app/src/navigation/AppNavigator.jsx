@@ -67,12 +67,13 @@ export default function AppNavigator() {
                     </>
                 ) : user.role === 'admin' ? (
                     <>
-                        <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} options={{ headerShown: true, title: 'Admin Home', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: COLORS.secondary }} />
+                        <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} options={{ headerShown: true, title: 'Admin Home', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: '#fff' }} />
                         <Stack.Screen name="ManageUsers" component={ManageUsersScreen} options={{ headerShown: false }} />
                         <Stack.Screen name="UserDetails" component={UserDetailsScreen} options={{ headerShown: false }} />
                         <Stack.Screen name="ManageServices" component={ManageServicesScreen} options={{ headerShown: false }} />
                         <Stack.Screen name="AddNewService" component={AddNewServiceScreen} options={{ headerShown: false }} />
                         <Stack.Screen name="ServiceDetails" component={ServiceDetailsScreen} options={{ headerShown: false }} />
+                        <Stack.Screen name="AdminChangePassword" component={ChangePasswordScreen} options={{ headerShown: true, title: 'Change Password', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: '#fff' }} />
                     </>
                 ) : (
                     <>
