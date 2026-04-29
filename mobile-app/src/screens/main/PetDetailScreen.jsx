@@ -11,7 +11,7 @@ import { fetchPetById, deletePet } from '../../api/petApi';
 const INFO_ROWS = (pet) => [
     { label: 'Breed', value: pet.breed || '—' },
     { label: 'Color', value: pet.color || '—' },
-    { label: 'Type', value: '—' },
+    { label: 'Gender', value: pet.gender || '—' },
     { label: 'Microchip', value: pet.isMicrochipped ? (pet.microchipNumber || 'Yes') : 'No' },
 ];
 
