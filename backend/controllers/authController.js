@@ -1,11 +1,22 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 
+const buildUserPayload = (user) => ({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    phone: user.phone,
+    address: user.address,
+    bio: user.bio,
+    profileImage: user.profileImage,
+});
+
 // ── Public Auth ────────────────────────────────────────────────────
 
 exports.registerUser = async (req, res) => {
     try {
-        const { name, email, password, phone, address, profileImage, role } = req.body;
+        const { name, email, password, phone, address, bio, profileImage, role } = req.body;
 
         // Validation
         if (!name || !email || !password) {
@@ -28,18 +39,10 @@ exports.registerUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         const user = await User.create({
-            name, email, password: hashedPassword, phone, address, profileImage, role: 'user'
+            name, email, password: hashedPassword, phone, address, bio, profileImage, role: 'user'
         });
 
-        res.status(201).json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            phone: user.phone,
-            address: user.address,
-            profileImage: user.profileImage,
-        });
+        res.status(201).json(buildUserPayload(user));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -56,15 +59,7 @@ exports.loginUser = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (user && (await bcrypt.compare(password, user.password))) {
-            res.json({
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                phone: user.phone,
-                address: user.address,
-                profileImage: user.profileImage,
-            });
+            res.json(buildUserPayload(user));
         } else {
             res.status(401).json({ message: "Invalid credentials" });
         }
@@ -79,7 +74,7 @@ exports.getUserProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user._id).select('-password');
         if (user) {
-            res.json(user);
+            res.json(buildUserPayload(user));
         } else {
             res.status(404).json({ message: 'User not found' });
         }
@@ -95,18 +90,11 @@ exports.updateUserProfile = async (req, res) => {
             user.name = req.body.name || user.name;
             user.phone = req.body.phone !== undefined ? req.body.phone : user.phone;
             user.address = req.body.address !== undefined ? req.body.address : user.address;
+            user.bio = req.body.bio !== undefined ? req.body.bio : user.bio;
             user.profileImage = req.body.profileImage || user.profileImage;
 
             const updatedUser = await user.save();
-            res.json({
-                _id: updatedUser._id,
-                name: updatedUser.name,
-                email: updatedUser.email,
-                role: updatedUser.role,
-                phone: updatedUser.phone,
-                address: updatedUser.address,
-                profileImage: updatedUser.profileImage,
-            });
+            res.json(buildUserPayload(updatedUser));
         } else {
             res.status(404).json({ message: 'User not found' });
         }
@@ -172,7 +160,7 @@ exports.getUsers = async (req, res) => {
 
 exports.createUser = async (req, res) => {
     try {
-        const { name, email, password, role, phone, address, profileImage } = req.body;
+        const { name, email, password, role, phone, address, bio, profileImage } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).json({ message: "Name, email, and password are required" });
@@ -188,9 +176,9 @@ exports.createUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         const user = await User.create({
-            name, email, password: hashedPassword, role: role || 'user', phone, address, profileImage
+            name, email, password: hashedPassword, role: role || 'user', phone, address, bio, profileImage
         });
-        res.status(201).json({ _id: user._id, name: user.name, email: user.email, role: user.role });
+        res.status(201).json(buildUserPayload(user));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -204,9 +192,10 @@ exports.updateUser = async (req, res) => {
             user.role = req.body.role || user.role;
             user.phone = req.body.phone !== undefined ? req.body.phone : user.phone;
             user.address = req.body.address !== undefined ? req.body.address : user.address;
+            user.bio = req.body.bio !== undefined ? req.body.bio : user.bio;
             user.profileImage = req.body.profileImage || user.profileImage;
             const updatedUser = await user.save();
-            res.json({ _id: updatedUser._id, name: updatedUser.name, email: updatedUser.email, role: updatedUser.role });
+            res.json(buildUserPayload(updatedUser));
         } else {
             res.status(404).json({ message: "User not found" });
         }

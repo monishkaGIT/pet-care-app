@@ -25,6 +25,10 @@ const userSchema = new mongoose.Schema({
     address: {
         type: String
     },
+    bio: {
+        type: String,
+        default: ''
+    },
     profileImage: {
         type: String
     }

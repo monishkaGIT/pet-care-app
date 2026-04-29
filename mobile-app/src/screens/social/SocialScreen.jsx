@@ -303,7 +303,7 @@ export default function SocialScreen({ navigation }) {
                         }
                     }}
                 >
-                    <MaterialIcons name="article" size={24} color="#30628a" />
+                    <MaterialIcons name="account-circle" size={24} color="#30628a" />
                 </TouchableOpacity>
             </View>
 

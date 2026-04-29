@@ -10,6 +10,7 @@ export default function ProfileScreen({ navigation }) {
     const [name, setName] = useState(user?.name || '');
     const [phone, setPhone] = useState(user?.phone || '');
     const [address, setAddress] = useState(user?.address || '');
+    const [bio, setBio] = useState(user?.bio || '');
     const [profileImage, setProfileImage] = useState(user?.profileImage || null);
     const [loading, setLoading] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
@@ -40,7 +41,13 @@ export default function ProfileScreen({ navigation }) {
         }
         setLoading(true);
         try {
-            const { data } = await api.put('/profile', { name: name.trim(), phone: phone.trim(), address: address.trim(), profileImage });
+            const { data } = await api.put('/profile', {
+                name: name.trim(),
+                phone: phone.trim(),
+                address: address.trim(),
+                bio: bio.trim(),
+                profileImage,
+            });
             setUser(data);
             Alert.alert('Success', 'Profile updated successfully!');
         } catch (error) {
@@ -110,7 +117,8 @@ export default function ProfileScreen({ navigation }) {
                         <View style={styles.profileNameRow}>
                             <Text style={styles.profileUsername} numberOfLines={1} adjustsFontSizeToFit>{user?.name || 'User'}</Text>
                         </View>
-                        <Text style={styles.profileBio}>{user?.email || 'Proud pet parent 🐾'}</Text>
+                        <Text style={styles.profileBio}>{user?.bio?.trim() || 'Proud pet parent 🐾'}</Text>
+                        <Text style={styles.profileEmail}>{user?.email}</Text>
 
                     </View>
                 </View>
@@ -126,6 +134,16 @@ export default function ProfileScreen({ navigation }) {
                     <TextInput style={styles.input} value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="Phone" placeholderTextColor="#72787f" />
                     <Text style={styles.fieldLabel}>Address</Text>
                     <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="Address" placeholderTextColor="#72787f" />
+                    <Text style={styles.fieldLabel}>Bio</Text>
+                    <TextInput
+                        style={[styles.input, styles.bioInput]}
+                        value={bio}
+                        onChangeText={setBio}
+                        placeholder="Write a short bio about you and your pets"
+                        placeholderTextColor="#72787f"
+                        multiline
+                        maxLength={160}
+                    />
 
                     <TouchableOpacity style={styles.saveBtn} onPress={handleUpdate} disabled={loading} activeOpacity={0.85}>
                         {loading ? <ActivityIndicator size="small" color="#ffffff" /> : (
@@ -200,6 +218,7 @@ const styles = StyleSheet.create({
     },
     editProfileBtnText: { color: '#ffffff', fontWeight: 'bold', fontSize: 13 },
     profileBio: { fontSize: 13, color: '#41474e', lineHeight: 18, marginBottom: 12 },
+    profileEmail: { fontSize: 12, color: '#72787f', marginBottom: 12 },
     statsRow: { flexDirection: 'row', gap: 20, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#e9e2d0' },
     statItem: { alignItems: 'flex-start' },
     statValue: { fontSize: 18, fontWeight: '800', color: '#79573f' },
@@ -211,6 +230,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#ffffff', borderWidth: 1.5, borderColor: '#D9CFBC',
         borderRadius: 12, paddingHorizontal: 16, height: 50, fontSize: 15, color: '#1e1c10', marginBottom: 14,
     },
+    bioInput: { height: 96, paddingTop: 14, textAlignVertical: 'top' },
     disabledInput: { backgroundColor: '#f4eedb', color: '#72787f' },
     saveBtn: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
