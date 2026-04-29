@@ -79,12 +79,20 @@ export default function AppNavigator() {
                                 headerStyle: { backgroundColor: COLORS.primary },
                                 headerTintColor: '#fff',
                                 headerRight: () => (
-                                    <TouchableOpacity
-                                        onPress={() => navigation.navigate('AdminChangePassword')}
-                                        style={{ marginRight: 16, padding: 6 }}
-                                    >
-                                        <MaterialIcons name="lock-outline" size={22} color="#fff" />
-                                    </TouchableOpacity>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <TouchableOpacity
+                                            onPress={() => navigation.navigate('AdminBookings')}
+                                            style={{ marginRight: 12, padding: 6 }}
+                                        >
+                                            <MaterialIcons name="notifications-none" size={22} color="#fff" />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            onPress={() => navigation.navigate('AdminChangePassword')}
+                                            style={{ marginRight: 16, padding: 6 }}
+                                        >
+                                            <MaterialIcons name="lock-outline" size={22} color="#fff" />
+                                        </TouchableOpacity>
+                                    </View>
                                 ),
                             })}
                         />
