@@ -74,9 +74,7 @@ export default function AddPetScreen() {
                         Tell us about{'\n'}
                         {form.name ? `[${form.name}]` : '[Pet Name]'}
                     </Text>
-                    <TouchableOpacity style={styles.profileIcon}>
-                        <Ionicons name="person" size={18} color="#fff" />
-                    </TouchableOpacity>
+                    <View style={{ width: 24 }} />
                 </View>
 
                 {/* Form */}

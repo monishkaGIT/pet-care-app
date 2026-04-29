@@ -97,12 +97,11 @@ export default function EditPetScreen() {
                 <View style={styles.header}>
                     <View style={styles.headerTopRow}>
                         <TouchableOpacity onPress={() => navigation.goBack()}>
-                            <Ionicons name="menu" size={26} color={COLORS.secondary} />
+                            <Ionicons name="menu" size={26} color="#fff" />
                         </TouchableOpacity>
-                        <Text style={styles.headerBrand}>PetCare</Text>
-                        <View style={styles.profileInitials}>
-                            <Text style={styles.initialsText}>JD</Text>
-                        </View>
+                        <Text style={[styles.headerBrand, { color: '#fff' }]}>PetCare</Text>
+                        {/* Empty view to balance flex space if needed, or simply removed right circle */}
+                        <View style={{ width: 26 }} />
                     </View>
                 </View>
 
