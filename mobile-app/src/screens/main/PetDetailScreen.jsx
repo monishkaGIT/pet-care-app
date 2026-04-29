@@ -83,13 +83,7 @@ export default function PetDetailScreen() {
                             <MaterialIcons name="arrow-back" size={24} color="#30628a" />
                         </TouchableOpacity>
                         <Text style={styles.heroBrand}>PetCare</Text>
-                        <TouchableOpacity
-                            style={styles.editBtn}
-                            onPress={() => navigation.navigate('EditPet', { petId: pet._id })}
-                            activeOpacity={0.8}
-                        >
-                            <MaterialIcons name="edit" size={20} color="#30628a" />
-                        </TouchableOpacity>
+                        <View style={styles.editBtn} />
                     </View>
 
                     {/* Avatar */}
@@ -166,7 +160,11 @@ export default function PetDetailScreen() {
                     <Text style={styles.infoCardTitle}>
                         <MaterialIcons name="medical-services" size={18} color="#79573f" />{'  '}Health Status
                     </Text>
-                    <View style={styles.healthRow}>
+                    <TouchableOpacity
+                        style={styles.healthRow}
+                        onPress={() => navigation.navigate('MainTabs', { screen: 'PetHealth', params: { petId: pet._id } })}
+                        activeOpacity={0.8}
+                    >
                         <View style={styles.healthIconBox}>
                             <MaterialIcons name="vaccines" size={28} color="#30628a" />
                         </View>
@@ -180,7 +178,7 @@ export default function PetDetailScreen() {
                             </Text>
                         </View>
                         <MaterialIcons name="chevron-right" size={20} color="#72787f" />
-                    </View>
+                    </TouchableOpacity>
                 </View>
             </ScrollView>
         </SafeAreaView>

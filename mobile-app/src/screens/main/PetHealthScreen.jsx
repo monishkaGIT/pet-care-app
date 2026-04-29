@@ -142,9 +142,7 @@ export default function PetHealthScreen() {
                     <FontAwesome5 name="paw" size={20} color="#fff" />
                     <Text style={styles.headerTitle}>Pet Health</Text>
                 </View>
-                <TouchableOpacity onPress={onRefresh}>
-                    <Ionicons name="notifications-outline" size={22} color="#fff" />
-                </TouchableOpacity>
+                <View />
             </View>
 
             <ScrollView

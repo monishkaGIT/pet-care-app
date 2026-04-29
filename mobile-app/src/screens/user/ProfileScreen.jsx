@@ -108,10 +108,7 @@ export default function ProfileScreen({ navigation }) {
                     {/* Profile Info */}
                     <View style={styles.profileInfo}>
                         <View style={styles.profileNameRow}>
-                            <Text style={styles.profileUsername}>{user?.name || 'User'}</Text>
-                            <TouchableOpacity style={styles.editProfileBtn} onPress={handleUpdate} disabled={loading}>
-                                {loading ? <ActivityIndicator size="small" color="#ffffff" /> : <Text style={styles.editProfileBtnText}>Save</Text>}
-                            </TouchableOpacity>
+                            <Text style={styles.profileUsername} numberOfLines={1} adjustsFontSizeToFit>{user?.name || 'User'}</Text>
                         </View>
                         <Text style={styles.profileBio}>{user?.email || 'Proud pet parent 🐾'}</Text>
 
@@ -129,6 +126,15 @@ export default function ProfileScreen({ navigation }) {
                     <TextInput style={styles.input} value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="Phone" placeholderTextColor="#72787f" />
                     <Text style={styles.fieldLabel}>Address</Text>
                     <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="Address" placeholderTextColor="#72787f" />
+
+                    <TouchableOpacity style={styles.saveBtn} onPress={handleUpdate} disabled={loading} activeOpacity={0.85}>
+                        {loading ? <ActivityIndicator size="small" color="#ffffff" /> : (
+                            <>
+                                <MaterialIcons name="check" size={18} color="#ffffff" />
+                                <Text style={styles.saveBtnText}>Save Changes</Text>
+                            </>
+                        )}
+                    </TouchableOpacity>
                 </View>
 
                 {/* Action buttons */}
@@ -206,6 +212,12 @@ const styles = StyleSheet.create({
         borderRadius: 12, paddingHorizontal: 16, height: 50, fontSize: 15, color: '#1e1c10', marginBottom: 14,
     },
     disabledInput: { backgroundColor: '#f4eedb', color: '#72787f' },
+    saveBtn: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+        backgroundColor: '#30628a', paddingVertical: 16, borderRadius: 12, marginTop: 6,
+        shadowColor: '#30628a', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4,
+    },
+    saveBtnText: { color: '#ffffff', fontWeight: 'bold', fontSize: 16 },
     tabBar: {
         flexDirection: 'row', borderBottomWidth: 1, borderColor: '#efe8d5',
         marginBottom: 12,
