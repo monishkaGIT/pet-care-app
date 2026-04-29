@@ -1,9 +1,10 @@
 import React, { useContext } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthContext } from '../context/AuthContext';
 import { COLORS } from '../constants/theme';
+import { MaterialIcons } from '@expo/vector-icons';
 
 // Auth Screens
 import SplashScreen from '../screens/auth/SplashScreen';
@@ -68,7 +69,24 @@ export default function AppNavigator() {
                     </>
                 ) : user.role === 'admin' ? (
                     <>
-                        <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} options={{ headerShown: true, title: 'Admin Home', headerStyle: { backgroundColor: COLORS.primary }, headerTintColor: '#fff' }} />
+                        <Stack.Screen
+                            name="AdminDashboard"
+                            component={AdminDashboardScreen}
+                            options={({ navigation }) => ({
+                                headerShown: true,
+                                title: 'Admin Home',
+                                headerStyle: { backgroundColor: COLORS.primary },
+                                headerTintColor: '#fff',
+                                headerRight: () => (
+                                    <TouchableOpacity
+                                        onPress={() => navigation.navigate('AdminChangePassword')}
+                                        style={{ marginRight: 16, padding: 6 }}
+                                    >
+                                        <MaterialIcons name="lock-outline" size={22} color="#fff" />
+                                    </TouchableOpacity>
+                                ),
+                            })}
+                        />
                         <Stack.Screen name="ManageUsers" component={ManageUsersScreen} options={{ headerShown: false }} />
                         <Stack.Screen name="UserDetails" component={UserDetailsScreen} options={{ headerShown: false }} />
                         <Stack.Screen name="ManageServices" component={ManageServicesScreen} options={{ headerShown: false }} />
