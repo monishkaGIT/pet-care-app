@@ -13,7 +13,6 @@ export default function RegisterScreen({ navigation }) {
     const [phone, setPhone] = useState('');
     const [address, setAddress] = useState('');
     const [profileImage, setProfileImage] = useState(null);
-    const [role, setRole] = useState('user');
     const [loading, setLoading] = useState(false);
 
     const pickImage = async () => {
@@ -37,7 +36,7 @@ export default function RegisterScreen({ navigation }) {
 
         setLoading(true);
         try {
-            await register({ name, email, password, phone, address, profileImage, role });
+            await register({ name, email, password, phone, address, profileImage, role: 'user' });
         } catch (error) {
             Alert.alert('Registration Failed', error.response?.data?.message || 'Error occurred');
         } finally {
@@ -118,19 +117,6 @@ export default function RegisterScreen({ navigation }) {
                                 </View>
                             </View>
 
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>ACCOUNT TYPE</Text>
-                                <View style={styles.roleContainer}>
-                                    <TouchableOpacity style={[styles.roleBtn, role === 'user' && styles.roleBtnActive]} onPress={() => setRole('user')}>
-                                        <MaterialIcons name="pets" size={16} color={role === 'user' ? '#ffffff' : '#345d75'} style={{marginRight: 6}} />
-                                        <Text style={[styles.roleText, role === 'user' && styles.roleTextActive]}>User</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity style={[styles.roleBtn, role === 'admin' && styles.roleBtnActive]} onPress={() => setRole('admin')}>
-                                        <MaterialIcons name="admin-panel-settings" size={16} color={role === 'admin' ? '#ffffff' : '#345d75'} style={{marginRight: 6}} />
-                                        <Text style={[styles.roleText, role === 'admin' && styles.roleTextActive]}>Admin</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
 
                             {/* Submit */}
                             <TouchableOpacity style={styles.submitBtn} onPress={handleRegister} disabled={loading} activeOpacity={0.8}>
