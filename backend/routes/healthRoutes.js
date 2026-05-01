@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router({ mergeParams: true });
+const { protect } = require('../middleware/authMiddleware');
 
 const {
     getHealthSummary,
@@ -24,33 +25,33 @@ const {
 } = require('../controllers/weightLogController');
 
 // Health Summary
-router.get('/summary', getHealthSummary);
+router.get('/summary', protect, getHealthSummary);
 
 // Health Records
 router.route('/records')
-    .get(getHealthRecords)
-    .post(createHealthRecord);
+    .get(protect, getHealthRecords)
+    .post(protect, createHealthRecord);
 
 router.route('/records/:recordId')
-    .get(getHealthRecordById)
-    .put(updateHealthRecord)
-    .delete(deleteHealthRecord);
+    .get(protect, getHealthRecordById)
+    .put(protect, updateHealthRecord)
+    .delete(protect, deleteHealthRecord);
 
 // Vaccinations
 router.route('/vaccinations')
-    .get(getVaccinations)
-    .post(createVaccination);
+    .get(protect, getVaccinations)
+    .post(protect, createVaccination);
 
 router.route('/vaccinations/:vacId')
-    .put(updateVaccination)
-    .delete(deleteVaccination);
+    .put(protect, updateVaccination)
+    .delete(protect, deleteVaccination);
 
 // Weight Logs
 router.route('/weight')
-    .get(getWeightHistory)
-    .post(addWeightEntry);
+    .get(protect, getWeightHistory)
+    .post(protect, addWeightEntry);
 
 router.route('/weight/:logId')
-    .delete(deleteWeightEntry);
+    .delete(protect, deleteWeightEntry);
 
 module.exports = router;

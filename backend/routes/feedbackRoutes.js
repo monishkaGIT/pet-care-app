@@ -8,17 +8,19 @@ const {
     updateFeedback,
     deleteFeedback,
 } = require('../controllers/feedbackController');
+const { protect } = require('../middleware/authMiddleware');
 
 // Public route (no auth required)
 router.get('/public', getAllFeedbacks);
 
+// Protected routes
 router.route('/')
-    .get(getUserFeedbacks)
-    .post(createFeedback);
+    .get(protect, getUserFeedbacks)
+    .post(protect, createFeedback);
 
 router.route('/:id')
-    .get(getFeedbackById)
-    .put(updateFeedback)
-    .delete(deleteFeedback);
+    .get(protect, getFeedbackById)
+    .put(protect, updateFeedback)
+    .delete(protect, deleteFeedback);
 
 module.exports = router;
