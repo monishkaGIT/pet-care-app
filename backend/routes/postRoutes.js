@@ -9,6 +9,7 @@ const {
     deletePost,
     toggleLike,
     addComment,
+    deleteComment,
 } = require('../controllers/postController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -34,5 +35,8 @@ router.route('/:id/like')
 // Comments
 router.route('/:id/comments')
     .post(protect, addComment);
+
+router.route('/:id/comments/:commentId')
+    .delete(protect, deleteComment);
 
 module.exports = router;

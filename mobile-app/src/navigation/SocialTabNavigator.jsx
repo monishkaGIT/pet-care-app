@@ -6,7 +6,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 // Social screens
 import SocialFeedScreen from '../screens/social/SocialScreen';
 import CreatePostScreen from '../screens/social/CreatePostScreen';
-import AlertsScreen from '../screens/main/NotificationsScreen';
+import ActivityScreen from '../screens/notifications/ActivityScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -15,7 +15,7 @@ function SocialTabBar({ state, descriptors, navigation }) {
     const TABS = [
         { name: 'Feed', icon: 'home', activeIcon: 'home', label: 'Feed' },
         { name: 'Create', icon: 'add-circle-outline', activeIcon: 'add-circle', label: 'Create' },
-        { name: 'Alerts', icon: 'notifications-none', activeIcon: 'notifications', label: 'Alerts' },
+        { name: 'Activity', icon: 'notifications-none', activeIcon: 'notifications', label: 'Activity' },
     ];
 
     return (
@@ -91,7 +91,7 @@ export default function SocialTabNavigator() {
         >
             <Tab.Screen name="Feed" component={SocialFeedScreen} />
             <Tab.Screen name="Create" component={CreatePostScreen} />
-            <Tab.Screen name="Alerts" component={AlertsScreen} />
+            <Tab.Screen name="Activity" component={ActivityScreen} />
         </Tab.Navigator>
     );
 }

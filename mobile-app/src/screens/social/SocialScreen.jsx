@@ -7,6 +7,7 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { postApi } from '../../api/axiosConfig';
 import { AuthContext } from '../../context/AuthContext';
+import CommentsModal from '../../components/CommentsModal';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -27,7 +28,7 @@ function getPetChipStyle(type) {
 
 // ─── PostCard Component ─────────────────────────────────────────────────────
 
-function PostCard({ post, currentUserId, onLike, onDelete, onEdit }) {
+function PostCard({ post, currentUserId, onLike, onDelete, onEdit, onOpenComments }) {
     const isOwner = post.author?._id === currentUserId;
     const isLiked = post.likes?.includes(currentUserId);
     const petTypeOrBreed = post.pet?.type || post.pet?.breed;
@@ -123,7 +124,7 @@ function PostCard({ post, currentUserId, onLike, onDelete, onEdit }) {
                         />
                     </TouchableOpacity>
                     <Text style={styles.actionCount}>{post.likes?.length || 0}</Text>
-                    <TouchableOpacity style={[styles.actionBtn, { marginLeft: 12 }]}>
+                    <TouchableOpacity style={[styles.actionBtn, { marginLeft: 12 }]} onPress={() => onOpenComments(post)}>
                         <MaterialIcons name="chat-bubble-outline" size={24} color="#79573f" />
                     </TouchableOpacity>
                     <Text style={styles.actionCount}>{post.comments?.length || 0}</Text>
@@ -140,64 +141,13 @@ function PostCard({ post, currentUserId, onLike, onDelete, onEdit }) {
                     {post.caption}
                 </Text>
                 {post.comments?.length > 0 && (
-                    <Text style={styles.viewCommentsText}>View all {post.comments.length} comments</Text>
+                    <TouchableOpacity onPress={() => onOpenComments(post)}>
+                        <Text style={styles.viewCommentsText}>View all {post.comments.length} comments</Text>
+                    </TouchableOpacity>
                 )}
                 <Text style={styles.timestampText}>{timeAgo(post.createdAt)}</Text>
             </View>
         </View>
-    );
-}
-
-// ─── Story Row (derived from real post authors) ────────────────────────────
-
-function StoryRow({ posts, currentUserId }) {
-    // Build stories from unique post authors
-    const stories = [
-        { key: 'your', icon: 'person-add', label: 'YOUR STORY', ringColor: '#fcd34d', bgColor: '#ffffff', iconColor: '#30628a' },
-    ];
-
-    const seenAuthors = new Set();
-    posts.forEach((post) => {
-        const authorId = post.author?._id;
-        if (authorId && authorId !== currentUserId && !seenAuthors.has(authorId)) {
-            seenAuthors.add(authorId);
-            const petName = post.pet?.name || post.author?.name || 'Pet';
-            stories.push({
-                key: authorId,
-                icon: 'pets',
-                label: petName.toUpperCase().slice(0, 10),
-                ringColor: '#f59e0b',
-                bgColor: '#faf3e0',
-                iconColor: '#79573f',
-                image: post.author?.profileImage || null,
-            });
-        }
-    });
-
-    return (
-        <FlatList
-            data={stories.slice(0, 8)}
-            keyExtractor={i => i.key}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.storiesScroll}
-            renderItem={({ item }) => (
-                <View style={styles.storyContainer}>
-                    <View style={[styles.storyRing, { backgroundColor: item.ringColor }]}>
-                        <View style={styles.storyIconWrapper}>
-                            <View style={[styles.storyIconInner, { backgroundColor: item.bgColor }]}>
-                                {item.image ? (
-                                    <Image source={{ uri: item.image }} style={{ width: '100%', height: '100%', borderRadius: 29 }} />
-                                ) : (
-                                    <MaterialIcons name={item.icon} size={26} color={item.iconColor} />
-                                )}
-                            </View>
-                        </View>
-                    </View>
-                    <Text style={styles.storyLabel}>{item.label}</Text>
-                </View>
-            )}
-        />
     );
 }
 
@@ -208,6 +158,9 @@ export default function SocialScreen({ navigation }) {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    
+    // Comments Modal State
+    const [selectedPost, setSelectedPost] = useState(null);
 
     const fetchPosts = useCallback(async () => {
         try {
@@ -260,6 +213,20 @@ export default function SocialScreen({ navigation }) {
         navigation.navigate('EditPost', { post });
     };
 
+    const handleCommentAdded = (postId, updatedComments) => {
+        setPosts(prev => prev.map(p => p._id === postId ? { ...p, comments: updatedComments } : p));
+        if (selectedPost && selectedPost._id === postId) {
+            setSelectedPost({ ...selectedPost, comments: updatedComments });
+        }
+    };
+
+    const handleCommentDeleted = (postId, updatedComments) => {
+        setPosts(prev => prev.map(p => p._id === postId ? { ...p, comments: updatedComments } : p));
+        if (selectedPost && selectedPost._id === postId) {
+            setSelectedPost({ ...selectedPost, comments: updatedComments });
+        }
+    };
+
     const handleHomePress = () => {
         Alert.alert(
             'Quit Social',
@@ -305,11 +272,6 @@ export default function SocialScreen({ navigation }) {
                 >
                     <MaterialIcons name="account-circle" size={24} color="#30628a" />
                 </TouchableOpacity>
-            </View>
-
-            {/* Stories */}
-            <View style={styles.storiesSection}>
-                <StoryRow posts={posts} currentUserId={user?._id} />
             </View>
         </>
     );
@@ -362,11 +324,21 @@ export default function SocialScreen({ navigation }) {
                             onLike={handleLike}
                             onDelete={handleDelete}
                             onEdit={handleEdit}
+                            onOpenComments={(post) => setSelectedPost(post)}
                         />
                     )}
                     ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
                 />
             )}
+
+            <CommentsModal
+                visible={!!selectedPost}
+                onClose={() => setSelectedPost(null)}
+                post={selectedPost}
+                currentUserId={user?._id}
+                onCommentAdded={handleCommentAdded}
+                onCommentDeleted={handleCommentDeleted}
+            />
         </SafeAreaView>
     );
 }
@@ -405,26 +377,8 @@ const styles = StyleSheet.create({
         fontStyle: 'italic', marginLeft: 10,
     },
 
-    // Stories
-    storiesSection: { marginTop: 20, marginBottom: 12 },
-    storiesScroll: { paddingHorizontal: 20 },
-    storyContainer: { alignItems: 'center', marginRight: 20 },
-    storyRing: {
-        padding: 4, borderRadius: 40,
-        justifyContent: 'center', alignItems: 'center', marginBottom: 8,
-    },
-    storyIconWrapper: {
-        backgroundColor: '#fff9ec', borderRadius: 36, padding: 3,
-    },
-    storyIconInner: {
-        width: 58, height: 58, borderRadius: 29,
-        alignItems: 'center', justifyContent: 'center',
-        borderWidth: 2, borderColor: '#fff9ec',
-    },
-    storyLabel: { fontSize: 9, fontWeight: 'bold', color: '#41474e', letterSpacing: 0.5 },
-
     // Feed
-    scrollContent: { paddingBottom: 120 },
+    scrollContent: { paddingBottom: 120, paddingTop: 12 },
 
     // Post Card
     postCard: {

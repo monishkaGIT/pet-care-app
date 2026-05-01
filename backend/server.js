@@ -29,6 +29,7 @@ app.use('/api/ask-pawly', require('./routes/askPawlyRoutes'));
 app.use('/api/bookings', require('./routes/bookingRoutes'));
 app.use('/api/feedbacks', require('./routes/feedbackRoutes'));
 app.use('/api/pets/:petId/health', require('./routes/healthRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
 
 app.get('/', (req, res) => {
   res.send('Pet Management API is running...');

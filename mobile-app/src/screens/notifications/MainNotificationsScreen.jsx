@@ -56,7 +56,7 @@ const serviceNotifications = [
 ];
 
 export default function MainNotificationsScreen() {
-    const { markAllRead } = useContext(NotificationsContext);
+    const { notifications, markAllRead } = useContext(NotificationsContext);
 
     useFocusEffect(
         useCallback(() => {
@@ -64,9 +64,40 @@ export default function MainNotificationsScreen() {
         }, [markAllRead])
     );
 
+    // Helpers to format real notifications
+    function timeAgo(dateStr) {
+        if (!dateStr) return '';
+        const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+        if (diff < 60) return 'Just now';
+        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+        if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+        return `${Math.floor(diff / 604800)}w ago`;
+    }
+
+    const realHealth = notifications.filter(n => n.type === 'health').map(n => ({
+        id: n._id,
+        icon: 'health-and-safety',
+        iconColor: '#1f5f91',
+        iconBg: 'rgba(31,95,145,0.08)',
+        title: 'Health Update',
+        subtitle: n.message,
+        time: timeAgo(n.createdAt),
+    }));
+
+    const realService = notifications.filter(n => n.type === 'service').map(n => ({
+        id: n._id,
+        icon: 'room-service',
+        iconColor: '#7a5840',
+        iconBg: 'rgba(122,88,64,0.08)',
+        title: 'Service Update',
+        subtitle: n.message,
+        time: timeAgo(n.createdAt),
+    }));
+
     const sections = [
-        { key: 'health', title: 'Health', items: healthNotifications },
-        { key: 'service', title: 'Service', items: serviceNotifications },
+        { key: 'health', title: 'Health', items: [...realHealth, ...healthNotifications] },
+        { key: 'service', title: 'Service', items: [...realService, ...serviceNotifications] },
     ];
 
     return (

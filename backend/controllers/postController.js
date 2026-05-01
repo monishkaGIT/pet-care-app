@@ -1,4 +1,5 @@
 const Post = require('../models/Post');
+const Notification = require('../models/Notification');
 
 // ─────────────────────────────────────────────────────────────
 // @desc   Get all posts (main feed) — populated with author & pet
@@ -139,6 +140,16 @@ const toggleLike = async (req, res) => {
             post.likes = post.likes.filter(id => id.toString() !== userId);
         } else {
             post.likes.push(req.user._id);
+            // Create notification only when liking (not unliking) someone else's post
+            if (post.author.toString() !== userId) {
+                await Notification.create({
+                    recipient: post.author,
+                    sender: req.user._id,
+                    type: 'like',
+                    message: `${req.user.name} liked your post.`,
+                    referenceId: post._id,
+                });
+            }
         }
 
         await post.save();
@@ -164,12 +175,51 @@ const addComment = async (req, res) => {
         post.comments.push({ author: req.user._id, text });
         await post.save();
 
+        // Notify the post author when someone else comments
+        if (post.author.toString() !== req.user._id.toString()) {
+            await Notification.create({
+                recipient: post.author,
+                sender: req.user._id,
+                type: 'comment',
+                message: `${req.user.name} commented: "${text.slice(0, 60)}${text.length > 60 ? '…' : ''}"`,
+                referenceId: post._id,
+            });
+        }
+
         // Re-fetch to populate comment authors
         const updated = await Post.findById(req.params.id)
             .populate('comments.author', 'name profileImage');
         res.status(201).json(updated.comments);
     } catch (error) {
         res.status(500).json({ message: 'Server error adding comment' });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────
+// @desc   Delete a comment
+// @route  DELETE /api/posts/:id/comments/:commentId
+// @access Private
+// ─────────────────────────────────────────────────────────────
+const deleteComment = async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ message: 'Post not found' });
+
+        const comment = post.comments.id(req.params.commentId);
+        if (!comment) return res.status(404).json({ message: 'Comment not found' });
+
+        // Ensure user is comment author or post author
+        if (comment.author.toString() !== req.user._id.toString() && post.author.toString() !== req.user._id.toString()) {
+            return res.status(401).json({ message: 'Not authorized to delete this comment' });
+        }
+
+        // Mongoose subdocument removal
+        post.comments.pull({ _id: req.params.commentId });
+        await post.save();
+
+        res.json({ message: 'Comment removed successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error deleting comment' });
     }
 };
 
@@ -182,4 +232,5 @@ module.exports = {
     deletePost,
     toggleLike,
     addComment,
+    deleteComment,
 };

@@ -7,53 +7,8 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { postApi } from '../../api/axiosConfig';
 import { AuthContext } from '../../context/AuthContext';
+import { NotificationsContext } from '../../context/NotificationsContext';
 import NotificationSections from '../../components/NotificationSections';
-
-// ─── Derive notification-like items from real post activity ─────────────────
-
-function deriveNotifications(posts, currentUserId) {
-    const items = [];
-
-    posts.forEach((post) => {
-        // Likes from other users
-        if (post.likes?.length > 0) {
-            const othersWhoLiked = post.likes.filter(
-                (id) => id !== currentUserId
-            );
-            if (othersWhoLiked.length > 0 && post.author?._id === currentUserId) {
-                items.push({
-                    id: `like-${post._id}`,
-                    icon: 'favorite',
-                    iconColor: '#30628a',
-                    iconBg: 'rgba(162,210,255,0.3)',
-                    message: `Your post "${(post.caption || '').slice(0, 30)}${post.caption?.length > 30 ? '…' : ''}" received ${othersWhoLiked.length} like${othersWhoLiked.length > 1 ? 's' : ''}.`,
-                    time: timeAgo(post.updatedAt || post.createdAt),
-                });
-            }
-        }
-
-        // Comments from other users on your posts
-        if (post.comments?.length > 0 && post.author?._id === currentUserId) {
-            const otherComments = post.comments.filter(
-                (c) => c.author?._id !== currentUserId && c.author !== currentUserId
-            );
-            otherComments.forEach((comment) => {
-                items.push({
-                    id: `comment-${post._id}-${comment._id}`,
-                    icon: 'comment',
-                    iconColor: '#79573f',
-                    iconBg: 'rgba(255,209,179,0.3)',
-                    message: `${comment.author?.name || 'Someone'} commented: "${(comment.text || '').slice(0, 40)}${comment.text?.length > 40 ? '…' : ''}"`,
-                    time: timeAgo(comment.createdAt || post.updatedAt || post.createdAt),
-                });
-            });
-        }
-
-    });
-
-    // Sort by recency (items derived from more recent posts first)
-    return items;
-}
 
 function timeAgo(dateStr) {
     if (!dateStr) return '';
@@ -65,36 +20,30 @@ function timeAgo(dateStr) {
     return `${Math.floor(diff / 604800)}w ago`;
 }
 
-export default function NotificationsScreen() {
-    const { user } = useContext(AuthContext);
-    const [notifications, setNotifications] = useState([]);
-    const [loading, setLoading] = useState(true);
+export default function ActivityScreen() {
+    const { notifications, fetchNotifications } = useContext(NotificationsContext);
     const [refreshing, setRefreshing] = useState(false);
 
-    const fetchNotifications = useCallback(async () => {
-        try {
-            const { data } = await postApi.get('/');
-            const derived = deriveNotifications(data, user?._id);
-            setNotifications(derived);
-        } catch (err) {
-            console.error('Failed to load notifications:', err);
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
-    }, [user]);
-
-    useEffect(() => {
-        fetchNotifications();
-    }, [fetchNotifications]);
-
-    const onRefresh = () => {
+    const onRefresh = async () => {
         setRefreshing(true);
-        fetchNotifications();
+        await fetchNotifications();
+        setRefreshing(false);
     };
 
-    const todayItems = notifications.slice(0, Math.min(3, notifications.length));
-    const earlierItems = notifications.slice(3);
+    // Filter to show only 'like' and 'comment' notifications
+    const socialActivity = notifications
+        .filter(n => n.type === 'like' || n.type === 'comment')
+        .map(n => ({
+            id: n._id,
+            icon: n.type === 'like' ? 'favorite' : 'comment',
+            iconColor: n.type === 'like' ? '#30628a' : '#79573f',
+            iconBg: n.type === 'like' ? 'rgba(162,210,255,0.3)' : 'rgba(255,209,179,0.3)',
+            message: n.message,
+            time: timeAgo(n.createdAt),
+        }));
+
+    const todayItems = socialActivity.slice(0, Math.min(3, socialActivity.length));
+    const earlierItems = socialActivity.slice(3);
     const sections = [
         { key: 'recent', title: 'Recent', items: todayItems },
         { key: 'earlier', title: 'Earlier', items: earlierItems, faded: true },
@@ -110,13 +59,8 @@ export default function NotificationsScreen() {
                 </View>
             </View>
 
-            {loading ? (
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#a2d2ff" />
-                    <Text style={styles.loadingText}>Loading alerts...</Text>
-                </View>
-            ) : (
-                <ScrollView
+            {/* We no longer show a loading state for Context data, unless it's null */}
+            <ScrollView
                     contentContainerStyle={styles.scrollContent}
                     showsVerticalScrollIndicator={false}
                     refreshControl={
@@ -128,7 +72,7 @@ export default function NotificationsScreen() {
                         />
                     }
                 >
-                    <Text style={styles.pageTitle}>Social Alerts</Text>
+                    <Text style={styles.pageTitle}>Social Activity</Text>
                     <Text style={styles.pageSub}>Likes and comments from the feed appear here.</Text>
 
                     {notifications.length === 0 ? (
@@ -145,7 +89,6 @@ export default function NotificationsScreen() {
                         </>
                     )}
                 </ScrollView>
-            )}
         </SafeAreaView>
     );
 }

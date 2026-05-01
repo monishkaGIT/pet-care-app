@@ -27,7 +27,7 @@ import MyPetsList from '../screens/main/MyPetsList';
 import PetDetailScreen from '../screens/main/PetDetailScreen';
 import NewHealthRecordScreen from '../screens/main/NewHealthRecordScreen';
 import HealthRecordDetailScreen from '../screens/main/HealthRecordDetailScreen';
-import MainNotificationsScreen from '../screens/main/MainNotificationsScreen';
+import MainNotificationsScreen from '../screens/notifications/MainNotificationsScreen';
 
 // Social Screens
 import EditBioScreen from '../screens/social/EditBioScreen';

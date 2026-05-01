@@ -36,4 +36,8 @@ feedbackApi.interceptors.request.use(authInterceptor, (error) => Promise.reject(
 export const healthApi = axios.create({ baseURL: `${BASE_URL}/pets` });
 healthApi.interceptors.request.use(authInterceptor, (error) => Promise.reject(error));
 
+// Notifications API
+export const notificationApi = axios.create({ baseURL: `${BASE_URL}/notifications` });
+notificationApi.interceptors.request.use(authInterceptor, (error) => Promise.reject(error));
+
 export default api;
