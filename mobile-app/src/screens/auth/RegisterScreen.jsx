@@ -6,7 +6,7 @@ import { AuthContext } from '../../context/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
 
 export default function RegisterScreen({ navigation }) {
-    const { register } = useContext(AuthContext);
+    const { register, verifyOtp } = useContext(AuthContext);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -14,6 +14,8 @@ export default function RegisterScreen({ navigation }) {
     const [address, setAddress] = useState('');
     const [profileImage, setProfileImage] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [showOtpForm, setShowOtpForm] = useState(false);
+    const [otp, setOtp] = useState('');
 
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
@@ -53,9 +55,27 @@ export default function RegisterScreen({ navigation }) {
 
         setLoading(true);
         try {
-            await register({ name: name.trim(), email: email.trim(), password, phone: phone.trim(), address: address.trim(), profileImage, role: 'user' });
+            const data = await register({ name: name.trim(), email: email.trim(), password, phone: phone.trim(), address: address.trim(), profileImage, role: 'user' });
+            Alert.alert('OTP Sent', data.message);
+            navigation.navigate('OtpVerification', { email: email.trim() });
         } catch (error) {
             Alert.alert('Registration Failed', error.response?.data?.message || 'Error occurred');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerifyOtp = async () => {
+        if (!otp.trim()) {
+            return Alert.alert('Missing OTP', 'Please enter the verification OTP.');
+        }
+
+        setLoading(true);
+        try {
+            await verifyOtp(email.trim(), otp.trim());
+            Alert.alert('Account Created', 'Your account has been created successfully!');
+        } catch (error) {
+            Alert.alert('Verification Failed', error.response?.data?.message || 'Invalid or expired OTP code.');
         } finally {
             setLoading(false);
         }
@@ -74,78 +94,112 @@ export default function RegisterScreen({ navigation }) {
                         
                         <View style={styles.headerSection}>
                             <Text style={styles.brandTitle}>Join PetCare</Text>
-                            <Text style={styles.brandSubtitle}>Create an account to start managing your pets with ease.</Text>
+                            <Text style={styles.brandSubtitle}>
+                                {showOtpForm 
+                                    ? `Enter the verification code sent to ${email}.`
+                                    : 'Create an account to start managing your pets with ease.'
+                                }
+                            </Text>
                         </View>
 
                         <View style={styles.card}>
-                            
-                            {/* Profile Image Picker */}
-                            <View style={styles.imagePickerContainer}>
-                                <TouchableOpacity onPress={pickImage} style={styles.imagePicker} activeOpacity={0.8}>
-                                    {profileImage ? (
-                                        <Image source={{ uri: profileImage }} style={styles.image} />
-                                    ) : (
-                                        <View style={styles.placeholderContainer}>
-                                            <MaterialIcons name="add-a-photo" size={28} color="#345d75" />
-                                            <Text style={styles.imagePlaceholderText}>Add Photo</Text>
-                                        </View>
-                                    )}
-                                </TouchableOpacity>
-                            </View>
-
-                            {/* Inputs */}
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>FULL NAME</Text>
-                                <View style={styles.inputContainer}>
-                                    <MaterialIcons name="person" size={20} color="#81817a" style={styles.inputIcon} />
-                                    <TextInput style={styles.input} placeholder="John Doe" placeholderTextColor="#81817a" value={name} onChangeText={setName} />
-                                </View>
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>EMAIL ADDRESS</Text>
-                                <View style={styles.inputContainer}>
-                                    <MaterialIcons name="mail" size={20} color="#81817a" style={styles.inputIcon} />
-                                    <TextInput style={styles.input} placeholder="hello@example.com" placeholderTextColor="#81817a" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
-                                </View>
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>PASSWORD</Text>
-                                <View style={styles.inputContainer}>
-                                    <MaterialIcons name="lock" size={20} color="#81817a" style={styles.inputIcon} />
-                                    <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor="#81817a" value={password} onChangeText={setPassword} secureTextEntry />
-                                </View>
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>PHONE NUMBER</Text>
-                                <View style={styles.inputContainer}>
-                                    <MaterialIcons name="phone" size={20} color="#81817a" style={styles.inputIcon} />
-                                    <TextInput style={styles.input} placeholder="+1 234 567 890" placeholderTextColor="#81817a" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
-                                </View>
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>ADDRESS</Text>
-                                <View style={styles.inputContainer}>
-                                    <MaterialIcons name="location-pin" size={20} color="#81817a" style={styles.inputIcon} />
-                                    <TextInput style={styles.input} placeholder="123 Pet Street" placeholderTextColor="#81817a" value={address} onChangeText={setAddress} />
-                                </View>
-                            </View>
-
-
-                            {/* Submit */}
-                            <TouchableOpacity style={styles.submitBtn} onPress={handleRegister} disabled={loading} activeOpacity={0.8}>
-                                {loading ? (
-                                    <ActivityIndicator color="#fff" />
-                                ) : (
-                                    <View style={styles.btnContent}>
-                                        <Text style={styles.submitBtnText}>Create Account</Text>
-                                        <MaterialIcons name="arrow-forward" size={20} color="#ffffff" />
+                            {!showOtpForm ? (
+                                <>
+                                    {/* Profile Image Picker */}
+                                    <View style={styles.imagePickerContainer}>
+                                        <TouchableOpacity onPress={pickImage} style={styles.imagePicker} activeOpacity={0.8}>
+                                            {profileImage ? (
+                                                <Image source={{ uri: profileImage }} style={styles.image} />
+                                            ) : (
+                                                <View style={styles.placeholderContainer}>
+                                                    <MaterialIcons name="add-a-photo" size={28} color="#345d75" />
+                                                    <Text style={styles.imagePlaceholderText}>Add Photo</Text>
+                                                </View>
+                                            )}
+                                        </TouchableOpacity>
                                     </View>
-                                )}
-                            </TouchableOpacity>
+
+                                    {/* Inputs */}
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>FULL NAME</Text>
+                                        <View style={styles.inputContainer}>
+                                            <MaterialIcons name="person" size={20} color="#81817a" style={styles.inputIcon} />
+                                            <TextInput style={styles.input} placeholder="John Doe" placeholderTextColor="#81817a" value={name} onChangeText={setName} />
+                                        </View>
+                                    </View>
+
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>EMAIL ADDRESS</Text>
+                                        <View style={styles.inputContainer}>
+                                            <MaterialIcons name="mail" size={20} color="#81817a" style={styles.inputIcon} />
+                                            <TextInput style={styles.input} placeholder="hello@example.com" placeholderTextColor="#81817a" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
+                                        </View>
+                                    </View>
+
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>PASSWORD</Text>
+                                        <View style={styles.inputContainer}>
+                                            <MaterialIcons name="lock" size={20} color="#81817a" style={styles.inputIcon} />
+                                            <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor="#81817a" value={password} onChangeText={setPassword} secureTextEntry />
+                                        </View>
+                                    </View>
+
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>PHONE NUMBER</Text>
+                                        <View style={styles.inputContainer}>
+                                            <MaterialIcons name="phone" size={20} color="#81817a" style={styles.inputIcon} />
+                                            <TextInput style={styles.input} placeholder="+1 234 567 890" placeholderTextColor="#81817a" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+                                        </View>
+                                    </View>
+
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>ADDRESS</Text>
+                                        <View style={styles.inputContainer}>
+                                            <MaterialIcons name="location-pin" size={20} color="#81817a" style={styles.inputIcon} />
+                                            <TextInput style={styles.input} placeholder="123 Pet Street" placeholderTextColor="#81817a" value={address} onChangeText={setAddress} />
+                                        </View>
+                                    </View>
+
+                                    {/* Submit */}
+                                    <TouchableOpacity style={styles.submitBtn} onPress={handleRegister} disabled={loading} activeOpacity={0.8}>
+                                        {loading ? (
+                                            <ActivityIndicator color="#fff" />
+                                        ) : (
+                                            <View style={styles.btnContent}>
+                                                <Text style={styles.submitBtnText}>Create Account</Text>
+                                                <MaterialIcons name="arrow-forward" size={20} color="#ffffff" />
+                                            </View>
+                                        )}
+                                    </TouchableOpacity>
+                                </>
+                            ) : (
+                                <>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.label}>VERIFICATION OTP</Text>
+                                        <View style={styles.inputContainer}>
+                                            <MaterialIcons name="vpn-key" size={20} color="#81817a" style={styles.inputIcon} />
+                                            <TextInput style={styles.input} placeholder="Enter 4 or 6-digit OTP" placeholderTextColor="#81817a" value={otp} onChangeText={setOtp} keyboardType="number-pad" />
+                                        </View>
+                                    </View>
+
+                                    {/* Submit OTP */}
+                                    <TouchableOpacity style={styles.submitBtn} onPress={handleVerifyOtp} disabled={loading} activeOpacity={0.8}>
+                                        {loading ? (
+                                            <ActivityIndicator color="#fff" />
+                                        ) : (
+                                            <View style={styles.btnContent}>
+                                                <Text style={styles.submitBtnText}>Verify OTP</Text>
+                                                <MaterialIcons name="check-circle" size={20} color="#ffffff" />
+                                            </View>
+                                        )}
+                                    </TouchableOpacity>
+
+                                    {/* Back to register form */}
+                                    <TouchableOpacity style={styles.backBtn} onPress={() => setShowOtpForm(false)}>
+                                        <Text style={styles.backBtnText}>Change details / Back</Text>
+                                    </TouchableOpacity>
+                                </>
+                            )}
                         </View>
 
                         <View style={styles.bottomAction}>
@@ -191,6 +245,8 @@ const styles = StyleSheet.create({
     submitBtn: { backgroundColor: '#345d75', borderRadius: 30, height: 56, justifyContent: 'center', alignItems: 'center', marginTop: 10, shadowColor: '#345d75', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
     btnContent: { flexDirection: 'row', alignItems: 'center' },
     submitBtnText: { color: '#ffffff', fontSize: 16, fontWeight: 'bold', marginRight: 8 },
+    backBtn: { paddingVertical: 14, alignItems: 'center', marginTop: 10 },
+    backBtnText: { color: '#805d45', fontSize: 14, fontWeight: '600', textDecorationLine: 'underline' },
     bottomAction: { flexDirection: 'row', justifyContent: 'center', marginTop: 30 },
     bottomText: { fontSize: 14, color: '#805d45', fontWeight: '500' },
     bottomLinkText: { fontSize: 14, color: '#416982', fontWeight: 'bold' }

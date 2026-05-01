@@ -44,6 +44,11 @@ export const AuthProvider = ({ children }) => {
 
     const register = async (formData) => {
         const response = await api.post('/register', formData);
+        return response.data;
+    };
+
+    const verifyOtp = async (email, otp) => {
+        const response = await api.post('/verify-otp', { email, otp });
         const userData = response.data;
         await AsyncStorage.setItem('userData', JSON.stringify(userData));
         setUser(userData);
@@ -56,7 +61,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, setUser, isLoading, login, register, logout }}>
+        <AuthContext.Provider value={{ user, setUser, isLoading, login, register, verifyOtp, logout }}>
             {children}
         </AuthContext.Provider>
     );

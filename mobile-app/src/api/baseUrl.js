@@ -29,5 +29,8 @@ export const BASE_URL = envUrl
     ? normalizeUrl(envUrl)
     : (() => {
         const host = getExpoHost();
-        return host ? `http://${host}:5000/api` : 'http://localhost:5000/api';
+        if (host && host !== 'localhost' && host !== '127.0.0.1') {
+            return `http://${host}:5000/api`;
+        }
+        return 'http://192.168.1.10:5000/api';
     })();

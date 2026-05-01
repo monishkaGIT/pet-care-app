@@ -4,13 +4,16 @@ import { BASE_URL } from './baseUrl';
 
 export const API_URL = `${BASE_URL}/users`;
 
-// Shared request interceptor that injects x-user-id
+// Shared request interceptor that injects x-user-id and Authorization token
 const authInterceptor = async (config) => {
     const stored = await AsyncStorage.getItem('userData');
     if (stored) {
         const userData = JSON.parse(stored);
         if (userData._id) {
             config.headers['x-user-id'] = userData._id;
+        }
+        if (userData.token) {
+            config.headers['Authorization'] = `Bearer ${userData.token}`;
         }
     }
     return config;

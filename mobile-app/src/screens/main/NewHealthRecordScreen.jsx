@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, ScrollView, TouchableOpacity,
     TextInput, Alert, StatusBar, Platform,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { COLORS, SHADOWS } from '../../constants/theme';
-import { createHealthRecord } from '../../api/healthApi';
-import { createVaccination } from '../../api/healthApi';
-import { addWeightEntry } from '../../api/healthApi';
+import {
+    createHealthRecord, updateHealthRecord,
+    createVaccination, updateVaccination,
+    addWeightEntry
+} from '../../api/healthApi';
 
 const RECORD_TYPES = [
     { key: 'medical', label: 'Medical', icon: 'medkit' },
@@ -19,7 +22,7 @@ const RECORD_TYPES = [
 export default function NewHealthRecordScreen() {
     const navigation = useNavigation();
     const route = useRoute();
-    const { petId } = route.params;
+    const { petId, editRecord } = route.params || {};
 
     const [recordType, setRecordType] = useState('medical');
     const [title, setTitle] = useState('');
@@ -41,6 +44,88 @@ export default function NewHealthRecordScreen() {
 
     const [saving, setSaving] = useState(false);
 
+    // Date Picker States
+    const [visitDateObj, setVisitDateObj] = useState(new Date());
+    const [nextDueDateObj, setNextDueDateObj] = useState(new Date());
+    const [showVisitDatePicker, setShowVisitDatePicker] = useState(false);
+    const [showNextDueDatePicker, setShowNextDueDatePicker] = useState(false);
+
+    const formatDate = (d) => {
+        if (!d) return '';
+        const dateObj = new Date(d);
+        if (isNaN(dateObj.getTime())) return '';
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const year = dateObj.getFullYear();
+        return `${month}/${day}/${year}`;
+    };
+
+    useEffect(() => {
+        if (editRecord) {
+            setRecordType(editRecord.recordType || 'medical');
+            setTitle(editRecord.title || '');
+            if (editRecord.visitDate) {
+                const d = new Date(editRecord.visitDate);
+                setVisitDate(formatDate(d));
+                setVisitDateObj(d);
+            } else if (editRecord.administeredDate) {
+                const d = new Date(editRecord.administeredDate);
+                setVisitDate(formatDate(d));
+                setVisitDateObj(d);
+            } else if (editRecord.date) {
+                const d = new Date(editRecord.date);
+                setVisitDate(formatDate(d));
+                setVisitDateObj(d);
+            }
+            
+            setNotes(editRecord.notes || '');
+            setClinicName(editRecord.clinicName || '');
+            setVetName(editRecord.vetName || '');
+            setDiagnosis(editRecord.diagnosis || '');
+            if (Array.isArray(editRecord.treatment)) {
+                setTreatment(editRecord.treatment.join('\n'));
+            } else {
+                setTreatment(editRecord.treatment || '');
+            }
+
+            setVaccineName(editRecord.vaccineName || '');
+            setLotNumber(editRecord.lotNumber || '');
+            if (editRecord.nextDueDate) {
+                const d = new Date(editRecord.nextDueDate);
+                setNextDueDate(formatDate(d));
+                setNextDueDateObj(d);
+            }
+
+            setWeight(editRecord.weight ? String(editRecord.weight) : '');
+            setWeightUnit(editRecord.unit || 'kg');
+        } else {
+            // New record - set default date
+            const today = new Date();
+            setVisitDate(formatDate(today));
+            setVisitDateObj(today);
+        }
+    }, [editRecord]);
+
+    const onChangeVisitDate = (event, selectedDate) => {
+        if (Platform.OS === 'android') {
+            setShowVisitDatePicker(false);
+        }
+        if (selectedDate) {
+            setVisitDateObj(selectedDate);
+            setVisitDate(formatDate(selectedDate));
+        }
+    };
+
+    const onChangeNextDueDate = (event, selectedDate) => {
+        if (Platform.OS === 'android') {
+            setShowNextDueDatePicker(false);
+        }
+        if (selectedDate) {
+            setNextDueDateObj(selectedDate);
+            setNextDueDate(formatDate(selectedDate));
+        }
+    };
+
     const parseDate = (str) => {
         if (!str) return null;
         // Accept mm/dd/yyyy format
@@ -53,35 +138,16 @@ export default function NewHealthRecordScreen() {
     };
 
     const handleSave = async () => {
-        const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/\d{4}$/;
-
         try {
             setSaving(true);
 
-            // Validate date if provided
-            if (visitDate.trim() && !dateRegex.test(visitDate.trim())) {
-                Alert.alert('Invalid Date', 'Please enter date in mm/dd/yyyy format (e.g. 01/15/2026).');
-                setSaving(false);
-                return;
-            }
-
             if (recordType === 'medical') {
                 if (!title.trim()) {
-                    Alert.alert('Missing Title', 'Please enter a title or diagnosis.');
+                    Alert.alert('Error', 'Please enter a title/diagnosis');
                     setSaving(false);
                     return;
                 }
-                if (title.trim().length < 3) {
-                    Alert.alert('Title Too Short', 'Title must be at least 3 characters.');
-                    setSaving(false);
-                    return;
-                }
-                if (!visitDate.trim()) {
-                    Alert.alert('Missing Date', 'Please enter the visit date.');
-                    setSaving(false);
-                    return;
-                }
-                await createHealthRecord(petId, {
+                const dataToSave = {
                     recordType: 'medical',
                     title: title.trim(),
                     visitDate: parseDate(visitDate) || new Date(),
@@ -90,39 +156,36 @@ export default function NewHealthRecordScreen() {
                     diagnosis: diagnosis.trim(),
                     treatment: treatment.trim() ? treatment.split('\n').filter(t => t.trim()) : [],
                     notes: notes.trim(),
-                });
+                };
+
+                if (editRecord && editRecord._id) {
+                    await updateHealthRecord(petId, editRecord._id, dataToSave);
+                } else {
+                    await createHealthRecord(petId, dataToSave);
+                }
             } else if (recordType === 'vaccination') {
                 if (!vaccineName.trim()) {
-                    Alert.alert('Missing Vaccine', 'Please enter the vaccine name.');
+                    Alert.alert('Error', 'Please enter the vaccine name');
                     setSaving(false);
                     return;
                 }
-                if (!visitDate.trim()) {
-                    Alert.alert('Missing Date', 'Please enter the administered date.');
-                    setSaving(false);
-                    return;
-                }
-                if (nextDueDate.trim() && !dateRegex.test(nextDueDate.trim())) {
-                    Alert.alert('Invalid Due Date', 'Next due date must be in mm/dd/yyyy format.');
-                    setSaving(false);
-                    return;
-                }
-                await createVaccination(petId, {
+                const dataToSave = {
                     vaccineName: vaccineName.trim(),
                     lotNumber: lotNumber.trim(),
                     administeredDate: parseDate(visitDate) || new Date(),
                     nextDueDate: parseDate(nextDueDate) || null,
                     clinicName: clinicName.trim(),
                     notes: notes.trim(),
-                });
+                };
+
+                if (editRecord && editRecord._id) {
+                    await updateVaccination(petId, editRecord._id, dataToSave);
+                } else {
+                    await createVaccination(petId, dataToSave);
+                }
             } else if (recordType === 'weight') {
                 if (!weight.trim() || isNaN(parseFloat(weight))) {
-                    Alert.alert('Invalid Weight', 'Please enter a valid numeric weight.');
-                    setSaving(false);
-                    return;
-                }
-                if (parseFloat(weight) <= 0 || parseFloat(weight) > 200) {
-                    Alert.alert('Weight Out of Range', 'Please enter a weight between 0.1 and 200.');
+                    Alert.alert('Error', 'Please enter a valid weight');
                     setSaving(false);
                     return;
                 }
@@ -210,16 +273,28 @@ export default function NewHealthRecordScreen() {
                             />
 
                             <Text style={styles.fieldLabel}>Date of Visit</Text>
-                            <View style={styles.dateInputContainer}>
-                                <TextInput
-                                    style={[styles.input, { flex: 1 }]}
-                                    placeholder="mm/dd/yyyy"
-                                    placeholderTextColor={COLORS.textPlaceholder}
-                                    value={visitDate}
-                                    onChangeText={setVisitDate}
-                                />
+                            <TouchableOpacity style={styles.dateInputContainer} onPress={() => setShowVisitDatePicker(true)}>
+                                <Text style={[styles.dateInputText, !visitDate && { color: COLORS.textPlaceholder }]}>
+                                    {visitDate || 'mm/dd/yyyy'}
+                                </Text>
                                 <Ionicons name="calendar-outline" size={20} color={COLORS.textMuted} style={styles.dateIcon} />
-                            </View>
+                            </TouchableOpacity>
+
+                            {showVisitDatePicker && (
+                                <View style={Platform.OS === 'ios' ? styles.iosPickerContainer : null}>
+                                    <DateTimePicker
+                                        value={visitDateObj}
+                                        mode="date"
+                                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                        onChange={onChangeVisitDate}
+                                    />
+                                    {Platform.OS === 'ios' && (
+                                        <TouchableOpacity style={styles.iosDoneButton} onPress={() => setShowVisitDatePicker(false)}>
+                                            <Text style={styles.iosDoneButtonText}>Done</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                            )}
 
                             <Text style={styles.fieldLabel}>Clinic Name</Text>
                             <TextInput
@@ -295,28 +370,52 @@ export default function NewHealthRecordScreen() {
                             />
 
                             <Text style={styles.fieldLabel}>Date Administered</Text>
-                            <View style={styles.dateInputContainer}>
-                                <TextInput
-                                    style={[styles.input, { flex: 1 }]}
-                                    placeholder="mm/dd/yyyy"
-                                    placeholderTextColor={COLORS.textPlaceholder}
-                                    value={visitDate}
-                                    onChangeText={setVisitDate}
-                                />
+                            <TouchableOpacity style={styles.dateInputContainer} onPress={() => setShowVisitDatePicker(true)}>
+                                <Text style={[styles.dateInputText, !visitDate && { color: COLORS.textPlaceholder }]}>
+                                    {visitDate || 'mm/dd/yyyy'}
+                                </Text>
                                 <Ionicons name="calendar-outline" size={20} color={COLORS.textMuted} style={styles.dateIcon} />
-                            </View>
+                            </TouchableOpacity>
+
+                            {showVisitDatePicker && (
+                                <View style={Platform.OS === 'ios' ? styles.iosPickerContainer : null}>
+                                    <DateTimePicker
+                                        value={visitDateObj}
+                                        mode="date"
+                                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                        onChange={onChangeVisitDate}
+                                    />
+                                    {Platform.OS === 'ios' && (
+                                        <TouchableOpacity style={styles.iosDoneButton} onPress={() => setShowVisitDatePicker(false)}>
+                                            <Text style={styles.iosDoneButtonText}>Done</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                            )}
 
                             <Text style={styles.fieldLabel}>Next Due Date</Text>
-                            <View style={styles.dateInputContainer}>
-                                <TextInput
-                                    style={[styles.input, { flex: 1 }]}
-                                    placeholder="mm/dd/yyyy"
-                                    placeholderTextColor={COLORS.textPlaceholder}
-                                    value={nextDueDate}
-                                    onChangeText={setNextDueDate}
-                                />
+                            <TouchableOpacity style={styles.dateInputContainer} onPress={() => setShowNextDueDatePicker(true)}>
+                                <Text style={[styles.dateInputText, !nextDueDate && { color: COLORS.textPlaceholder }]}>
+                                    {nextDueDate || 'mm/dd/yyyy'}
+                                </Text>
                                 <Ionicons name="calendar-outline" size={20} color={COLORS.textMuted} style={styles.dateIcon} />
-                            </View>
+                            </TouchableOpacity>
+
+                            {showNextDueDatePicker && (
+                                <View style={Platform.OS === 'ios' ? styles.iosPickerContainer : null}>
+                                    <DateTimePicker
+                                        value={nextDueDateObj}
+                                        mode="date"
+                                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                        onChange={onChangeNextDueDate}
+                                    />
+                                    {Platform.OS === 'ios' && (
+                                        <TouchableOpacity style={styles.iosDoneButton} onPress={() => setShowNextDueDatePicker(false)}>
+                                            <Text style={styles.iosDoneButtonText}>Done</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                            )}
 
                             <Text style={styles.fieldLabel}>Clinic Name</Text>
                             <TextInput
@@ -371,16 +470,28 @@ export default function NewHealthRecordScreen() {
                             </View>
 
                             <Text style={styles.fieldLabel}>Date of Measurement</Text>
-                            <View style={styles.dateInputContainer}>
-                                <TextInput
-                                    style={[styles.input, { flex: 1 }]}
-                                    placeholder="mm/dd/yyyy"
-                                    placeholderTextColor={COLORS.textPlaceholder}
-                                    value={visitDate}
-                                    onChangeText={setVisitDate}
-                                />
+                            <TouchableOpacity style={styles.dateInputContainer} onPress={() => setShowVisitDatePicker(true)}>
+                                <Text style={[styles.dateInputText, !visitDate && { color: COLORS.textPlaceholder }]}>
+                                    {visitDate || 'mm/dd/yyyy'}
+                                </Text>
                                 <Ionicons name="calendar-outline" size={20} color={COLORS.textMuted} style={styles.dateIcon} />
-                            </View>
+                            </TouchableOpacity>
+
+                            {showVisitDatePicker && (
+                                <View style={Platform.OS === 'ios' ? styles.iosPickerContainer : null}>
+                                    <DateTimePicker
+                                        value={visitDateObj}
+                                        mode="date"
+                                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                        onChange={onChangeVisitDate}
+                                    />
+                                    {Platform.OS === 'ios' && (
+                                        <TouchableOpacity style={styles.iosDoneButton} onPress={() => setShowVisitDatePicker(false)}>
+                                            <Text style={styles.iosDoneButtonText}>Done</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                            )}
 
                             <Text style={styles.fieldLabel}>Notes</Text>
                             <TextInput
@@ -528,10 +639,20 @@ const styles = StyleSheet.create({
     dateInputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: COLORS.surfaceContainerLow,
+        borderRadius: 12,
+        padding: 14,
+        borderWidth: 1,
+        borderColor: COLORS.outlineVariant,
+    },
+    dateInputText: {
+        fontSize: 15,
+        color: COLORS.onSurface,
+        flex: 1,
     },
     dateIcon: {
-        position: 'absolute',
-        right: 14,
+        marginLeft: 8,
     },
 
     // ─── Chips ───
@@ -644,5 +765,25 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: COLORS.textSecondary,
         lineHeight: 19,
+    },
+    iosPickerContainer: {
+        backgroundColor: COLORS.surfaceContainerLow,
+        borderRadius: 14,
+        marginBottom: 20,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: COLORS.outlineVariant,
+    },
+    iosDoneButton: {
+        backgroundColor: COLORS.primaryContainer,
+        padding: 12,
+        alignItems: 'center',
+        borderTopWidth: 1,
+        borderColor: COLORS.outlineVariant,
+    },
+    iosDoneButtonText: {
+        color: COLORS.primary,
+        fontWeight: 'bold',
+        fontSize: 16,
     },
 });

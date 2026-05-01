@@ -11,6 +11,7 @@ import SplashScreen from '../screens/auth/SplashScreen';
 import LandingScreen from '../screens/auth/LandingScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
+import OtpVerificationScreen from '../screens/auth/OtpVerificationScreen';
 
 // Main Tab Navigator
 import MainTabNavigator from './MainTabNavigator';
@@ -68,6 +69,7 @@ export default function AppNavigator() {
                         <Stack.Screen name="Landing" component={LandingScreen} />
                         <Stack.Screen name="Login" component={LoginScreen} />
                         <Stack.Screen name="Register" component={RegisterScreen} />
+                        <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} />
                         <Stack.Screen name="PublicFeedback" component={PublicFeedbackScreen} />
                     </>
                 ) : user.role === 'admin' ? (

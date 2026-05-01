@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { 
-    registerUser, loginUser, getUserProfile, updateUserProfile, changePassword,
+    registerUser, verifyOTP, loginUser, getUserProfile, updateUserProfile, changePassword,
     deleteOwnAccount,
     getUsers, createUser, updateUser, deleteUser 
 } = require("../controllers/authController");
@@ -9,6 +9,7 @@ const { protect, admin } = require("../middleware/authMiddleware");
 
 // Public routes
 router.post("/register", registerUser);
+router.post("/verify-otp", verifyOTP);
 router.post("/login", loginUser);
 
 // Protected User routes

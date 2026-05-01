@@ -1,23 +1,32 @@
 const User = require("../models/User");
+const OTP = require("../models/OTP");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const { uploadToCloudinary } = require("../utils/cloudinaryHelper");
+const { sendOTPEmail } = require("../utils/emailHelper");
 
-const buildUserPayload = (user) => ({
-    _id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    phone: user.phone,
-    address: user.address,
-    bio: user.bio,
-    profileImage: user.profileImage,
-});
+const buildUserPayload = (user) => {
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'your_jwt_secret_key_change_me_in_production', {
+        expiresIn: process.env.JWT_EXPIRE || '30d'
+    });
+    return {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        address: user.address,
+        bio: user.bio,
+        profileImage: user.profileImage,
+        token
+    };
+};
 
 // ── Public Auth ────────────────────────────────────────────────────
 
 exports.registerUser = async (req, res) => {
     try {
-        const { name, email, password, phone, address, bio, profileImage, role } = req.body;
+        const { name, email, password, phone, address, bio, profileImage } = req.body;
 
         // Validation
         if (!name || !email || !password) {
@@ -45,10 +54,74 @@ exports.registerUser = async (req, res) => {
             finalProfileImage = cloudinaryResult.secure_url;
         }
 
-        const user = await User.create({
-            name, email, password: hashedPassword, phone, address, bio, profileImage: finalProfileImage, role: 'user'
-        });
+        // Generate a 4-digit OTP
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
+        // Save OTP info to temporary DB
+        await OTP.findOneAndUpdate(
+            { email },
+            {
+                email,
+                otp,
+                userData: {
+                    name,
+                    email,
+                    password: hashedPassword,
+                    phone,
+                    address,
+                    bio,
+                    profileImage: finalProfileImage,
+                    role: 'user'
+                }
+            },
+            { upsert: true, new: true }
+        );
+
+        // Send OTP email via Nodemailer
+        const emailSent = await sendOTPEmail(email, otp);
+
+        if (!emailSent) {
+            return res.status(200).json({
+                message: `Verification OTP has been generated (but email failed to send in dev mode).`,
+                email,
+                otp
+            });
+        }
+
+        res.status(200).json({
+            message: `Verification OTP has been sent to ${email}. Please check your inbox.`,
+            email,
+            otp: process.env.NODE_ENV === 'development' ? otp : undefined
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.verifyOTP = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+
+        if (!email || !otp) {
+            return res.status(400).json({ message: "Email and OTP are required" });
+        }
+
+        const otpRecord = await OTP.findOne({ email });
+        if (!otpRecord) {
+            return res.status(400).json({ message: "No verification OTP found or it has expired. Please try registering again." });
+        }
+
+        if (otpRecord.otp !== otp) {
+            return res.status(400).json({ message: "Invalid verification code. Please check and try again." });
+        }
+
+        // Create the real user from userData
+        const user = await User.create(otpRecord.userData);
+
+        // Delete the temporary OTP record
+        await OTP.deleteOne({ _id: otpRecord._id });
+
+        // Build response including JWT token
         res.status(201).json(buildUserPayload(user));
     } catch (error) {
         res.status(500).json({ message: error.message });
