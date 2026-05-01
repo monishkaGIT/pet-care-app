@@ -6,7 +6,7 @@ const { uploadToCloudinary } = require("../utils/cloudinaryHelper");
 const { sendOTPEmail } = require("../utils/emailHelper");
 
 const buildUserPayload = (user) => {
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'your_jwt_secret_key_change_me_in_production', {
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRE || '30d'
     });
     return {
