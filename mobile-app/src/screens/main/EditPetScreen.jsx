@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
-    ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, StatusBar
+    ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, StatusBar, Image
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { COLORS, SHADOWS } from '../../constants/theme';
 import { fetchPetById, updatePet } from '../../api/petApi';
 
@@ -17,7 +18,7 @@ export default function EditPetScreen() {
     const [form, setForm] = useState({
         name: '', breed: '', age: '', weight: '',
         gender: 'Male', color: '',
-        isNeutered: false, isMicrochipped: false, isVaccinated: false,
+        isNeutered: false, isMicrochipped: false, isVaccinated: false, profileImage: ''
     });
 
     useEffect(() => {
@@ -37,12 +38,26 @@ export default function EditPetScreen() {
                 isNeutered: pet.isNeutered || false,
                 isMicrochipped: pet.isMicrochipped || false,
                 isVaccinated: pet.isVaccinated || false,
+                profileImage: pet.profileImage || '',
             });
         } catch (e) {
             Alert.alert('Error', 'Failed to load pet data.');
             navigation.goBack();
         } finally {
             setLoading(false);
+        }
+    };
+
+    const pickImage = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.5,
+            base64: true
+        });
+        if (!result.canceled) {
+            setForm(prev => ({ ...prev, profileImage: `data:image/jpeg;base64,${result.assets[0].base64}` }));
         }
     };
 
@@ -111,6 +126,20 @@ export default function EditPetScreen() {
                     <Text style={styles.editDesc}>
                         Keep {form.name || 'your pet'}'s health and personality details up to date.
                     </Text>
+
+                    {/* Pet Image */}
+                    <View style={styles.imagePickerContainer}>
+                        <TouchableOpacity style={styles.imagePickerBtn} onPress={pickImage} activeOpacity={0.8}>
+                            {form.profileImage ? (
+                                <Image source={{ uri: form.profileImage }} style={styles.petImage} />
+                            ) : (
+                                <View style={styles.imagePlaceholder}>
+                                    <Ionicons name="camera" size={32} color={COLORS.secondary} />
+                                    <Text style={styles.imagePlaceholderText}>Change Photo</Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                    </View>
 
                     {/* Pet Name */}
                     <Text style={styles.label}>PET NAME</Text>
@@ -240,6 +269,16 @@ const styles = StyleSheet.create({
     formWrapper: { paddingHorizontal: 24, paddingTop: 24 },
     editTitle: { fontSize: 26, fontWeight: 'bold', color: COLORS.textPrimary },
     editDesc: { fontSize: 14, color: COLORS.textMuted, marginTop: 6, marginBottom: 20, lineHeight: 20 },
+
+    imagePickerContainer: { alignItems: 'center', marginBottom: 20 },
+    imagePickerBtn: {
+        width: 100, height: 100, borderRadius: 50,
+        backgroundColor: '#faf0e4', borderWidth: 2, borderColor: COLORS.secondary, borderStyle: 'dashed',
+        justifyContent: 'center', alignItems: 'center', overflow: 'hidden'
+    },
+    petImage: { width: '100%', height: '100%', borderRadius: 50 },
+    imagePlaceholder: { alignItems: 'center', justifyContent: 'center' },
+    imagePlaceholderText: { fontSize: 10, color: COLORS.secondary, fontWeight: 'bold', marginTop: 4 },
 
     label: { fontSize: 12, fontWeight: 'bold', color: COLORS.textMuted, letterSpacing: 0.5, marginTop: 16, marginBottom: 6 },
     input: {

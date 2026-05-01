@@ -1,5 +1,6 @@
 const Post = require('../models/Post');
 const Notification = require('../models/Notification');
+const { uploadToCloudinary } = require('../utils/cloudinaryHelper');
 
 // ─────────────────────────────────────────────────────────────
 // @desc   Get all posts (main feed) — populated with author & pet
@@ -63,12 +64,16 @@ const createPost = async (req, res) => {
 
         if (!caption) return res.status(400).json({ message: 'Caption is required' });
 
-        // TODO: image should be the Cloudinary secure_url uploaded from the mobile app
-        // e.g. 'https://res.cloudinary.com/your-cloud/image/upload/v.../filename.jpg'
+        let finalImage = image || '';
+        if (image && image.startsWith('data:image')) {
+            const cloudinaryResult = await uploadToCloudinary(image, "petcare/posts");
+            finalImage = cloudinaryResult.secure_url;
+        }
+
         const post = await Post.create({
             author: req.user._id,   // mirrors: owner: req.user._id in petController
             caption,
-            image: image || '',
+            image: finalImage,
             pet: pet || null,
             label: label || '',
             likes: [],
@@ -97,6 +102,11 @@ const updatePost = async (req, res) => {
         // findOne with author check — same as Pet.findOne({ _id, owner })
         const post = await Post.findOne({ _id: req.params.id, author: req.user._id });
         if (!post) return res.status(404).json({ message: 'Post not found' });
+
+        if (req.body.image && req.body.image.startsWith('data:image')) {
+            const cloudinaryResult = await uploadToCloudinary(req.body.image, "petcare/posts");
+            req.body.image = cloudinaryResult.secure_url;
+        }
 
         const fields = ['caption', 'image', 'pet', 'label'];
         fields.forEach(f => { if (req.body[f] !== undefined) post[f] = req.body[f]; });

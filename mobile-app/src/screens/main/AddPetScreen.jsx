@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
-    ScrollView, Alert, KeyboardAvoidingView, Platform, StatusBar
+    ScrollView, Alert, KeyboardAvoidingView, Platform, StatusBar, Image
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { COLORS, SHADOWS } from '../../constants/theme';
 import { createPet } from '../../api/petApi';
 
@@ -21,7 +22,21 @@ export default function AddPetScreen() {
         isNeutered: false,
         isMicrochipped: false,
         isVaccinated: false,
+        profileImage: '',
     });
+
+    const pickImage = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.5,
+            base64: true
+        });
+        if (!result.canceled) {
+            setForm(prev => ({ ...prev, profileImage: `data:image/jpeg;base64,${result.assets[0].base64}` }));
+        }
+    };
 
     const toggleField = (field) => setForm(prev => ({ ...prev, [field]: !prev[field] }));
 
@@ -79,6 +94,20 @@ export default function AddPetScreen() {
 
                 {/* Form */}
                 <View style={styles.formCard}>
+                    {/* Pet Image */}
+                    <View style={styles.imagePickerContainer}>
+                        <TouchableOpacity style={styles.imagePickerBtn} onPress={pickImage} activeOpacity={0.8}>
+                            {form.profileImage ? (
+                                <Image source={{ uri: form.profileImage }} style={styles.petImage} />
+                            ) : (
+                                <View style={styles.imagePlaceholder}>
+                                    <Ionicons name="camera" size={32} color={COLORS.secondary} />
+                                    <Text style={styles.imagePlaceholderText}>Add Photo</Text>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+
                     {/* Name */}
                     <Text style={styles.label}>Name</Text>
                     <TextInput
@@ -226,6 +255,15 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.surface, margin: 20, marginTop: 24,
         borderRadius: 20, padding: 20, ...SHADOWS.card,
     },
+    imagePickerContainer: { alignItems: 'center', marginBottom: 20 },
+    imagePickerBtn: {
+        width: 100, height: 100, borderRadius: 50,
+        backgroundColor: '#faf0e4', borderWidth: 2, borderColor: COLORS.secondary, borderStyle: 'dashed',
+        justifyContent: 'center', alignItems: 'center', overflow: 'hidden'
+    },
+    petImage: { width: '100%', height: '100%', borderRadius: 50 },
+    imagePlaceholder: { alignItems: 'center', justifyContent: 'center' },
+    imagePlaceholderText: { fontSize: 10, color: COLORS.secondary, fontWeight: 'bold', marginTop: 4 },
     label: { fontSize: 13, fontWeight: '600', color: COLORS.secondary, marginBottom: 6, marginTop: 14 },
     input: {
         backgroundColor: COLORS.inputBg, borderWidth: 1, borderColor: COLORS.inputBorder,

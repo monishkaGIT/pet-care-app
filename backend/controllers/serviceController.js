@@ -1,47 +1,7 @@
 const Service = require("../models/Service");
-const { cloudinary, isCloudinaryConfigured } = require("../config/cloudinary");
+const { isCloudinaryConfigured } = require("../config/cloudinary");
+const { uploadToCloudinary, deleteFromCloudinary } = require("../utils/cloudinaryHelper");
 const { validateObjectId, validateServiceInput } = require("../middleware/validateRequest");
-
-/**
- * Helper: upload a file buffer to Cloudinary
- */
-const uploadToCloudinary = (fileBuffer, folder = "petcare/services") => {
-    return new Promise((resolve, reject) => {
-        if (!isCloudinaryConfigured) {
-            return reject(new Error("Cloudinary is not configured"));
-        }
-
-        const stream = cloudinary.uploader.upload_stream(
-            {
-                folder,
-                resource_type: "image",
-                transformation: [
-                    { width: 800, height: 600, crop: "limit" },
-                    { quality: "auto" },
-                    { fetch_format: "auto" },
-                ],
-            },
-            (error, result) => {
-                if (error) reject(error);
-                else resolve(result);
-            }
-        );
-        stream.end(fileBuffer);
-    });
-};
-
-/**
- * Helper: delete an image from Cloudinary
- */
-const deleteFromCloudinary = async (publicId) => {
-    if (publicId) {
-        try {
-            await cloudinary.uploader.destroy(publicId);
-        } catch (error) {
-            console.error("Cloudinary deletion error:", error.message);
-        }
-    }
-};
 
 // ── GET /api/services — Get all services (protected) ───────────────
 exports.getAllServices = async (req, res) => {
@@ -124,7 +84,7 @@ exports.createService = async (req, res) => {
 
         if (req.file) {
             if (isCloudinaryConfigured) {
-                const cloudinaryResult = await uploadToCloudinary(req.file.buffer);
+                const cloudinaryResult = await uploadToCloudinary(req.file.buffer, "petcare/services");
                 imageUrl = cloudinaryResult.secure_url;
                 imagePublicId = cloudinaryResult.public_id;
             } else {
@@ -195,7 +155,7 @@ exports.updateService = async (req, res) => {
                 // New image uploaded — replace the old one
                 await deleteFromCloudinary(service.imagePublicId);
 
-                const cloudinaryResult = await uploadToCloudinary(req.file.buffer);
+                const cloudinaryResult = await uploadToCloudinary(req.file.buffer, "petcare/services");
                 service.imageUrl = cloudinaryResult.secure_url;
                 service.imagePublicId = cloudinaryResult.public_id;
             } else {

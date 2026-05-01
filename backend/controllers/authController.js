@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
+const { uploadToCloudinary } = require("../utils/cloudinaryHelper");
 
 const buildUserPayload = (user) => ({
     _id: user._id,
@@ -38,8 +39,14 @@ exports.registerUser = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
+        let finalProfileImage = profileImage;
+        if (profileImage && profileImage.startsWith('data:image')) {
+            const cloudinaryResult = await uploadToCloudinary(profileImage, "petcare/users");
+            finalProfileImage = cloudinaryResult.secure_url;
+        }
+
         const user = await User.create({
-            name, email, password: hashedPassword, phone, address, bio, profileImage, role: 'user'
+            name, email, password: hashedPassword, phone, address, bio, profileImage: finalProfileImage, role: 'user'
         });
 
         res.status(201).json(buildUserPayload(user));
@@ -91,7 +98,13 @@ exports.updateUserProfile = async (req, res) => {
             user.phone = req.body.phone !== undefined ? req.body.phone : user.phone;
             user.address = req.body.address !== undefined ? req.body.address : user.address;
             user.bio = req.body.bio !== undefined ? req.body.bio : user.bio;
-            user.profileImage = req.body.profileImage || user.profileImage;
+            
+            if (req.body.profileImage && req.body.profileImage.startsWith('data:image')) {
+                const cloudinaryResult = await uploadToCloudinary(req.body.profileImage, "petcare/users");
+                user.profileImage = cloudinaryResult.secure_url;
+            } else if (req.body.profileImage !== undefined) {
+                user.profileImage = req.body.profileImage;
+            }
 
             const updatedUser = await user.save();
             res.json(buildUserPayload(updatedUser));
@@ -175,8 +188,14 @@ exports.createUser = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
+        let finalProfileImage = profileImage;
+        if (profileImage && profileImage.startsWith('data:image')) {
+            const cloudinaryResult = await uploadToCloudinary(profileImage, "petcare/users");
+            finalProfileImage = cloudinaryResult.secure_url;
+        }
+
         const user = await User.create({
-            name, email, password: hashedPassword, role: role || 'user', phone, address, bio, profileImage
+            name, email, password: hashedPassword, role: role || 'user', phone, address, bio, profileImage: finalProfileImage
         });
         res.status(201).json(buildUserPayload(user));
     } catch (error) {
@@ -193,7 +212,13 @@ exports.updateUser = async (req, res) => {
             user.phone = req.body.phone !== undefined ? req.body.phone : user.phone;
             user.address = req.body.address !== undefined ? req.body.address : user.address;
             user.bio = req.body.bio !== undefined ? req.body.bio : user.bio;
-            user.profileImage = req.body.profileImage || user.profileImage;
+            
+            if (req.body.profileImage && req.body.profileImage.startsWith('data:image')) {
+                const cloudinaryResult = await uploadToCloudinary(req.body.profileImage, "petcare/users");
+                user.profileImage = cloudinaryResult.secure_url;
+            } else if (req.body.profileImage !== undefined) {
+                user.profileImage = req.body.profileImage;
+            }
             const updatedUser = await user.save();
             res.json(buildUserPayload(updatedUser));
         } else {

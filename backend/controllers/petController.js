@@ -1,4 +1,5 @@
 const Pet = require('../models/Pet');
+const { uploadToCloudinary } = require('../utils/cloudinaryHelper');
 
 // @desc    Create a new pet
 // @route   POST /api/pets
@@ -8,6 +9,12 @@ const createPet = async (req, res) => {
         if (!userId) {
             res.status(401);
             throw new Error('Not authorized - no user ID');
+        }
+
+        let finalProfileImage = req.body.profileImage || '';
+        if (req.body.profileImage && req.body.profileImage.startsWith('data:image')) {
+            const cloudinaryResult = await uploadToCloudinary(req.body.profileImage, "petcare/pets");
+            finalProfileImage = cloudinaryResult.secure_url;
         }
 
         const pet = await Pet.create({
@@ -23,6 +30,7 @@ const createPet = async (req, res) => {
             microchipNumber: req.body.microchipNumber || '',
             isVaccinated: req.body.isVaccinated || false,
             insurance: req.body.insurance || '',
+            profileImage: finalProfileImage,
         });
 
         res.status(201).json(pet);
@@ -89,6 +97,11 @@ const updatePet = async (req, res) => {
         if (!pet) {
             res.status(404);
             throw new Error('Pet not found');
+        }
+
+        if (req.body.profileImage && req.body.profileImage.startsWith('data:image')) {
+            const cloudinaryResult = await uploadToCloudinary(req.body.profileImage, "petcare/pets");
+            req.body.profileImage = cloudinaryResult.secure_url;
         }
 
         const updatedPet = await Pet.findByIdAndUpdate(
