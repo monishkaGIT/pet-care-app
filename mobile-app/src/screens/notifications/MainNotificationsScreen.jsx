@@ -183,15 +183,15 @@ export default function MainNotificationsScreen() {
                     />
                 }
             >
-                <Text style={styles.pageTitle}>Health & Services</Text>
-                <Text style={styles.pageSub}>Updates about pet health records and booked services.</Text>
+                <Text style={styles.pageTitle}>Notifications</Text>
+                <Text style={styles.pageSub}>Updates about your pet family.</Text>
 
                 {isEmpty ? (
                     <View style={styles.emptyState}>
                         <MaterialIcons name="notifications-none" size={64} color="rgba(162,210,255,0.5)" />
                         <Text style={styles.emptyTitle}>All caught up!</Text>
                         <Text style={styles.emptySub}>
-                            Health records, vaccinations, and booking updates will appear here.
+                            Updates about your pet family will appear here.
                         </Text>
                     </View>
                 ) : (

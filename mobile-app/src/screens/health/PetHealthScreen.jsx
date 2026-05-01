@@ -14,6 +14,7 @@ import {
     fetchVaccinations,
 } from '../../api/healthApi';
 import { generateVaccinationPassportPDF } from '../../utils/generateVaccinationPDF';
+import NotificationBell from '../../components/NotificationBell';
 
 export default function PetHealthScreen() {
     const navigation = useNavigation();
@@ -142,9 +143,7 @@ export default function PetHealthScreen() {
                     <FontAwesome5 name="paw" size={20} color="#fff" />
                     <Text style={styles.headerTitle}>Pet Health</Text>
                 </View>
-                <TouchableOpacity onPress={onRefresh}>
-                    <Ionicons name="notifications-outline" size={22} color="#fff" />
-                </TouchableOpacity>
+                <NotificationBell />
             </View>
 
             <ScrollView
