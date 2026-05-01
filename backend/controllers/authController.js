@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const OTP = require("../models/OTP");
+const Post = require("../models/Post");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { uploadToCloudinary } = require("../utils/cloudinaryHelper");
@@ -226,6 +227,9 @@ exports.deleteOwnAccount = async (req, res) => {
         const user = await User.findById(req.user._id);
         if (!user) return res.status(404).json({ message: "User not found" });
 
+        // Delete all social posts authored by this user
+        await Post.deleteMany({ author: user._id });
+
         await User.deleteOne({ _id: user._id });
         res.json({ message: "Account successfully deleted" });
     } catch (error) {
@@ -310,6 +314,9 @@ exports.deleteUser = async (req, res) => {
         if (userToDelete.role === 'admin' && req.user.role !== 'admin') {
             return res.status(403).json({ message: "Not allowed to delete an admin" });
         }
+
+        // Delete all social posts authored by this user
+        await Post.deleteMany({ author: userToDelete._id });
 
         await User.deleteOne({ _id: userToDelete._id });
         res.json({ message: "User removed" });
