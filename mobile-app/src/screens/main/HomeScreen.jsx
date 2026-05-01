@@ -8,6 +8,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { fetchUserPets } from '../../api/petApi';
 import BeagleLottie from '../../components/BeagleLottie';
+import NotificationBell from '../../components/NotificationBell';
 
 const PET_COLORS = [
     { bg: 'rgba(162,210,255,0.35)', icon: '#30628a' },
@@ -103,9 +104,7 @@ export default function HomeScreen() {
                                 <Text style={styles.greetingText}>Hi there 👋</Text>
                             </View>
                         </View>
-                        <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('UserProfile')}>
-                            <MaterialIcons name="list" size={24} color="#30628a" />
-                        </TouchableOpacity>
+                        <NotificationBell />
                     </View>
                     <View style={styles.headerBottomRow}>
                         <Text style={styles.pageTitle}>My Pets</Text>

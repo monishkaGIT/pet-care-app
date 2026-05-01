@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import {
-    View, Text, StyleSheet, TouchableOpacity, ScrollView,
+    View, Text, StyleSheet, ScrollView,
     SafeAreaView, ActivityIndicator, RefreshControl,
     Platform, StatusBar
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { postApi } from '../../api/axiosConfig';
 import { AuthContext } from '../../context/AuthContext';
+import NotificationSections from '../../components/NotificationSections';
 
 // ─── Derive notification-like items from real post activity ─────────────────
 
@@ -48,17 +49,6 @@ function deriveNotifications(posts, currentUserId) {
             });
         }
 
-        // Your own new posts (activity log)
-        if (post.author?._id === currentUserId) {
-            items.push({
-                id: `post-${post._id}`,
-                icon: 'photo-camera',
-                iconColor: '#72787f',
-                iconBg: '#e9e2d0',
-                message: `You shared a new post: "${(post.caption || '').slice(0, 40)}${post.caption?.length > 40 ? '…' : ''}"`,
-                time: timeAgo(post.createdAt),
-            });
-        }
     });
 
     // Sort by recency (items derived from more recent posts first)
@@ -73,20 +63,6 @@ function timeAgo(dateStr) {
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
     if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
     return `${Math.floor(diff / 604800)}w ago`;
-}
-
-function AlertItem({ item, faded = false }) {
-    return (
-        <View style={[styles.alertCard, faded && styles.alertCardFaded]}>
-            <View style={[styles.alertIconWrap, { backgroundColor: item.iconBg }]}>
-                <MaterialIcons name={item.icon} size={22} color={item.iconColor} />
-            </View>
-            <View style={styles.alertContent}>
-                <Text style={styles.alertMessage}>{item.message}</Text>
-                <Text style={styles.alertTime}>{item.time}</Text>
-            </View>
-        </View>
-    );
 }
 
 export default function NotificationsScreen() {
@@ -117,13 +93,12 @@ export default function NotificationsScreen() {
         fetchNotifications();
     };
 
-    // Separate today vs earlier
-    const now = Date.now();
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-
     const todayItems = notifications.slice(0, Math.min(3, notifications.length));
     const earlierItems = notifications.slice(3);
+    const sections = [
+        { key: 'recent', title: 'Recent', items: todayItems },
+        { key: 'earlier', title: 'Earlier', items: earlierItems, faded: true },
+    ];
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -153,8 +128,8 @@ export default function NotificationsScreen() {
                         />
                     }
                 >
-                    <Text style={styles.pageTitle}>Alerts</Text>
-                    <Text style={styles.pageSub}>Keep track of your furry friend's social life.</Text>
+                    <Text style={styles.pageTitle}>Social Alerts</Text>
+                    <Text style={styles.pageSub}>Likes and comments from the feed appear here.</Text>
 
                     {notifications.length === 0 ? (
                         <View style={styles.emptyState}>
@@ -166,31 +141,7 @@ export default function NotificationsScreen() {
                         </View>
                     ) : (
                         <>
-                            {/* Recent */}
-                            {todayItems.length > 0 && (
-                                <>
-                                    <View style={styles.sectionHeader}>
-                                        <Text style={styles.sectionTitle}>Recent</Text>
-                                        <View style={styles.dividerLine} />
-                                    </View>
-                                    {todayItems.map((item) => (
-                                        <AlertItem key={item.id} item={item} />
-                                    ))}
-                                </>
-                            )}
-
-                            {/* Earlier */}
-                            {earlierItems.length > 0 && (
-                                <>
-                                    <View style={[styles.sectionHeader, { marginTop: 32 }]}>
-                                        <Text style={styles.sectionTitle}>Earlier</Text>
-                                        <View style={styles.dividerLine} />
-                                    </View>
-                                    {earlierItems.map((item) => (
-                                        <AlertItem key={item.id} item={item} faded />
-                                    ))}
-                                </>
-                            )}
+                            <NotificationSections sections={sections} />
                         </>
                     )}
                 </ScrollView>
@@ -219,24 +170,6 @@ const styles = StyleSheet.create({
     scrollContent: { paddingHorizontal: 24, paddingTop: 28, paddingBottom: 100 },
     pageTitle: { fontSize: 34, fontWeight: '800', color: '#79573f', letterSpacing: -0.5, marginBottom: 6 },
     pageSub: { fontSize: 14, color: '#41474e', fontWeight: '500', marginBottom: 28 },
-    sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-    sectionTitle: { fontSize: 17, fontWeight: 'bold', color: '#79573f' },
-    dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(233,226,208,0.5)' },
-    alertCard: {
-        backgroundColor: '#ffffff',
-        borderRadius: 14,
-        padding: 18,
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        gap: 14,
-        marginBottom: 12,
-        shadowColor: 'rgba(56,56,51,0.04)', shadowOffset: { width: 0, height: 2 }, shadowRadius: 8, shadowOpacity: 1, elevation: 1,
-    },
-    alertCardFaded: { backgroundColor: 'rgba(250,243,224,0.5)', opacity: 0.85 },
-    alertIconWrap: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
-    alertContent: { flex: 1 },
-    alertMessage: { fontSize: 14, color: '#41474e', lineHeight: 20 },
-    alertTime: { fontSize: 13, fontWeight: '600', color: 'rgba(48,98,138,0.7)', marginTop: 4 },
 
     // Loading
     loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },

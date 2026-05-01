@@ -46,7 +46,22 @@ function PetCard({ pet, index }) {
     );
 }
 
-function SocialProfileHeader({ user, postsCount, petsCount, onEditProfile, pets }) {
+function StatCard({ label, value }) {
+    return (
+        <View style={styles.statCard}>
+            <Text style={styles.statValue}>{value}</Text>
+            <Text style={styles.statLabel}>{label}</Text>
+        </View>
+    );
+}
+
+function SocialProfileHeader({
+    user,
+    postsCount,
+    petsCount,
+    onEditProfile,
+    pets,
+}) {
     return (
         <View style={styles.profileHeaderWrap}>
             <View style={styles.profileHero}>
@@ -78,14 +93,8 @@ function SocialProfileHeader({ user, postsCount, petsCount, onEditProfile, pets 
                     </Text>
 
                     <View style={styles.statsRow}>
-                        <View style={styles.statCard}>
-                            <Text style={styles.statValue}>{postsCount}</Text>
-                            <Text style={styles.statLabel}>Posts</Text>
-                        </View>
-                        <View style={styles.statCard}>
-                            <Text style={styles.statValue}>{petsCount}</Text>
-                            <Text style={styles.statLabel}>Pets</Text>
-                        </View>
+                        <StatCard label="Posts" value={postsCount} />
+                        <StatCard label="Pets" value={petsCount} />
                     </View>
                 </View>
             </View>
