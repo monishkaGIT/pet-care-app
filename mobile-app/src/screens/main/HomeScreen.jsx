@@ -9,6 +9,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { fetchUserPets } from '../../api/petApi';
 import BeagleLottie from '../../components/BeagleLottie';
 import NotificationBell from '../../components/NotificationBell';
+import { AuthContext } from '../../context/AuthContext';
+import { useContext } from 'react';
 
 const PET_COLORS = [
     { bg: 'rgba(162,210,255,0.35)', icon: '#30628a' },
@@ -52,6 +54,7 @@ function PetCard({ pet, index, onPress }) {
 
 export default function HomeScreen() {
     const navigation = useNavigation();
+    const { user } = useContext(AuthContext);
     const [pets, setPets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -97,7 +100,11 @@ export default function HomeScreen() {
                                 onPress={() => navigation.navigate('UserProfile')}
                                 activeOpacity={0.8}
                             >
-                                <MaterialIcons name="account-circle" size={32} color="#79573f" />
+                                {user?.profileImage ? (
+                                    <Image source={{ uri: user.profileImage }} style={{ width: '100%', height: '100%', borderRadius: 25 }} />
+                                ) : (
+                                    <MaterialIcons name="account-circle" size={32} color="#79573f" />
+                                )}
                             </TouchableOpacity>
                             <View style={styles.greetingArea}>
                                 <Text style={styles.brandText}>PetCare</Text>

@@ -219,7 +219,11 @@ export default function SocialScreen({ navigation }) {
                     (parentNav || navigation).navigate('MyPosts');
                 }}
             >
-                <MaterialIcons name="account-circle" size={24} color="#30628a" />
+                {user?.profileImage ? (
+                    <Image source={{ uri: user.profileImage }} style={{ width: 24, height: 24, borderRadius: 12 }} />
+                ) : (
+                    <MaterialIcons name="account-circle" size={24} color="#30628a" />
+                )}
             </TouchableOpacity>
         </View>
     );

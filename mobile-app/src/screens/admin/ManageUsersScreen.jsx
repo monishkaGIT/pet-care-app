@@ -12,6 +12,7 @@ import {
     Platform,
     StatusBar,
     TextInput,
+    Image,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
@@ -53,8 +54,12 @@ function UserCard({ user, onPress }) {
         >
             <View style={styles.cardBody}>
                 {/* Avatar */}
-                <View style={[styles.avatar, isAdmin && styles.avatarAdmin]}>
-                    <Text style={[styles.avatarText, isAdmin && styles.avatarTextAdmin]}>{initials}</Text>
+                <View style={[styles.avatar, isAdmin && styles.avatarAdmin, user.profileImage && { backgroundColor: 'transparent' }]}>
+                    {user.profileImage ? (
+                        <Image source={{ uri: user.profileImage }} style={{ width: '100%', height: '100%', borderRadius: 24 }} />
+                    ) : (
+                        <Text style={[styles.avatarText, isAdmin && styles.avatarTextAdmin]}>{initials}</Text>
+                    )}
                 </View>
 
                 {/* Info */}

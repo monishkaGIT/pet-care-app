@@ -9,6 +9,7 @@ import {
     Platform,
     StatusBar,
     ActivityIndicator,
+    Image,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
@@ -100,8 +101,12 @@ export default function UserDetailsScreen({ route, navigation }) {
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 {/* ── Profile Header ── */}
                 <View style={[styles.profileCard, SHADOWS.editorial]}>
-                    <View style={[styles.profileAvatar, isAdmin && styles.profileAvatarAdmin]}>
-                        <Text style={[styles.profileInitials, isAdmin && styles.profileInitialsAdmin]}>{initials}</Text>
+                    <View style={[styles.profileAvatar, isAdmin && styles.profileAvatarAdmin, user.profileImage && { backgroundColor: 'transparent' }]}>
+                        {user.profileImage ? (
+                            <Image source={{ uri: user.profileImage }} style={{ width: '100%', height: '100%', borderRadius: 40 }} />
+                        ) : (
+                            <Text style={[styles.profileInitials, isAdmin && styles.profileInitialsAdmin]}>{initials}</Text>
+                        )}
                     </View>
                     <Text style={styles.profileName}>{user.name}</Text>
                     <Text style={styles.profileEmail}>{user.email}</Text>
