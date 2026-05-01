@@ -255,13 +255,12 @@ export default function MyPostsScreen({ navigation }) {
 
                 {/* Action buttons */}
                 <View style={styles.cardActions}>
-                    <TouchableOpacity style={styles.editBtn} onPress={() => handleEdit(item)} activeOpacity={0.7}>
-                        <MaterialIcons name="edit" size={16} color={COLORS.primary} />
-                        <Text style={styles.editBtnText}>Edit</Text>
+                    <TouchableOpacity style={styles.editBtn} onPress={() => handleEdit(item)} activeOpacity={0.85}>
+                        <MaterialIcons name="edit" size={18} color="#ffffff" />
+                        <Text style={styles.editBtnText}>Edit Post</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item)} activeOpacity={0.7}>
-                        <MaterialIcons name="delete-outline" size={16} color={COLORS.error} />
-                        <Text style={styles.deleteBtnText}>Delete</Text>
+                    <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item)} activeOpacity={0.85}>
+                        <MaterialIcons name="delete-outline" size={20} color="#ef4444" />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -512,33 +511,31 @@ const styles = StyleSheet.create({
     /* Actions */
     cardActions: {
         flexDirection: 'row',
-        gap: 10,
+        gap: 12,
         borderTopWidth: 1,
         borderTopColor: COLORS.outlineVariant + '40',
-        paddingTop: 10,
+        paddingTop: 14,
+        marginTop: 4,
     },
     editBtn: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 8,
-        borderRadius: 10,
-        backgroundColor: COLORS.primaryContainer + '40',
-        gap: 6,
+        paddingVertical: 10,
+        borderRadius: 12,
+        backgroundColor: '#30628a',
+        gap: 8,
     },
-    editBtnText: { fontSize: 13, fontWeight: '700', color: COLORS.primary },
+    editBtnText: { fontSize: 14, fontWeight: '800', color: '#ffffff' },
     deleteBtn: {
-        flex: 1,
-        flexDirection: 'row',
+        width: 42,
+        height: 42,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 8,
-        borderRadius: 10,
-        backgroundColor: COLORS.errorContainer + '40',
-        gap: 6,
+        borderRadius: 12,
+        backgroundColor: '#fee2e2',
     },
-    deleteBtnText: { fontSize: 13, fontWeight: '700', color: COLORS.error },
 
     /* Empty */
     emptyState: {
