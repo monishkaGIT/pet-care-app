@@ -7,7 +7,6 @@ import {
     TextInput,
     TouchableOpacity,
     Switch,
-    Alert,
     KeyboardAvoidingView,
     Platform,
     Image,
@@ -18,11 +17,12 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, SHADOWS } from '../../constants/theme';
 import { createService, updateService } from '../../api/serviceApi';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 const CATEGORY_OPTIONS = ['Grooming', 'Boarding', 'Medical Care', 'Training', 'Walking'];
 
 export default function AddNewServiceScreen({ navigation, route }) {
-    // Pre-fill fields when editing an existing service
     const existingService = route?.params?.service ?? null;
 
     const [serviceName, setServiceName] = useState(existingService?.name || '');
@@ -32,22 +32,18 @@ export default function AddNewServiceScreen({ navigation, route }) {
     const [isActive, setIsActive] = useState(existingService?.isActive ?? true);
     const [showCategoryPicker, setShowCategoryPicker] = useState(false);
     const [imageUri, setImageUri] = useState(existingService?.imageUrl || null);
-    const [imageFile, setImageFile] = useState(null); // The actual file object for upload
-    const [imageRemoved, setImageRemoved] = useState(false); // Track if user explicitly removed the image
+    const [imageFile, setImageFile] = useState(null);
+    const [imageRemoved, setImageRemoved] = useState(false);
     const [imageLoading, setImageLoading] = useState(false);
     const [saving, setSaving] = useState(false);
-
-    // Field-level errors
     const [errors, setErrors] = useState({});
+    const [modalProps, showModal] = usePetCareModal();
 
     // ── Image Picker ────────────────────────────────────────────────
     const pickImage = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-            Alert.alert(
-                'Permission Required',
-                'Please allow access to your photo library to upload a service image.',
-            );
+            showModal('warning', 'Permission Required', 'Please allow access to your photo library to upload a service image.');
             return;
         }
 
@@ -74,7 +70,7 @@ export default function AddNewServiceScreen({ navigation, route }) {
     };
 
     const removeImage = () => {
-        Alert.alert('Remove Image', 'Are you sure you want to remove this image?', [
+        showModal('warning', 'Remove Image', 'Are you sure you want to remove this image?', [
             { text: 'Cancel', style: 'cancel' },
             {
                 text: 'Remove',
@@ -144,32 +140,29 @@ export default function AddNewServiceScreen({ navigation, route }) {
             }
 
             if (existingService?._id) {
-                // Update existing service
                 await updateService(existingService._id, serviceData);
-                Alert.alert('Success', `Service "${serviceName}" updated successfully!`, [
-                    { text: 'OK', onPress: () => navigation.goBack() },
+                showModal('success', 'Updated!', `Service "${serviceName}" updated successfully!`, [
+                    { text: 'OK', style: 'primary', onPress: () => navigation.goBack() },
                 ]);
             } else {
-                // Create new service
                 await createService(serviceData);
-                Alert.alert('Success', `Service "${serviceName}" created successfully!`, [
-                    { text: 'OK', onPress: () => navigation.goBack() },
+                showModal('success', 'Created!', `Service "${serviceName}" created successfully!`, [
+                    { text: 'OK', style: 'primary', onPress: () => navigation.goBack() },
                 ]);
             }
         } catch (error) {
             console.error('Service save error:', error.response?.data ?? error.message ?? error);
             const apiErrors = error.response?.data?.errors;
             if (apiErrors && Array.isArray(apiErrors)) {
-                // Map API errors to field-level errors
                 const fieldErrors = {};
                 apiErrors.forEach((e) => {
                     fieldErrors[e.field] = e.message;
                 });
                 setErrors(fieldErrors);
-                Alert.alert('Validation Failed', apiErrors.map((e) => e.message).join('\n'));
+                showModal('error', 'Validation Failed', apiErrors.map((e) => e.message).join('\n'));
             } else {
                 const errorMessage = error.response?.data?.message || error.message || 'Failed to save service';
-                Alert.alert('Error', errorMessage);
+                showModal('error', 'Error', errorMessage);
             }
         } finally {
             setSaving(false);
@@ -178,6 +171,7 @@ export default function AddNewServiceScreen({ navigation, route }) {
 
     return (
         <View style={styles.container}>
+            <PetCareModal {...modalProps} />
             {/* ── Top App Bar ── */}
             <View style={[styles.topBar, SHADOWS.editorial]}>
                 <View style={styles.topBarLeft}>

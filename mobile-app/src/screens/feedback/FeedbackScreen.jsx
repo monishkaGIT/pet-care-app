@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import {
     View, Text, StyleSheet, FlatList, TouchableOpacity,
-    TextInput, Modal, Alert, ActivityIndicator, KeyboardAvoidingView,
+    TextInput, Modal, ActivityIndicator, KeyboardAvoidingView,
     Platform, ScrollView, Animated, RefreshControl
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -13,6 +13,8 @@ import {
     updateFeedback,
     deleteFeedback,
 } from '../../api/feedbackApi';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 const CATEGORIES = ['General', 'Bug Report', 'Feature Request', 'Compliment', 'Other'];
 
@@ -40,6 +42,7 @@ export default function FeedbackScreen() {
     const [modalVisible, setModalVisible] = useState(false);
     const [editingFeedback, setEditingFeedback] = useState(null);
     const [submitting, setSubmitting] = useState(false);
+    const [modalProps, showModal] = usePetCareModal();
 
     // Form state
     const [title, setTitle] = useState('');
@@ -59,7 +62,7 @@ export default function FeedbackScreen() {
                 useNativeDriver: true,
             }).start();
         } catch (error) {
-            Alert.alert('Error', 'Failed to load feedbacks');
+            showModal('error', 'Error', 'Failed to load feedbacks');
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -99,19 +102,19 @@ export default function FeedbackScreen() {
 
     const handleSubmit = async () => {
         if (!title.trim()) {
-            Alert.alert('Missing Title', 'Please enter a title for your feedback.');
+            showModal('warning', 'Missing Title', 'Please enter a title for your feedback.');
             return;
         }
         if (title.trim().length < 3) {
-            Alert.alert('Title Too Short', 'Title must be at least 3 characters.');
+            showModal('warning', 'Title Too Short', 'Title must be at least 3 characters.');
             return;
         }
         if (!message.trim()) {
-            Alert.alert('Missing Message', 'Please enter your feedback message.');
+            showModal('warning', 'Missing Message', 'Please enter your feedback message.');
             return;
         }
         if (message.trim().length < 10) {
-            Alert.alert('Message Too Short', 'Please provide at least 10 characters of feedback.');
+            showModal('warning', 'Message Too Short', 'Please provide at least 10 characters of feedback.');
             return;
         }
 
@@ -127,42 +130,38 @@ export default function FeedbackScreen() {
 
             if (editingFeedback) {
                 await updateFeedback(editingFeedback._id, feedbackData);
-                Alert.alert('Success', 'Feedback updated successfully!');
+                showModal('success', 'Success', 'Feedback updated successfully!');
             } else {
                 await createFeedback(feedbackData);
-                Alert.alert('Success', 'Feedback submitted successfully!');
+                showModal('success', 'Success', 'Feedback submitted successfully!');
             }
 
             setModalVisible(false);
             resetForm();
             loadFeedbacks();
         } catch (error) {
-            Alert.alert('Error', error.response?.data?.message || 'Something went wrong');
+            showModal('error', 'Error', error.response?.data?.message || 'Something went wrong');
         } finally {
             setSubmitting(false);
         }
     };
 
     const handleDelete = (fb) => {
-        Alert.alert(
-            'Delete Feedback',
-            `Are you sure you want to delete "${fb.title}"?`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await deleteFeedback(fb._id);
-                            loadFeedbacks();
-                        } catch (error) {
-                            Alert.alert('Error', 'Failed to delete feedback');
-                        }
-                    },
+        showModal('warning', 'Delete Feedback', `Are you sure you want to delete "${fb.title}"?`, [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Delete',
+                style: 'destructive',
+                onPress: async () => {
+                    try {
+                        await deleteFeedback(fb._id);
+                        loadFeedbacks();
+                    } catch (error) {
+                        showModal('error', 'Error', 'Failed to delete feedback');
+                    }
                 },
-            ]
-        );
+            },
+        ]);
     };
 
     const renderStars = (count, interactive = false, size = 18) => {

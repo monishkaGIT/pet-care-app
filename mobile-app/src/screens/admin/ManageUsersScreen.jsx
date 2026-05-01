@@ -7,7 +7,6 @@ import {
     TouchableOpacity,
     Dimensions,
     ActivityIndicator,
-    Alert,
     RefreshControl,
     Platform,
     StatusBar,
@@ -17,6 +16,8 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
 import api from '../../api/axiosConfig';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 const { width } = Dimensions.get('window');
 
@@ -95,13 +96,14 @@ export default function ManageUsersScreen({ navigation }) {
     const [refreshing, setRefreshing] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeFilter, setActiveFilter] = useState('All');
+    const [modalProps, showModal] = usePetCareModal();
 
     const loadUsers = useCallback(async () => {
         try {
             const { data } = await api.get('/');
             setUsers(data);
         } catch (err) {
-            Alert.alert('Error', err.response?.data?.message || 'Failed to load users');
+            showModal('error', 'Error', err.response?.data?.message || 'Failed to load users');
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -150,6 +152,7 @@ export default function ManageUsersScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
+            <PetCareModal {...modalProps} />
             {/* ── Top App Bar ── */}
             <View style={[styles.topBar, SHADOWS.editorial]}>
                 <View style={styles.topBarLeft}>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import {
     View, Text, StyleSheet, FlatList, TouchableOpacity,
-    Alert, ActivityIndicator, RefreshControl, Image,
+    ActivityIndicator, RefreshControl, Image,
     Platform, StatusBar, SafeAreaView, ScrollView,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -9,6 +9,8 @@ import { COLORS, SHADOWS } from '../../constants/theme';
 import api, { postApi } from '../../api/axiosConfig';
 import { fetchUserPets } from '../../api/petApi';
 import { AuthContext } from '../../context/AuthContext';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 function timeAgo(dateStr) {
     const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
@@ -136,6 +138,7 @@ export default function MyPostsScreen({ navigation }) {
     const [profileUser, setProfileUser] = useState(user);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [modalProps, showModal] = usePetCareModal();
 
     const fetchMyPosts = useCallback(async () => {
         try {
@@ -156,7 +159,7 @@ export default function MyPostsScreen({ navigation }) {
                 const myPosts = postsResult.value.data.filter(p => p.author?._id === user?._id);
                 setPosts(myPosts);
             } else {
-                Alert.alert('Error', 'Could not load your posts.');
+                showModal('error', 'Error', 'Could not load your posts.');
             }
 
             if (petsResult.status === 'fulfilled') {
@@ -165,7 +168,7 @@ export default function MyPostsScreen({ navigation }) {
                 setPets([]);
             }
         } catch (err) {
-            Alert.alert('Error', 'Could not load your profile page.');
+            showModal('error', 'Error', 'Could not load your profile page.');
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -195,25 +198,21 @@ export default function MyPostsScreen({ navigation }) {
     };
 
     const handleDelete = (post) => {
-        Alert.alert(
-            'Delete Post',
-            `Are you sure you want to delete this post?`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await postApi.delete(`/${post._id}`);
-                            setPosts(prev => prev.filter(p => p._id !== post._id));
-                        } catch {
-                            Alert.alert('Error', 'Could not delete post');
-                        }
-                    },
+        showModal('warning', 'Delete Post', 'Are you sure you want to delete this post?', [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Delete',
+                style: 'destructive',
+                onPress: async () => {
+                    try {
+                        await postApi.delete(`/${post._id}`);
+                        setPosts(prev => prev.filter(p => p._id !== post._id));
+                    } catch {
+                        showModal('error', 'Error', 'Could not delete post');
+                    }
                 },
-            ],
-        );
+            },
+        ]);
     };
 
     const renderPostCard = ({ item }) => (
@@ -298,6 +297,7 @@ export default function MyPostsScreen({ navigation }) {
 
     return (
         <SafeAreaView style={styles.container}>
+            <PetCareModal {...modalProps} />
             <View style={[styles.topBar, SHADOWS.header]}>
                 <View style={styles.topBarLeft}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>

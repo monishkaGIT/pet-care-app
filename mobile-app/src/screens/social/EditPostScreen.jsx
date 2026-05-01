@@ -1,13 +1,15 @@
 import React, { useState, useContext } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-    TextInput, Alert, ScrollView, Image, ActivityIndicator,
+    TextInput, ScrollView, Image, ActivityIndicator,
     Platform, StatusBar,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { postApi } from '../../api/axiosConfig';
 import { AuthContext } from '../../context/AuthContext';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 // TODO: When Cloudinary is configured, import uploadToCloudinary here:
 // import { uploadToCloudinary } from '../../utils/uploadImage';
@@ -16,6 +18,7 @@ export default function EditPostScreen({ navigation, route }) {
     // post object passed from SocialScreen via navigation.navigate('EditPost', { post })
     const { post } = route.params;
     const { user } = useContext(AuthContext);
+    const [modalProps, showModal] = usePetCareModal();
 
     const [caption, setCaption] = useState(post.caption || '');
     const [label, setLabel] = useState(post.label || '');
@@ -42,15 +45,15 @@ export default function EditPostScreen({ navigation, route }) {
 
     const handleSave = async () => {
         if (!caption.trim()) {
-            Alert.alert('Missing Caption', 'Please write something for your post.');
+            showModal('warning', 'Missing Caption', 'Please write something for your post.');
             return;
         }
         if (caption.trim().length < 3) {
-            Alert.alert('Caption Too Short', 'Caption must be at least 3 characters.');
+            showModal('warning', 'Caption Too Short', 'Caption must be at least 3 characters.');
             return;
         }
         if (caption.trim().length > 500) {
-            Alert.alert('Caption Too Long', 'Caption must be under 500 characters.');
+            showModal('warning', 'Caption Too Long', 'Caption must be under 500 characters.');
             return;
         }
 
@@ -75,10 +78,11 @@ export default function EditPostScreen({ navigation, route }) {
                 label: label.trim(),
             });
 
-            Alert.alert('Saved! ✅', 'Your post has been updated.');
-            navigation.goBack();
+            showModal('success', 'Saved! ✅', 'Your post has been updated.', [
+                { text: 'OK', style: 'primary', onPress: () => navigation.goBack() },
+            ]);
         } catch (err) {
-            Alert.alert('Error', err?.response?.data?.message || 'Could not update post');
+            showModal('error', 'Error', err?.response?.data?.message || 'Could not update post');
         } finally {
             setLoading(false);
         }
@@ -86,6 +90,7 @@ export default function EditPostScreen({ navigation, route }) {
 
     return (
         <SafeAreaView style={styles.safeArea}>
+            <PetCareModal {...modalProps} />
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()} activeOpacity={0.8}>
@@ -184,26 +189,22 @@ export default function EditPostScreen({ navigation, route }) {
                     <TouchableOpacity
                         style={styles.deleteBtn}
                         activeOpacity={0.8}
-                        onPress={() =>
-                            Alert.alert(
-                                'Delete Post',
-                                'This will permanently delete your post.',
-                                [
-                                    { text: 'Cancel', style: 'cancel' },
-                                    {
-                                        text: 'Delete', style: 'destructive',
-                                        onPress: async () => {
-                                            try {
-                                                await postApi.delete(`/${post._id}`);
-                                                navigation.goBack();
-                                            } catch {
-                                                Alert.alert('Error', 'Could not delete post');
-                                            }
-                                        },
+                        onPress={() => {
+                            showModal('warning', 'Delete Post', 'This will permanently delete your post.', [
+                                { text: 'Cancel', style: 'cancel' },
+                                {
+                                    text: 'Delete', style: 'destructive',
+                                    onPress: async () => {
+                                        try {
+                                            await postApi.delete(`/${post._id}`);
+                                            navigation.goBack();
+                                        } catch {
+                                            showModal('error', 'Error', 'Could not delete post');
+                                        }
                                     },
-                                ]
-                            )
-                        }
+                                },
+                            ]);
+                        }}
                     >
                         <MaterialIcons name="delete-outline" size={20} color="#ef4444" />
                         <Text style={styles.deleteBtnText}>Delete This Post</Text>

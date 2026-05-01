@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, ScrollView, TouchableOpacity,
-    TextInput, Alert, StatusBar, Platform,
+    TextInput, StatusBar, Platform,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
@@ -12,6 +12,8 @@ import {
     createVaccination, updateVaccination,
     addWeightEntry
 } from '../../api/healthApi';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 const RECORD_TYPES = [
     { key: 'medical', label: 'Medical', icon: 'medkit' },
@@ -43,6 +45,7 @@ export default function NewHealthRecordScreen() {
     const [weightUnit, setWeightUnit] = useState('kg');
 
     const [saving, setSaving] = useState(false);
+    const [modalProps, showModal] = usePetCareModal();
 
     // Date Picker States
     const [visitDateObj, setVisitDateObj] = useState(new Date());
@@ -143,7 +146,7 @@ export default function NewHealthRecordScreen() {
 
             if (recordType === 'medical') {
                 if (!title.trim()) {
-                    Alert.alert('Error', 'Please enter a title/diagnosis');
+                    showModal('warning', 'Missing Field', 'Please enter a title/diagnosis');
                     setSaving(false);
                     return;
                 }
@@ -165,7 +168,7 @@ export default function NewHealthRecordScreen() {
                 }
             } else if (recordType === 'vaccination') {
                 if (!vaccineName.trim()) {
-                    Alert.alert('Error', 'Please enter the vaccine name');
+                    showModal('warning', 'Missing Field', 'Please enter the vaccine name');
                     setSaving(false);
                     return;
                 }
@@ -185,7 +188,7 @@ export default function NewHealthRecordScreen() {
                 }
             } else if (recordType === 'weight') {
                 if (!weight.trim() || isNaN(parseFloat(weight))) {
-                    Alert.alert('Error', 'Please enter a valid weight');
+                    showModal('warning', 'Invalid Weight', 'Please enter a valid weight');
                     setSaving(false);
                     return;
                 }
@@ -197,12 +200,12 @@ export default function NewHealthRecordScreen() {
                 });
             }
 
-            Alert.alert('Success', 'Record saved successfully!', [
-                { text: 'OK', onPress: () => navigation.goBack() }
+            showModal('success', 'Saved!', 'Record saved successfully!', [
+                { text: 'OK', style: 'primary', onPress: () => navigation.goBack() }
             ]);
         } catch (err) {
             console.error('Save error:', err);
-            Alert.alert('Error', err.response?.data?.message || 'Failed to save record');
+            showModal('error', 'Error', err.response?.data?.message || 'Failed to save record');
         } finally {
             setSaving(false);
         }
@@ -210,6 +213,7 @@ export default function NewHealthRecordScreen() {
 
     return (
         <View style={styles.container}>
+            <PetCareModal {...modalProps} />
             <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
 
             {/* ─── Header ─── */}

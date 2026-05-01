@@ -9,13 +9,14 @@ import {
   Image,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   Platform,
   StatusBar,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { fetchUserPets } from '../../api/petApi';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 const PET_COLORS = [
   { bg: 'rgba(162,210,255,0.35)', icon: '#30628a' },
@@ -57,13 +58,14 @@ export default function MyPetsList() {
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [modalProps, showModal] = usePetCareModal();
 
   const loadPets = useCallback(async () => {
     try {
       const data = await fetchUserPets();
       setPets(data);
     } catch (error) {
-      Alert.alert('Error', 'Could not load pets. Please try again.');
+      showModal('error', 'Error', 'Could not load pets. Please try again.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -84,6 +86,7 @@ export default function MyPetsList() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <PetCareModal {...modalProps} />
       <FlatList
         data={pets}
         keyExtractor={(item) => item._id}

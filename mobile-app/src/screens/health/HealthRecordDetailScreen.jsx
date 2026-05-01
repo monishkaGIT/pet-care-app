@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, ScrollView, TouchableOpacity,
-    ActivityIndicator, Alert, StatusBar,
+    ActivityIndicator, StatusBar,
 } from 'react-native';
 import { MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -11,6 +11,8 @@ import {
     updateHealthRecord,
     deleteHealthRecord,
 } from '../../api/healthApi';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 export default function HealthRecordDetailScreen() {
     const navigation = useNavigation();
@@ -19,6 +21,7 @@ export default function HealthRecordDetailScreen() {
 
     const [record, setRecord] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [modalProps, showModal] = usePetCareModal();
 
     useEffect(() => {
         loadRecord();
@@ -31,33 +34,30 @@ export default function HealthRecordDetailScreen() {
             setRecord(data);
         } catch (err) {
             console.error('Error loading record:', err);
-            Alert.alert('Error', 'Could not load health record');
+            showModal('error', 'Error', 'Could not load health record');
         } finally {
             setLoading(false);
         }
     };
 
     const handleDelete = () => {
-        Alert.alert(
-            'Delete Record',
-            'Are you sure you want to delete this health record? This action cannot be undone.',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await deleteHealthRecord(petId, recordId);
-                            Alert.alert('Deleted', 'Record removed successfully');
-                            navigation.goBack();
-                        } catch (err) {
-                            Alert.alert('Error', 'Failed to delete record');
-                        }
-                    },
+        showModal('warning', 'Delete Record', 'Are you sure you want to delete this health record? This action cannot be undone.', [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Delete',
+                style: 'destructive',
+                onPress: async () => {
+                    try {
+                        await deleteHealthRecord(petId, recordId);
+                        showModal('success', 'Deleted', 'Record removed successfully', [
+                            { text: 'OK', style: 'primary', onPress: () => navigation.goBack() },
+                        ]);
+                    } catch (err) {
+                        showModal('error', 'Error', 'Failed to delete record');
+                    }
                 },
-            ]
-        );
+            },
+        ]);
     };
 
     const handleToggleStatus = async () => {
@@ -66,7 +66,7 @@ export default function HealthRecordDetailScreen() {
             const updated = await updateHealthRecord(petId, recordId, { status: newStatus });
             setRecord(updated);
         } catch (err) {
-            Alert.alert('Error', 'Failed to update status');
+            showModal('error', 'Error', 'Failed to update status');
         }
     };
 
@@ -101,6 +101,7 @@ export default function HealthRecordDetailScreen() {
 
     return (
         <View style={styles.container}>
+            <PetCareModal {...modalProps} />
             <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
 
             {/* ─── Header ─── */}

@@ -1,17 +1,9 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { COLORS } from '../../constants/theme';
 
-export default function SplashScreen({ navigation }) {
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            navigation.replace('Landing');
-        }, 3000);
-
-        return () => clearTimeout(timer);
-    }, [navigation]);
-
+export default function SplashScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.content}>

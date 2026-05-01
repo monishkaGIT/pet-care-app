@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
-    ScrollView, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, StatusBar, Image
+    ScrollView, ActivityIndicator, KeyboardAvoidingView, Platform, StatusBar, Image
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, SHADOWS } from '../../constants/theme';
 import { fetchPetById, updatePet } from '../../api/petApi';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 export default function EditPetScreen() {
     const navigation = useNavigation();
@@ -15,6 +17,7 @@ export default function EditPetScreen() {
     const { petId } = route.params;
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [modalProps, showModal] = usePetCareModal();
     const [form, setForm] = useState({
         name: '', breed: '', age: '', weight: '',
         gender: 'Male', color: '',
@@ -41,7 +44,7 @@ export default function EditPetScreen() {
                 profileImage: pet.profileImage || '',
             });
         } catch (e) {
-            Alert.alert('Error', 'Failed to load pet data.');
+            showModal('error', 'Error', 'Failed to load pet data.');
             navigation.goBack();
         } finally {
             setLoading(false);
@@ -63,23 +66,23 @@ export default function EditPetScreen() {
 
     const handleUpdate = async () => {
         if (!form.name.trim()) {
-            Alert.alert('Missing Name', 'Please enter your pet\'s name.');
+            showModal('warning', 'Missing Name', "Please enter your pet's name.");
             return;
         }
         if (form.name.trim().length < 2) {
-            Alert.alert('Invalid Name', 'Pet name must be at least 2 characters.');
+            showModal('warning', 'Invalid Name', 'Pet name must be at least 2 characters.');
             return;
         }
         if (!form.breed.trim()) {
-            Alert.alert('Missing Breed', 'Please enter your pet\'s breed.');
+            showModal('warning', 'Missing Breed', "Please enter your pet's breed.");
             return;
         }
         if (form.age && (isNaN(parseFloat(form.age)) || parseFloat(form.age) < 0 || parseFloat(form.age) > 30)) {
-            Alert.alert('Invalid Age', 'Please enter a valid age between 0 and 30 years.');
+            showModal('warning', 'Invalid Age', 'Please enter a valid age between 0 and 30 years.');
             return;
         }
         if (form.weight && (isNaN(parseFloat(form.weight)) || parseFloat(form.weight) < 0 || parseFloat(form.weight) > 200)) {
-            Alert.alert('Invalid Weight', 'Please enter a valid weight between 0 and 200 kg.');
+            showModal('warning', 'Invalid Weight', 'Please enter a valid weight between 0 and 200 kg.');
             return;
         }
         setSaving(true);
@@ -91,7 +94,7 @@ export default function EditPetScreen() {
             });
             navigation.goBack();
         } catch (e) {
-            Alert.alert('Error', 'Failed to update pet profile.');
+            showModal('error', 'Error', 'Failed to update pet profile.');
         } finally {
             setSaving(false);
         }
@@ -107,6 +110,7 @@ export default function EditPetScreen() {
 
     return (
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+            <PetCareModal {...modalProps} />
             <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 120 }}>
                 {/* Header */}
                 <View style={styles.header}>

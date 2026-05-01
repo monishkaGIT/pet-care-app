@@ -1,19 +1,22 @@
 import React, { useState, useEffect, useContext } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
-    TextInput, Alert, ScrollView, Image, ActivityIndicator,
+    TextInput, ScrollView, Image, ActivityIndicator,
     Platform, StatusBar,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { AuthContext } from '../../context/AuthContext';
 import { petApi, postApi } from '../../api/axiosConfig';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 // TODO: When Cloudinary is configured, import uploadToCloudinary here:
 // import { uploadToCloudinary } from '../../utils/uploadImage';
 
 export default function CreatePostScreen({ navigation }) {
     const { user } = useContext(AuthContext);
+    const [modalProps, showModal] = usePetCareModal();
 
     const [caption, setCaption] = useState('');
     const [label, setLabel] = useState('');
@@ -51,15 +54,15 @@ export default function CreatePostScreen({ navigation }) {
 
     const handlePost = async () => {
         if (!caption.trim()) {
-            Alert.alert('Missing Caption', 'Please write something for your post.');
+            showModal('warning', 'Missing Caption', 'Please write something for your post.');
             return;
         }
         if (caption.trim().length < 3) {
-            Alert.alert('Caption Too Short', 'Caption must be at least 3 characters.');
+            showModal('warning', 'Caption Too Short', 'Caption must be at least 3 characters.');
             return;
         }
         if (caption.trim().length > 500) {
-            Alert.alert('Caption Too Long', 'Caption must be under 500 characters.');
+            showModal('warning', 'Caption Too Long', 'Caption must be under 500 characters.');
             return;
         }
 
@@ -84,10 +87,11 @@ export default function CreatePostScreen({ navigation }) {
                 pet: selectedPet?._id || null,
             });
 
-            Alert.alert('Posted! 🐾', 'Your post has been shared.');
-            navigation.goBack();
+            showModal('success', 'Posted! 🐾', 'Your post has been shared.', [
+                { text: 'OK', style: 'primary', onPress: () => navigation.goBack() },
+            ]);
         } catch (err) {
-            Alert.alert('Error', err?.response?.data?.message || 'Could not create post');
+            showModal('error', 'Error', err?.response?.data?.message || 'Could not create post');
         } finally {
             setLoading(false);
         }
@@ -95,6 +99,7 @@ export default function CreatePostScreen({ navigation }) {
 
     return (
         <SafeAreaView style={styles.safeArea}>
+            <PetCareModal {...modalProps} />
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()} activeOpacity={0.8}>

@@ -1,34 +1,38 @@
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity, Text, Alert, ActivityIndicator } from 'react-native';
+import { View, TextInput, StyleSheet, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { COLORS } from '../../constants/theme';
 import api from '../../api/axiosConfig';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 export default function ChangePasswordScreen({ navigation }) {
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [modalProps, showModal] = usePetCareModal();
 
     const handleChangePassword = async () => {
         if (!oldPassword || !newPassword || !confirmPassword) {
-            return Alert.alert('Missing Fields', 'All fields are required.');
+            return showModal('warning', 'Missing Fields', 'All fields are required.');
         }
         if (newPassword.length < 6) {
-            return Alert.alert('Weak Password', 'New password must be at least 6 characters.');
+            return showModal('warning', 'Weak Password', 'New password must be at least 6 characters.');
         }
         if (newPassword !== confirmPassword) {
-            return Alert.alert('Mismatch', 'New passwords do not match.');
+            return showModal('warning', 'Mismatch', 'New passwords do not match.');
         }
         if (oldPassword === newPassword) {
-            return Alert.alert('Same Password', 'New password must be different from old password.');
+            return showModal('warning', 'Same Password', 'New password must be different from old password.');
         }
         setLoading(true);
         try {
             await api.put('/password', { oldPassword, newPassword });
-            Alert.alert('Success', 'Password changed successfully!');
-            navigation.goBack();
+            showModal('success', 'Success', 'Password changed successfully!', [
+                { text: 'OK', style: 'primary', onPress: () => navigation.goBack() },
+            ]);
         } catch (error) {
-            Alert.alert('Error', error.response?.data?.message || 'Failed to change password');
+            showModal('error', 'Error', error.response?.data?.message || 'Failed to change password');
         } finally {
             setLoading(false);
         }
@@ -36,6 +40,7 @@ export default function ChangePasswordScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
+            <PetCareModal {...modalProps} />
             <View style={styles.card}>
                 <TextInput style={styles.input} placeholder="Old Password" value={oldPassword} onChangeText={setOldPassword} secureTextEntry />
                 <TextInput style={styles.input} placeholder="New Password" value={newPassword} onChangeText={setNewPassword} secureTextEntry />

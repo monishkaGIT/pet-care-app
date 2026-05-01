@@ -1,17 +1,20 @@
 import React, { useContext, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, TextInput, Alert, ActivityIndicator, Image, ScrollView, Platform, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, TextInput, ActivityIndicator, Image, ScrollView, Platform, StatusBar } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import api from '../../api/axiosConfig';
 import { AuthContext } from '../../context/AuthContext';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 export default function EditBioScreen({ navigation }) {
     const { user, setUser } = useContext(AuthContext);
     const [bio, setBio] = useState(user?.bio || '');
     const [loading, setLoading] = useState(false);
+    const [modalProps, showModal] = usePetCareModal();
 
     const handleSave = async () => {
         if (bio.trim().length > 160) {
-            Alert.alert('Bio Too Long', 'Bio must be under 160 characters.');
+            showModal('warning', 'Bio Too Long', 'Bio must be under 160 characters.');
             return;
         }
 
@@ -19,10 +22,11 @@ export default function EditBioScreen({ navigation }) {
         try {
             const { data } = await api.put('/profile', { bio: bio.trim() });
             setUser(data);
-            Alert.alert('Saved', 'Your bio has been updated.');
-            navigation.goBack();
+            showModal('success', 'Saved', 'Your bio has been updated.', [
+                { text: 'OK', style: 'primary', onPress: () => navigation.goBack() },
+            ]);
         } catch (error) {
-            Alert.alert('Error', error.response?.data?.message || 'Could not update bio');
+            showModal('error', 'Error', error.response?.data?.message || 'Could not update bio');
         } finally {
             setLoading(false);
         }
@@ -30,6 +34,7 @@ export default function EditBioScreen({ navigation }) {
 
     return (
         <SafeAreaView style={styles.safeArea}>
+            <PetCareModal {...modalProps} />
             <View style={styles.header}>
                 <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()} activeOpacity={0.8}>
                     <MaterialIcons name="close" size={26} color="#30628a" />

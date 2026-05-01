@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
 
     const checkLoginStatus = async () => {
+        const startTime = Date.now();
         try {
             const storedUser = await AsyncStorage.getItem('userData');
             if (storedUser) {
@@ -26,7 +27,11 @@ export const AuthProvider = ({ children }) => {
             await AsyncStorage.removeItem('userData');
             setUser(null);
         } finally {
-            setIsLoading(false);
+            const elapsedTime = Date.now() - startTime;
+            const delay = Math.max(0, 6000 - elapsedTime);
+            setTimeout(() => {
+                setIsLoading(false);
+            }, delay);
         }
     };
 

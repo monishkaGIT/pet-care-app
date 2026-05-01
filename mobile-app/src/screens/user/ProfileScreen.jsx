@@ -1,9 +1,11 @@
 import React, { useContext, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Image, ScrollView, SafeAreaView, Platform, StatusBar } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator, Image, ScrollView, SafeAreaView, Platform, StatusBar } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { AuthContext } from '../../context/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
 import api from '../../api/axiosConfig';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 export default function ProfileScreen({ navigation }) {
     const { user, setUser, logout } = useContext(AuthContext);
@@ -16,6 +18,7 @@ export default function ProfileScreen({ navigation }) {
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('grid');
     const [isEditing, setIsEditing] = useState(false);
+    const [modalProps, showModal] = usePetCareModal();
 
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
@@ -31,14 +34,14 @@ export default function ProfileScreen({ navigation }) {
     };
 
     const handleUpdate = async () => {
-        if (!name.trim()) return Alert.alert('Missing Name', 'Name cannot be empty.');
-        if (name.trim().length < 2) return Alert.alert('Invalid Name', 'Name must be at least 2 characters.');
+        if (!name.trim()) return showModal('warning', 'Missing Name', 'Name cannot be empty.');
+        if (name.trim().length < 2) return showModal('warning', 'Invalid Name', 'Name must be at least 2 characters.');
         if (phone.trim()) {
             const phoneDigits = phone.replace(/\D/g, '');
-            if (phoneDigits.length < 10) return Alert.alert('Invalid Phone', 'Please enter a valid phone number (at least 10 digits).');
+            if (phoneDigits.length < 10) return showModal('warning', 'Invalid Phone', 'Please enter a valid phone number (at least 10 digits).');
         }
         if (address.trim() && address.trim().length < 5) {
-            return Alert.alert('Invalid Address', 'Address must be at least 5 characters.');
+            return showModal('warning', 'Invalid Address', 'Address must be at least 5 characters.');
         }
         setLoading(true);
         try {
@@ -51,39 +54,38 @@ export default function ProfileScreen({ navigation }) {
             });
             setUser(data);
             setIsEditing(false);
-            Alert.alert('Success', 'Profile updated successfully!');
+            showModal('success', 'Success', 'Profile updated successfully!');
         } catch (error) {
-            Alert.alert('Error', error.response?.data?.message || 'Update failed');
+            showModal('error', 'Error', error.response?.data?.message || 'Update failed');
         } finally {
             setLoading(false);
         }
     };
 
     const handleDeleteAccount = () => {
-        Alert.alert("Delete Account", "Are you sure you want to permanently delete your account? This action cannot be undone.",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete", style: "destructive",
-                    onPress: async () => {
-                        setDeleteLoading(true);
-                        try {
-                            await api.delete('/me');
-                            Alert.alert("Deleted", "Your account has been deleted permanently.");
-                            await logout();
-                        } catch (error) {
-                            Alert.alert('Error', error.response?.data?.message || 'Could not delete account');
-                        } finally {
-                            setDeleteLoading(false);
-                        }
+        showModal('warning', 'Delete Account', 'Are you sure you want to permanently delete your account? This action cannot be undone.', [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Delete', style: 'destructive',
+                onPress: async () => {
+                    setDeleteLoading(true);
+                    try {
+                        await api.delete('/me');
+                        showModal('success', 'Deleted', 'Your account has been deleted permanently.');
+                        await logout();
+                    } catch (error) {
+                        showModal('error', 'Error', error.response?.data?.message || 'Could not delete account');
+                    } finally {
+                        setDeleteLoading(false);
                     }
                 }
-            ]
-        );
+            }
+        ]);
     };
 
     return (
         <SafeAreaView style={styles.safeArea}>
+            <PetCareModal {...modalProps} />
             {/* Header */}
             <View style={styles.header}>
                 <View style={styles.headerLeft}>

@@ -53,11 +53,7 @@ export default function AppNavigator() {
     const { user, isLoading } = useContext(AuthContext);
 
     if (isLoading) {
-        return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background }}>
-                <ActivityIndicator size="large" color={COLORS.primary} />
-            </View>
-        );
+        return <SplashScreen />;
     }
 
     return (
@@ -65,7 +61,6 @@ export default function AppNavigator() {
             <Stack.Navigator screenOptions={{ headerShown: false }}>
                 {user === null ? (
                     <>
-                        <Stack.Screen name="Splash" component={SplashScreen} />
                         <Stack.Screen name="Landing" component={LandingScreen} />
                         <Stack.Screen name="Login" component={LoginScreen} />
                         <Stack.Screen name="Register" component={RegisterScreen} />

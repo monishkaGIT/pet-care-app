@@ -2,10 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
     View, Text, StyleSheet, Modal, TouchableOpacity,
     FlatList, TextInput, KeyboardAvoidingView, Platform,
-    Image, Alert, Keyboard,
+    Image, Keyboard,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { postApi } from '../api/axiosConfig';
+import PetCareModal from './PetCareModal';
+import usePetCareModal from '../hooks/usePetCareModal';
 
 const EMOJI_REACTIONS = ['❤️', '🐶', '✨', '🐾'];
 
@@ -23,6 +25,7 @@ export default function CommentsModal({ visible, onClose, post, currentUserId, o
     const [inputText, setInputText] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const inputRef = useRef(null);
+    const [modalProps, showModal] = usePetCareModal();
 
     useEffect(() => {
         if (visible && post) {
@@ -41,34 +44,30 @@ export default function CommentsModal({ visible, onClose, post, currentUserId, o
             Keyboard.dismiss();
             if (onCommentAdded) onCommentAdded(post._id, data);
         } catch {
-            Alert.alert('Error', 'Could not post comment.');
+            showModal('error', 'Error', 'Could not post comment.');
         } finally {
             setSubmitting(false);
         }
     };
 
     const handleDelete = (commentId) => {
-        Alert.alert(
-            'Delete Comment',
-            'Are you sure you want to delete this comment?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await postApi.delete(`/${post._id}/comments/${commentId}`);
-                            const updated = comments.filter(c => c._id !== commentId);
-                            setComments(updated);
-                            if (onCommentDeleted) onCommentDeleted(post._id, updated);
-                        } catch {
-                            Alert.alert('Error', 'Could not delete comment.');
-                        }
-                    },
+        showModal('warning', 'Delete Comment', 'Are you sure you want to delete this comment?', [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Delete',
+                style: 'destructive',
+                onPress: async () => {
+                    try {
+                        await postApi.delete(`/${post._id}/comments/${commentId}`);
+                        const updated = comments.filter(c => c._id !== commentId);
+                        setComments(updated);
+                        if (onCommentDeleted) onCommentDeleted(post._id, updated);
+                    } catch {
+                        showModal('error', 'Error', 'Could not delete comment.');
+                    }
                 },
-            ]
-        );
+            },
+        ]);
     };
 
     const appendEmoji = (emoji) => {
@@ -154,6 +153,7 @@ export default function CommentsModal({ visible, onClose, post, currentUserId, o
                 <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose} />
 
                 <View style={styles.sheet}>
+                    <PetCareModal {...modalProps} />
                     {/* Drag handle */}
                     <View style={styles.handle} />
 

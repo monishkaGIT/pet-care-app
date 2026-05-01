@@ -5,7 +5,6 @@ import {
     StyleSheet,
     ScrollView,
     TouchableOpacity,
-    Alert,
     Platform,
     StatusBar,
     ActivityIndicator,
@@ -14,6 +13,8 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
 import api from '../../api/axiosConfig';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 // ── Components ─────────────────────────────────────────────────────
 
@@ -36,6 +37,7 @@ function InfoRow({ icon, label, value }) {
 export default function UserDetailsScreen({ route, navigation }) {
     const { user } = route.params;
     const [deleting, setDeleting] = useState(false);
+    const [modalProps, showModal] = usePetCareModal();
 
     const isAdmin = user.role === 'admin';
 
@@ -57,37 +59,34 @@ export default function UserDetailsScreen({ route, navigation }) {
 
     const handleDelete = () => {
         if (isAdmin) {
-            Alert.alert('Cannot Delete', 'Admin accounts cannot be removed from this panel.');
+            showModal('warning', 'Cannot Delete', 'Admin accounts cannot be removed from this panel.');
             return;
         }
 
-        Alert.alert(
-            'Remove User',
-            `Are you sure you want to permanently delete "${user.name}"?\n\nThis action cannot be undone.`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            setDeleting(true);
-                            await api.delete(`/${user._id}`);
-                            Alert.alert('Success', 'User has been removed.', [
-                                { text: 'OK', onPress: () => navigation.goBack() },
-                            ]);
-                        } catch (err) {
-                            setDeleting(false);
-                            Alert.alert('Error', err.response?.data?.message || 'Failed to delete user');
-                        }
-                    },
+        showModal('warning', 'Remove User', `Are you sure you want to permanently delete "${user.name}"?\n\nThis action cannot be undone.`, [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Delete',
+                style: 'destructive',
+                onPress: async () => {
+                    try {
+                        setDeleting(true);
+                        await api.delete(`/${user._id}`);
+                        showModal('success', 'Success', 'User has been removed.', [
+                            { text: 'OK', style: 'primary', onPress: () => navigation.goBack() },
+                        ]);
+                    } catch (err) {
+                        setDeleting(false);
+                        showModal('error', 'Error', err.response?.data?.message || 'Failed to delete user');
+                    }
                 },
-            ]
-        );
+            },
+        ]);
     };
 
     return (
         <View style={styles.container}>
+            <PetCareModal {...modalProps} />
             {/* ── Top App Bar ── */}
             <View style={[styles.topBar, SHADOWS.editorial]}>
                 <View style={styles.topBarLeft}>

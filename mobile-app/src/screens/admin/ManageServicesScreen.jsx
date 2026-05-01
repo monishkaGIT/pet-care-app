@@ -7,7 +7,6 @@ import {
     TouchableOpacity,
     Dimensions,
     ActivityIndicator,
-    Alert,
     RefreshControl,
     Image,
     Platform,
@@ -16,6 +15,8 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
 import { fetchServices, fetchServiceStats } from '../../api/serviceApi';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 const { width } = Dimensions.get('window');
 
@@ -101,6 +102,7 @@ export default function ManageServicesScreen({ navigation }) {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState(null);
+    const [modalProps, showModal] = usePetCareModal();
 
     // Derive unique categories from fetched services
     const categories = ['All Services', ...new Set(services.map((s) => s.category))];
@@ -116,7 +118,7 @@ export default function ManageServicesScreen({ navigation }) {
             if (statsData) setStats(statsData);
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to load services');
-            Alert.alert('Error', err.response?.data?.message || 'Failed to load services');
+            showModal('error', 'Error', err.response?.data?.message || 'Failed to load services');
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -151,6 +153,7 @@ export default function ManageServicesScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
+            <PetCareModal {...modalProps} />
             {/* ── Top App Bar ── */}
             <View style={[styles.topBar, SHADOWS.editorial]}>
                 <View style={styles.topBarLeft}>

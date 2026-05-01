@@ -1,12 +1,14 @@
 import React, { useState, useCallback } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, ScrollView,
-    Alert, ActivityIndicator, RefreshControl, Platform, StatusBar,
+    ActivityIndicator, RefreshControl, Platform, StatusBar,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
 import { fetchAllBookings, updateBookingStatus } from '../../api/bookingApi';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 const SERVICE_ICONS = {
     Grooming: 'content-cut',
@@ -27,6 +29,7 @@ export default function AdminBookingsScreen() {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [modalProps, showModal] = usePetCareModal();
 
     const loadBookings = async () => {
         try {
@@ -54,24 +57,21 @@ export default function AdminBookingsScreen() {
 
     const handleStatusChange = (booking, newStatus) => {
         const actionText = newStatus === 'Confirmed' ? 'Confirm' : newStatus === 'Completed' ? 'Complete' : 'Cancel';
-        Alert.alert(
-            `${actionText} Booking`,
-            `Are you sure you want to ${actionText.toLowerCase()} this ${booking.serviceType} booking for ${booking.user?.name || 'user'}?`,
-            [
-                { text: 'No', style: 'cancel' },
-                {
-                    text: `Yes, ${actionText}`,
-                    onPress: async () => {
-                        try {
-                            await updateBookingStatus(booking._id, newStatus);
-                            loadBookings();
-                        } catch (error) {
-                            Alert.alert('Error', 'Failed to update booking status.');
-                        }
-                    },
+        showModal('warning', `${actionText} Booking`, `Are you sure you want to ${actionText.toLowerCase()} this ${booking.serviceType} booking for ${booking.user?.name || 'user'}?`, [
+            { text: 'No', style: 'cancel' },
+            {
+                text: `Yes, ${actionText}`,
+                style: 'primary',
+                onPress: async () => {
+                    try {
+                        await updateBookingStatus(booking._id, newStatus);
+                        loadBookings();
+                    } catch (error) {
+                        showModal('error', 'Error', 'Failed to update booking status.');
+                    }
                 },
-            ]
-        );
+            },
+        ]);
     };
 
     const pendingBookings = bookings.filter(b => b.status === 'Pending');
@@ -88,6 +88,7 @@ export default function AdminBookingsScreen() {
 
     return (
         <View style={styles.container}>
+            <PetCareModal {...modalProps} />
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 refreshControl={

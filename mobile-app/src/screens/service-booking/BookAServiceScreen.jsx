@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, ScrollView,
-    TextInput, Alert, ActivityIndicator, Platform, StatusBar
+    TextInput, ActivityIndicator, Platform, StatusBar
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
@@ -9,6 +9,8 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
 import { fetchUserPets } from '../../api/petApi';
 import { createBooking, updateBooking, fetchBookings } from '../../api/bookingApi';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 export default function BookAServiceScreen() {
     const navigation = useNavigation();
@@ -23,6 +25,7 @@ export default function BookAServiceScreen() {
     const [notes, setNotes] = useState('');
     const [loading, setLoading] = useState(false);
     const [loadingData, setLoadingData] = useState(true);
+    const [modalProps, showModal] = usePetCareModal();
 
     const [dateObj, setDateObj] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -125,21 +128,20 @@ export default function BookAServiceScreen() {
 
     const handleSubmit = async () => {
         if (!selectedPetId) {
-            Alert.alert('No Pet Selected', 'Please select a pet for this booking.');
+            showModal('warning', 'No Pet Selected', 'Please select a pet for this booking.');
             return;
         }
         if (!bookingDate.trim()) {
-            Alert.alert('Missing Date', 'Please enter a booking date.');
+            showModal('warning', 'Missing Date', 'Please enter a booking date.');
             return;
         }
-        // Validate date format: mm/dd/yyyy
         const dateRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/\d{4}$/;
         if (!dateRegex.test(bookingDate.trim())) {
-            Alert.alert('Invalid Date', 'Please enter date in mm/dd/yyyy format (e.g. 01/15/2026).');
+            showModal('warning', 'Invalid Date', 'Please enter date in mm/dd/yyyy format (e.g. 01/15/2026).');
             return;
         }
         if (!bookingTime.trim()) {
-            Alert.alert('Missing Time', 'Please enter a booking time.');
+            showModal('warning', 'Missing Time', 'Please enter a booking time.');
             return;
         }
 
@@ -155,18 +157,18 @@ export default function BookAServiceScreen() {
 
             if (isEditMode) {
                 await updateBooking(bookingId, data);
-                Alert.alert('Success', 'Booking updated successfully!', [
-                    { text: 'OK', onPress: () => navigation.navigate('MyBookings') }
+                showModal('success', 'Success', 'Booking updated successfully!', [
+                    { text: 'OK', style: 'primary', onPress: () => navigation.navigate('MyBookings') }
                 ]);
             } else {
                 await createBooking(data);
-                Alert.alert('Success', 'Booking created successfully!', [
-                    { text: 'OK', onPress: () => navigation.navigate('MyBookings') }
+                showModal('success', 'Success', 'Booking created successfully!', [
+                    { text: 'OK', style: 'primary', onPress: () => navigation.navigate('MyBookings') }
                 ]);
             }
         } catch (error) {
             console.error('Booking error', error);
-            Alert.alert('Error', 'Failed to save booking. Please try again.');
+            showModal('error', 'Error', 'Failed to save booking. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -175,6 +177,7 @@ export default function BookAServiceScreen() {
     if (loadingData) {
         return (
             <View style={styles.loadingContainer}>
+                <PetCareModal {...modalProps} />
                 <ActivityIndicator size="large" color={COLORS.secondary} />
             </View>
         );
@@ -182,6 +185,7 @@ export default function BookAServiceScreen() {
 
     return (
         <View style={styles.container}>
+            <PetCareModal {...modalProps} />
             <ScrollView showsVerticalScrollIndicator={false}>
                 {/* Header */}
                 <View style={styles.header}>

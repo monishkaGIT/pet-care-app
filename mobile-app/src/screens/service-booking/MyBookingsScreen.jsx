@@ -1,13 +1,15 @@
 import React, { useState, useCallback } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, ScrollView,
-    Alert, ActivityIndicator, RefreshControl, Platform, StatusBar
+    ActivityIndicator, RefreshControl, Platform, StatusBar
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
 import { fetchBookings, deleteBooking } from '../../api/bookingApi';
 import { fetchUserPets } from '../../api/petApi';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 const SERVICE_ICONS = {
     Grooming: 'content-cut',
@@ -29,6 +31,7 @@ export default function MyBookingsScreen() {
     const [pets, setPets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [modalProps, showModal] = usePetCareModal();
 
     const loadData = async () => {
         try {
@@ -64,25 +67,21 @@ export default function MyBookingsScreen() {
     };
 
     const handleCancel = (booking) => {
-        Alert.alert(
-            'Cancel Booking',
-            `Are you sure you want to cancel this ${booking.serviceType} booking?`,
-            [
-                { text: 'No', style: 'cancel' },
-                {
-                    text: 'Yes, Cancel',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await deleteBooking(booking._id);
-                            loadData();
-                        } catch (error) {
-                            Alert.alert('Error', 'Failed to cancel booking.');
-                        }
-                    },
+        showModal('warning', 'Cancel Booking', `Are you sure you want to cancel this ${booking.serviceType} booking?`, [
+            { text: 'No', style: 'cancel' },
+            {
+                text: 'Yes, Cancel',
+                style: 'destructive',
+                onPress: async () => {
+                    try {
+                        await deleteBooking(booking._id);
+                        loadData();
+                    } catch (error) {
+                        showModal('error', 'Error', 'Failed to cancel booking.');
+                    }
                 },
-            ]
-        );
+            },
+        ]);
     };
 
     const handleReschedule = (booking) => {
@@ -109,6 +108,7 @@ export default function MyBookingsScreen() {
 
     return (
         <View style={styles.container}>
+            <PetCareModal {...modalProps} />
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 refreshControl={

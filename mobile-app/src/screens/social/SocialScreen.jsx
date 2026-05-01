@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, FlatList,
-    SafeAreaView, Alert, ActivityIndicator, RefreshControl, Image,
+    SafeAreaView, ActivityIndicator, RefreshControl, Image,
     Platform, StatusBar,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { postApi } from '../../api/axiosConfig';
 import { AuthContext } from '../../context/AuthContext';
 import CommentsModal from '../../components/CommentsModal';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -22,31 +24,22 @@ function timeAgo(dateStr) {
 
 // ─── PostCard Component ─────────────────────────────────────────────────────
 
-function PostCard({ post, currentUserId, onLike, onDelete, onEdit, onOpenComments }) {
+function PostCard({ post, currentUserId, onLike, onDelete, onEdit, onOpenComments, showModal }) {
     const isOwner = post.author?._id === currentUserId;
     const isLiked = post.likes?.includes(currentUserId);
 
     const handleOptions = () => {
-        Alert.alert(
-            'Post Options',
-            '',
-            [
-                { text: 'Edit Post', onPress: () => onEdit(post) },
-                { text: 'Delete Post', style: 'destructive', onPress: confirmDelete },
-                { text: 'Cancel', style: 'cancel' },
-            ]
-        );
+        showModal('info', 'Post Options', 'What would you like to do?', [
+            { text: 'Edit Post', style: 'primary', onPress: () => onEdit(post) },
+            { text: 'Delete', style: 'destructive', onPress: confirmDelete },
+        ]);
     };
 
     const confirmDelete = () => {
-        Alert.alert(
-            'Delete Post',
-            'Are you sure you want to delete this post?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Delete', style: 'destructive', onPress: () => onDelete(post._id) },
-            ]
-        );
+        showModal('warning', 'Delete Post', 'Are you sure you want to delete this post?', [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Delete', style: 'destructive', onPress: () => onDelete(post._id) },
+        ]);
     };
 
     return (
@@ -137,13 +130,14 @@ export default function SocialScreen({ navigation }) {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
+    const [modalProps, showModal] = usePetCareModal();
 
     const fetchPosts = useCallback(async () => {
         try {
             const { data } = await postApi.get('/');
             setPosts(data);
         } catch {
-            Alert.alert('Error', 'Could not load posts. Check your connection.');
+            showModal('error', 'Error', 'Could not load posts. Check your connection.');
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -162,7 +156,7 @@ export default function SocialScreen({ navigation }) {
             const { data } = await postApi.put(`/${postId}/like`);
             setPosts(prev => prev.map(p => p._id === postId ? { ...p, likes: data.likes } : p));
         } catch {
-            Alert.alert('Error', 'Could not update like');
+            showModal('error', 'Error', 'Could not update like');
         }
     };
 
@@ -171,7 +165,7 @@ export default function SocialScreen({ navigation }) {
             await postApi.delete(`/${postId}`);
             setPosts(prev => prev.filter(p => p._id !== postId));
         } catch {
-            Alert.alert('Error', 'Could not delete post');
+            showModal('error', 'Error', 'Could not delete post');
         }
     };
 
@@ -191,10 +185,11 @@ export default function SocialScreen({ navigation }) {
     };
 
     const handleHomePress = () => {
-        Alert.alert('Quit Social', 'Are you sure you want to go back to main home?', [
+        showModal('warning', 'Quit Social', 'Are you sure you want to go back to main home?', [
             { text: 'Cancel', style: 'cancel' },
             {
                 text: 'Yes',
+                style: 'primary',
                 onPress: () => {
                     const parentNav = navigation.getParent();
                     (parentNav || navigation).navigate('MyPets');
@@ -276,6 +271,7 @@ export default function SocialScreen({ navigation }) {
                             onDelete={handleDelete}
                             onEdit={handleEdit}
                             onOpenComments={setSelectedPost}
+                            showModal={showModal}
                         />
                     )}
                     ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
@@ -290,6 +286,7 @@ export default function SocialScreen({ navigation }) {
                 onCommentAdded={handleCommentAdded}
                 onCommentDeleted={handleCommentDeleted}
             />
+            <PetCareModal {...modalProps} />
         </SafeAreaView>
     );
 }

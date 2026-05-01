@@ -1,25 +1,28 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { COLORS } from '../../constants/theme';
 import { AuthContext } from '../../context/AuthContext';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 export default function LoginScreen({ navigation }) {
     const { login } = useContext(AuthContext);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [modalProps, showModal] = usePetCareModal();
 
     const handleLogin = async () => {
-        if (!email.trim() || !password.trim()) return Alert.alert('Missing Fields', 'Please enter both email and password.');
+        if (!email.trim() || !password.trim()) return showModal('warning', 'Missing Fields', 'Please enter both email and password.');
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email.trim())) return Alert.alert('Invalid Email', 'Please enter a valid email address.');
-        if (password.length < 6) return Alert.alert('Weak Password', 'Password must be at least 6 characters.');
+        if (!emailRegex.test(email.trim())) return showModal('warning', 'Invalid Email', 'Please enter a valid email address.');
+        if (password.length < 6) return showModal('warning', 'Weak Password', 'Password must be at least 6 characters.');
         setLoading(true);
         try {
             await login(email.trim(), password);
         } catch (error) {
-            Alert.alert('Login Failed', error.response?.data?.message || 'Invalid credentials');
+            showModal('error', 'Login Failed', error.response?.data?.message || 'Invalid credentials');
         } finally {
             setLoading(false);
         }
@@ -27,6 +30,7 @@ export default function LoginScreen({ navigation }) {
 
     return (
         <SafeAreaView style={styles.safeArea}>
+            <PetCareModal {...modalProps} />
             <KeyboardAvoidingView 
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.keyboardView}

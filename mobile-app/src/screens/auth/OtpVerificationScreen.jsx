@@ -1,8 +1,10 @@
 import React, { useState, useContext, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS } from '../../constants/theme';
 import { AuthContext } from '../../context/AuthContext';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 export default function OtpVerificationScreen({ route, navigation }) {
     const { verifyOtp } = useContext(AuthContext);
@@ -10,6 +12,7 @@ export default function OtpVerificationScreen({ route, navigation }) {
 
     const [otpValues, setOtpValues] = useState(['', '', '', '']);
     const [loading, setLoading] = useState(false);
+    const [modalProps, showModal] = usePetCareModal();
 
     const ref0 = useRef(null);
     const ref1 = useRef(null);
@@ -45,15 +48,15 @@ export default function OtpVerificationScreen({ route, navigation }) {
     const handleVerify = async () => {
         const otpCode = otpValues.join('');
         if (otpCode.length < 4) {
-            return Alert.alert('Missing OTP', 'Please enter your 4-digit verification code.');
+            return showModal('warning', 'Missing OTP', 'Please enter your 4-digit verification code.');
         }
 
         setLoading(true);
         try {
             await verifyOtp(email, otpCode);
-            Alert.alert('Success', 'Account verified successfully!');
+            showModal('success', 'Success', 'Account verified successfully!');
         } catch (error) {
-            Alert.alert('Verification Failed', error.response?.data?.message || 'Invalid or expired code.');
+            showModal('error', 'Verification Failed', error.response?.data?.message || 'Invalid or expired code.');
         } finally {
             setLoading(false);
         }
@@ -61,6 +64,7 @@ export default function OtpVerificationScreen({ route, navigation }) {
 
     return (
         <SafeAreaView style={styles.safeArea}>
+            <PetCareModal {...modalProps} />
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
                 
                 {/* Visual Banner Header matching the latest screenshot */}
@@ -112,7 +116,7 @@ export default function OtpVerificationScreen({ route, navigation }) {
                     </TouchableOpacity>
 
                     {/* Resend Code Link */}
-                    <TouchableOpacity style={styles.resendBtn} onPress={() => Alert.alert('OTP Resent', 'A new verification code has been sent to your email.')}>
+                    <TouchableOpacity style={styles.resendBtn} onPress={() => showModal('success', 'OTP Resent', 'A new verification code has been sent to your email.')}>
                         <MaterialIcons name="refresh" size={18} color="#805d45" style={styles.resendIcon} />
                         <Text style={styles.resendText}>Resend Code</Text>
                     </TouchableOpacity>

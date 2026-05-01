@@ -1,9 +1,11 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image, ScrollView, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Image, ScrollView, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS } from '../../constants/theme';
 import { AuthContext } from '../../context/AuthContext';
 import * as ImagePicker from 'expo-image-picker';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 export default function RegisterScreen({ navigation }) {
     const { register, verifyOtp } = useContext(AuthContext);
@@ -16,6 +18,7 @@ export default function RegisterScreen({ navigation }) {
     const [loading, setLoading] = useState(false);
     const [showOtpForm, setShowOtpForm] = useState(false);
     const [otp, setOtp] = useState('');
+    const [modalProps, showModal] = usePetCareModal();
 
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
@@ -33,33 +36,34 @@ export default function RegisterScreen({ navigation }) {
 
     const handleRegister = async () => {
         if (!name.trim() || !email.trim() || !password || !phone.trim() || !address.trim()) {
-            return Alert.alert('Missing Fields', 'Please fill all required fields.');
+            return showModal('warning', 'Missing Fields', 'Please fill all required fields.');
         }
         if (name.trim().length < 2) {
-            return Alert.alert('Invalid Name', 'Name must be at least 2 characters.');
+            return showModal('warning', 'Invalid Name', 'Name must be at least 2 characters.');
         }
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email.trim())) {
-            return Alert.alert('Invalid Email', 'Please enter a valid email address (e.g. user@example.com).');
+            return showModal('warning', 'Invalid Email', 'Please enter a valid email address (e.g. user@example.com).');
         }
         if (password.length < 6) {
-            return Alert.alert('Weak Password', 'Password must be at least 6 characters.');
+            return showModal('warning', 'Weak Password', 'Password must be at least 6 characters.');
         }
         const phoneDigits = phone.replace(/\D/g, '');
         if (phoneDigits.length < 10) {
-            return Alert.alert('Invalid Phone', 'Please enter a valid phone number (at least 10 digits).');
+            return showModal('warning', 'Invalid Phone', 'Please enter a valid phone number (at least 10 digits).');
         }
         if (address.trim().length < 5) {
-            return Alert.alert('Invalid Address', 'Please enter a valid address (at least 5 characters).');
+            return showModal('warning', 'Invalid Address', 'Please enter a valid address (at least 5 characters).');
         }
 
         setLoading(true);
         try {
             const data = await register({ name: name.trim(), email: email.trim(), password, phone: phone.trim(), address: address.trim(), profileImage, role: 'user' });
-            Alert.alert('OTP Sent', data.message);
-            navigation.navigate('OtpVerification', { email: email.trim() });
+            showModal('success', 'OTP Sent', data.message, [
+                { text: 'OK', style: 'primary', onPress: () => navigation.navigate('OtpVerification', { email: email.trim() }) },
+            ]);
         } catch (error) {
-            Alert.alert('Registration Failed', error.response?.data?.message || 'Error occurred');
+            showModal('error', 'Registration Failed', error.response?.data?.message || 'Error occurred');
         } finally {
             setLoading(false);
         }
@@ -67,15 +71,15 @@ export default function RegisterScreen({ navigation }) {
 
     const handleVerifyOtp = async () => {
         if (!otp.trim()) {
-            return Alert.alert('Missing OTP', 'Please enter the verification OTP.');
+            return showModal('warning', 'Missing OTP', 'Please enter the verification OTP.');
         }
 
         setLoading(true);
         try {
             await verifyOtp(email.trim(), otp.trim());
-            Alert.alert('Account Created', 'Your account has been created successfully!');
+            showModal('success', 'Account Created', 'Your account has been created successfully!');
         } catch (error) {
-            Alert.alert('Verification Failed', error.response?.data?.message || 'Invalid or expired OTP code.');
+            showModal('error', 'Verification Failed', error.response?.data?.message || 'Invalid or expired OTP code.');
         } finally {
             setLoading(false);
         }
@@ -83,6 +87,7 @@ export default function RegisterScreen({ navigation }) {
 
     return (
         <SafeAreaView style={styles.safeArea}>
+            <PetCareModal {...modalProps} />
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
                 <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                     

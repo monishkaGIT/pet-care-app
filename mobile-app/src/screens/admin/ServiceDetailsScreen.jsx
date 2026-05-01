@@ -5,7 +5,6 @@ import {
     StyleSheet,
     ScrollView,
     TouchableOpacity,
-    Alert,
     Dimensions,
     ActivityIndicator,
     Image,
@@ -15,6 +14,8 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
 import { fetchServiceById, deleteService } from '../../api/serviceApi';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 const { width } = Dimensions.get('window');
 
@@ -23,6 +24,7 @@ export default function ServiceDetailsScreen({ navigation, route }) {
     const [service, setService] = useState(null);
     const [loading, setLoading] = useState(true);
     const [deleting, setDeleting] = useState(false);
+    const [modalProps, showModal] = usePetCareModal();
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('focus', () => {
@@ -42,7 +44,7 @@ export default function ServiceDetailsScreen({ navigation, route }) {
             const data = await fetchServiceById(serviceId);
             setService(data);
         } catch (error) {
-            Alert.alert('Error', error.response?.data?.message || 'Failed to load service');
+            showModal('error', 'Error', error.response?.data?.message || 'Failed to load service');
         } finally {
             setLoading(false);
         }
@@ -53,29 +55,26 @@ export default function ServiceDetailsScreen({ navigation, route }) {
     };
 
     const handleDelete = () => {
-        Alert.alert(
-            'Delete Service',
-            `Are you sure you want to delete "${service?.name}"? This action cannot be undone.`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                        setDeleting(true);
-                        try {
-                            await deleteService(serviceId);
-                            Alert.alert('Deleted', 'Service has been deleted successfully.');
-                            navigation.goBack();
-                        } catch (error) {
-                            Alert.alert('Error', error.response?.data?.message || 'Failed to delete service');
-                        } finally {
-                            setDeleting(false);
-                        }
-                    },
+        showModal('warning', 'Delete Service', `Are you sure you want to delete "${service?.name}"? This action cannot be undone.`, [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Delete',
+                style: 'destructive',
+                onPress: async () => {
+                    setDeleting(true);
+                    try {
+                        await deleteService(serviceId);
+                        showModal('success', 'Deleted', 'Service has been deleted successfully.', [
+                            { text: 'OK', style: 'primary', onPress: () => navigation.goBack() },
+                        ]);
+                    } catch (error) {
+                        showModal('error', 'Error', error.response?.data?.message || 'Failed to delete service');
+                    } finally {
+                        setDeleting(false);
+                    }
                 },
-            ],
-        );
+            },
+        ]);
     };
 
     if (loading) {
@@ -109,6 +108,7 @@ export default function ServiceDetailsScreen({ navigation, route }) {
 
     return (
         <View style={styles.container}>
+            <PetCareModal {...modalProps} />
             {/* ── Top App Bar ── */}
             <View style={[styles.topBar, SHADOWS.editorial]}>
                 <View style={styles.topBarLeft}>

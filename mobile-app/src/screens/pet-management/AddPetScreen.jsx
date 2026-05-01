@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
-    ScrollView, Alert, KeyboardAvoidingView, Platform, StatusBar, Image
+    ScrollView, KeyboardAvoidingView, Platform, StatusBar, Image
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, SHADOWS } from '../../constants/theme';
 import { createPet } from '../../api/petApi';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 export default function AddPetScreen() {
     const navigation = useNavigation();
     const [loading, setLoading] = useState(false);
+    const [modalProps, showModal] = usePetCareModal();
     const [form, setForm] = useState({
         name: '',
         breed: '',
@@ -42,23 +45,23 @@ export default function AddPetScreen() {
 
     const handleSave = async () => {
         if (!form.name.trim()) {
-            Alert.alert('Missing Name', 'Please enter your pet\'s name.');
+            showModal('warning', 'Missing Name', "Please enter your pet's name.");
             return;
         }
         if (form.name.trim().length < 2) {
-            Alert.alert('Invalid Name', 'Pet name must be at least 2 characters.');
+            showModal('warning', 'Invalid Name', 'Pet name must be at least 2 characters.');
             return;
         }
         if (!form.breed.trim()) {
-            Alert.alert('Missing Breed', 'Please enter your pet\'s breed.');
+            showModal('warning', 'Missing Breed', "Please enter your pet's breed.");
             return;
         }
         if (form.age && (isNaN(parseFloat(form.age)) || parseFloat(form.age) < 0 || parseFloat(form.age) > 30)) {
-            Alert.alert('Invalid Age', 'Please enter a valid age between 0 and 30 years.');
+            showModal('warning', 'Invalid Age', 'Please enter a valid age between 0 and 30 years.');
             return;
         }
         if (form.weight && (isNaN(parseFloat(form.weight)) || parseFloat(form.weight) < 0 || parseFloat(form.weight) > 200)) {
-            Alert.alert('Invalid Weight', 'Please enter a valid weight between 0 and 200 kg.');
+            showModal('warning', 'Invalid Weight', 'Please enter a valid weight between 0 and 200 kg.');
             return;
         }
         setLoading(true);
@@ -70,7 +73,7 @@ export default function AddPetScreen() {
             });
             navigation.goBack();
         } catch (e) {
-            Alert.alert('Error', 'Failed to save pet profile.');
+            showModal('error', 'Error', 'Failed to save pet profile.');
             console.error(e);
         } finally {
             setLoading(false);
@@ -79,6 +82,7 @@ export default function AddPetScreen() {
 
     return (
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+            <PetCareModal {...modalProps} />
             <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 120 }}>
                 {/* Header */}
                 <View style={styles.header}>

@@ -1,12 +1,14 @@
 import React, { useState, useCallback } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity,
-    ScrollView, SafeAreaView, Image, ActivityIndicator, Alert,
+    ScrollView, SafeAreaView, Image, ActivityIndicator,
     Platform, StatusBar
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { fetchPetById, deletePet } from '../../api/petApi';
+import PetCareModal from '../../components/PetCareModal';
+import usePetCareModal from '../../hooks/usePetCareModal';
 
 const INFO_ROWS = (pet) => [
     { label: 'Breed', value: pet.breed || '—' },
@@ -21,13 +23,14 @@ export default function PetDetailScreen() {
     const { petId } = route.params;
     const [pet, setPet] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [modalProps, showModal] = usePetCareModal();
 
     const loadPet = async () => {
         try {
             const data = await fetchPetById(petId);
             setPet(data);
         } catch {
-            Alert.alert('Error', 'Failed to load pet details.');
+            showModal('error', 'Error', 'Failed to load pet details.');
             navigation.goBack();
         } finally {
             setLoading(false);
@@ -42,25 +45,21 @@ export default function PetDetailScreen() {
     );
 
     const handleDelete = () => {
-        Alert.alert(
-            'Delete Pet',
-            `Are you sure you want to delete ${pet?.name}?`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await deletePet(petId);
-                            navigation.goBack();
-                        } catch {
-                            Alert.alert('Error', 'Failed to delete pet.');
-                        }
+        showModal('warning', 'Delete Pet', `Are you sure you want to delete ${pet?.name}?`, [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Delete',
+                style: 'destructive',
+                onPress: async () => {
+                    try {
+                        await deletePet(petId);
+                        navigation.goBack();
+                    } catch {
+                        showModal('error', 'Error', 'Failed to delete pet.');
                     }
                 }
-            ]
-        );
+            }
+        ]);
     };
 
     if (loading || !pet) {
@@ -75,6 +74,7 @@ export default function PetDetailScreen() {
 
     return (
         <SafeAreaView style={styles.safeArea}>
+            <PetCareModal {...modalProps} />
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 {/* Hero Header */}
                 <View style={styles.heroHeader}>
