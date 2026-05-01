@@ -3,6 +3,7 @@ import {
     View, Text, StyleSheet, TouchableOpacity, ScrollView,
     TextInput, Alert, ActivityIndicator, Platform, StatusBar
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
@@ -22,6 +23,38 @@ export default function BookAServiceScreen() {
     const [notes, setNotes] = useState('');
     const [loading, setLoading] = useState(false);
     const [loadingData, setLoadingData] = useState(true);
+
+    const [dateObj, setDateObj] = useState(new Date());
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showTimePicker, setShowTimePicker] = useState(false);
+
+    const onChangeDate = (event, selectedDate) => {
+        if (Platform.OS === 'android') {
+            setShowDatePicker(false);
+        }
+        if (selectedDate) {
+            setDateObj(selectedDate);
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            const year = selectedDate.getFullYear();
+            setBookingDate(`${month}/${day}/${year}`);
+        }
+    };
+
+    const onChangeTime = (event, selectedDate) => {
+        if (Platform.OS === 'android') {
+            setShowTimePicker(false);
+        }
+        if (selectedDate) {
+            setDateObj(selectedDate);
+            let hours = selectedDate.getHours();
+            const minutes = String(selectedDate.getMinutes()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            setBookingTime(`${String(hours).padStart(2, '0')}:${minutes} ${ampm}`);
+        }
+    };
 
     const isEditMode = !!bookingId;
 
@@ -52,6 +85,27 @@ export default function BookAServiceScreen() {
                     setBookingDate(booking.bookingDate || '');
                     setBookingTime(booking.bookingTime || '');
                     setNotes(booking.notes || '');
+
+                    // Initialize dateObj if date/time exist
+                    if (booking.bookingDate) {
+                        const [month, day, year] = booking.bookingDate.split('/');
+                        if (month && day && year) {
+                            const d = new Date(year, month - 1, day);
+                            if (booking.bookingTime) {
+                                // Add time to dateObj
+                                const timeMatch = booking.bookingTime.match(/(\d+):(\d+)\s(AM|PM)/i);
+                                if (timeMatch) {
+                                    let hrs = parseInt(timeMatch[1], 10);
+                                    const mins = parseInt(timeMatch[2], 10);
+                                    const ap = timeMatch[3].toUpperCase();
+                                    if (ap === 'PM' && hrs < 12) hrs += 12;
+                                    if (ap === 'AM' && hrs === 12) hrs = 0;
+                                    d.setHours(hrs, mins);
+                                }
+                            }
+                            setDateObj(d);
+                        }
+                    }
                     // Try to find pet name
                     const pet = petsData.find(p => p._id === booking.petId);
                     if (pet) setSelectedPetName(pet.name);
@@ -186,29 +240,53 @@ export default function BookAServiceScreen() {
 
                     {/* Date Input */}
                     <Text style={styles.label}>DATE</Text>
-                    <View style={styles.inputRow}>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="mm/dd/yyyy"
-                            placeholderTextColor={COLORS.textPlaceholder}
-                            value={bookingDate}
-                            onChangeText={setBookingDate}
-                        />
+                    <TouchableOpacity style={styles.inputRow} onPress={() => setShowDatePicker(true)}>
+                        <Text style={[styles.input, !bookingDate && { color: COLORS.textPlaceholder }]}>
+                            {bookingDate || 'mm/dd/yyyy'}
+                        </Text>
                         <Ionicons name="calendar-outline" size={22} color={COLORS.textMuted} />
-                    </View>
+                    </TouchableOpacity>
+
+                    {showDatePicker && (
+                        <View style={Platform.OS === 'ios' ? styles.iosPickerContainer : null}>
+                            <DateTimePicker
+                                value={dateObj}
+                                mode="date"
+                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                onChange={onChangeDate}
+                            />
+                            {Platform.OS === 'ios' && (
+                                <TouchableOpacity style={styles.iosDoneButton} onPress={() => setShowDatePicker(false)}>
+                                    <Text style={styles.iosDoneButtonText}>Done</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    )}
 
                     {/* Time Input */}
                     <Text style={styles.label}>TIME</Text>
-                    <View style={styles.inputRow}>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="--:-- --"
-                            placeholderTextColor={COLORS.textPlaceholder}
-                            value={bookingTime}
-                            onChangeText={setBookingTime}
-                        />
+                    <TouchableOpacity style={styles.inputRow} onPress={() => setShowTimePicker(true)}>
+                        <Text style={[styles.input, !bookingTime && { color: COLORS.textPlaceholder }]}>
+                            {bookingTime || '--:-- --'}
+                        </Text>
                         <Ionicons name="time-outline" size={22} color={COLORS.primary} />
-                    </View>
+                    </TouchableOpacity>
+
+                    {showTimePicker && (
+                        <View style={Platform.OS === 'ios' ? styles.iosPickerContainer : null}>
+                            <DateTimePicker
+                                value={dateObj}
+                                mode="time"
+                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                onChange={onChangeTime}
+                            />
+                            {Platform.OS === 'ios' && (
+                                <TouchableOpacity style={styles.iosDoneButton} onPress={() => setShowTimePicker(false)}>
+                                    <Text style={styles.iosDoneButtonText}>Done</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    )}
 
                     {/* Notes Input */}
                     <Text style={styles.label}>NOTES</Text>
@@ -447,5 +525,25 @@ const styles = StyleSheet.create({
         color: COLORS.textMuted,
         textAlign: 'center',
         lineHeight: 19,
+    },
+    iosPickerContainer: {
+        backgroundColor: COLORS.surfaceContainerLow,
+        borderRadius: 14,
+        marginBottom: 20,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: COLORS.outlineVariant,
+    },
+    iosDoneButton: {
+        backgroundColor: COLORS.primaryContainer,
+        padding: 12,
+        alignItems: 'center',
+        borderTopWidth: 1,
+        borderColor: COLORS.outlineVariant,
+    },
+    iosDoneButtonText: {
+        color: COLORS.primary,
+        fontWeight: 'bold',
+        fontSize: 16,
     },
 });
