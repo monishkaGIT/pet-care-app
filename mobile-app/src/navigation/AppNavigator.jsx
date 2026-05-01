@@ -19,7 +19,7 @@ import MainTabNavigator from './MainTabNavigator';
 // User Screens
 import ProfileScreen from '../screens/user/ProfileScreen';
 import ChangePasswordScreen from '../screens/user/ChangePasswordScreen';
-import AskPawlyScreen from '../screens/main/AskPawlyScreen';
+import AskPawlyScreen from '../screens/AI-ChatBot/AskPawlyScreen';
 import BookAServiceScreen from '../screens/service-booking/BookAServiceScreen';
 import MyBookingsScreen from '../screens/service-booking/MyBookingsScreen';
 import AddPetScreen from '../screens/pet-management/AddPetScreen';
