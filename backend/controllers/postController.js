@@ -12,7 +12,8 @@ const getAllPosts = async (req, res) => {
         const posts = await Post.find()
             .sort({ createdAt: -1 })
             .populate('author', 'name profileImage')
-            .populate('pet', 'name type breed profileImage');
+            .populate('pet', 'name type breed profileImage')
+            .populate('comments.author', 'name profileImage');
         res.json(posts);
     } catch (error) {
         res.status(500).json({ message: 'Server error fetching posts' });
@@ -28,7 +29,9 @@ const getMyPosts = async (req, res) => {
     try {
         const posts = await Post.find({ author: req.user._id })
             .sort({ createdAt: -1 })
-            .populate('pet', 'name type breed profileImage');
+            .populate('author', 'name profileImage')
+            .populate('pet', 'name type breed profileImage')
+            .populate('comments.author', 'name profileImage');
         res.json(posts);
     } catch (error) {
         res.status(500).json({ message: 'Server error fetching your posts' });

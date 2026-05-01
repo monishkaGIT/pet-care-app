@@ -10,6 +10,7 @@ import { AuthContext } from '../../context/AuthContext';
 import CommentsModal from '../../components/CommentsModal';
 import PetCareModal from '../../components/PetCareModal';
 import usePetCareModal from '../../hooks/usePetCareModal';
+import SocialLoadingScreen from './SocialLoadingScreen';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -43,7 +44,7 @@ function PostCard({ post, currentUserId, onLike, onDelete, onEdit, onOpenComment
     };
 
     return (
-        <View style={styles.postCard}>
+        <View style={[styles.postCard, isLiked && { borderLeftWidth: 3, borderLeftColor: '#ef4444' }]}>
             {/* Post Header */}
             <View style={styles.postHeader}>
                 <View style={styles.postHeaderLeft}>
@@ -128,6 +129,7 @@ export default function SocialScreen({ navigation }) {
     const { user } = useContext(AuthContext);
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
     const [modalProps, showModal] = usePetCareModal();
@@ -148,7 +150,10 @@ export default function SocialScreen({ navigation }) {
     useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
     useEffect(() => {
-        const unsubscribe = navigation.addListener('focus', fetchPosts);
+        const unsubscribe = navigation.addListener('focus', () => {
+            setIsInitialLoading(true);
+            fetchPosts();
+        });
         return unsubscribe;
     }, [navigation, fetchPosts]);
 
@@ -205,7 +210,10 @@ export default function SocialScreen({ navigation }) {
                 <TouchableOpacity style={styles.headerBtn} activeOpacity={0.8} onPress={handleHomePress}>
                     <MaterialIcons name="home" size={24} color="#30628a" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Social Feed</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={styles.headerTitle}>PawFeed</Text>
+                    <MaterialIcons name="pets" size={20} color="#30628a" style={{ marginLeft: 6, marginTop: 2 }} />
+                </View>
             </View>
             <TouchableOpacity
                 style={styles.headerBtn}
@@ -237,6 +245,10 @@ export default function SocialScreen({ navigation }) {
             </TouchableOpacity>
         </View>
     );
+
+    if (isInitialLoading) {
+        return <SocialLoadingScreen onDone={() => setIsInitialLoading(false)} />;
+    }
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -354,7 +366,7 @@ const styles = StyleSheet.create({
     postHeaderLeft: { flexDirection: 'row', alignItems: 'center' },
     postAvatar: {
         width: 42, height: 42, borderRadius: 21,
-        backgroundColor: '#e8f4fd',
+        backgroundColor: '#faf3e0',
         alignItems: 'center', justifyContent: 'center',
         marginRight: 11,
         overflow: 'hidden',
@@ -363,7 +375,7 @@ const styles = StyleSheet.create({
     },
     avatarImg: { width: '100%', height: '100%' },
     avatarInitial: {
-        fontSize: 17, fontWeight: '800', color: '#30628a',
+        fontSize: 17, fontWeight: '800', color: '#79573f',
     },
     postUsername: { fontSize: 14, fontWeight: '700', color: '#5c3d2e' },
     postTimestamp: { fontSize: 11, color: '#b5a99a', marginTop: 1 },
@@ -414,7 +426,7 @@ const styles = StyleSheet.create({
         gap: 5,
         paddingHorizontal: 10,
         paddingVertical: 6,
-        borderRadius: 20,
+        borderRadius: 12,
         backgroundColor: '#faf3e0',
         marginRight: 6,
     },
