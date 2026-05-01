@@ -4,11 +4,11 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 
-import HomeScreen from '../screens/main/HomeScreen';
+import HomeScreen from '../screens/pet-management/HomeScreen';
 import ServicesScreen from '../screens/service-booking/ServicesScreen';
 import SocialTabNavigator from './SocialTabNavigator';
-import PetHealthScreen from '../screens/main/PetHealthScreen';
-import FeedbackScreen from '../screens/user/FeedbackScreen';
+import PetHealthScreen from '../screens/health/PetHealthScreen';
+import FeedbackScreen from '../screens/feedback/FeedbackScreen';
 import { fetchBookings } from '../api/bookingApi';
 
 const Tab = createBottomTabNavigator();

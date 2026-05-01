@@ -1,17 +1,10 @@
 /**
  * uploadImage.js — Cloudinary upload utility
  *
- * TODO: Replace the two constants below with your Cloudinary credentials.
- * 1. Go to https://cloudinary.com and log in.
- * 2. Copy your Cloud Name from the Dashboard (top right).
- * 3. Go to Settings → Upload → Add Upload Preset → set to UNSIGNED → save.
- * 4. Paste the values below.
+ * Uploads images to Cloudinary using unsigned upload preset.
  */
 
-// TODO: Add your Cloudinary Cloud Name here
 const CLOUDINARY_CLOUD_NAME = 'djuouhvha';
-
-// TODO: Add your Cloudinary unsigned upload preset name here
 const CLOUDINARY_UPLOAD_PRESET = 'petcare_preset';
 
 /**

@@ -30,7 +30,7 @@ export default function CreatePostScreen({ navigation }) {
     useEffect(() => {
         petApi.get('/')
             .then(({ data }) => setPets(data))
-            .catch(() => {})
+            .catch(() => { })
             .finally(() => setPetsLoading(false));
     }, []);
 

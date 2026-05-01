@@ -1,43 +1,64 @@
-import React, { useState, useEffect, useCallback, useContext } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-    View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput,
-    ActivityIndicator, RefreshControl, Image, Platform, StatusBar, Alert
+    View,
+    Text,
+    StyleSheet,
+    ScrollView,
+    Image,
+    ActivityIndicator,
+    RefreshControl,
+    TouchableOpacity,
+    Platform,
+    StatusBar,
 } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
 import { fetchServices } from '../../api/serviceApi';
-import { fetchBookings } from '../../api/bookingApi';
-import { NotificationsContext } from '../../context/NotificationsContext';
 
-// Map category names to MaterialCommunityIcons
 const CATEGORY_ICONS = {
     'Grooming': 'content-cut',
-    'Boarding': 'home-heart',
-    'Walking': 'walk',
-    'Training': 'school-outline',
-    'Medical Care': 'medical-bag',
+    'Boarding': 'home',
+    'Medical Care': 'medical-services',
+    'Training': 'sports',
+    'Walking': 'directions-walk',
 };
 
-// Category color palette for cards without images
-const CATEGORY_COLORS = {
-    'Grooming': { color: '#a2d2ff', bgColor: '#eaf4ff' },
-    'Boarding': { color: '#ffc092', bgColor: '#fff3e8' },
-    'Walking': { color: '#b8d8a8', bgColor: '#edf7e7' },
-    'Training': { color: '#f0c0c0', bgColor: '#fef0f0' },
-    'Medical Care': { color: '#c5b3e6', bgColor: '#f3eeff' },
-};
+function ServiceCard({ item }) {
+    const iconName = CATEGORY_ICONS[item.category] || 'pets';
 
-const DEFAULT_CATEGORY_COLOR = { color: '#a2d2ff', bgColor: '#eaf4ff' };
+    return (
+        <View style={[styles.card, SHADOWS.editorial]}>
+            {item.imageUrl && (
+                <Image source={{ uri: item.imageUrl }} style={styles.cardImage} resizeMode="cover" />
+            )}
+            <View style={styles.cardBody}>
+                <View style={styles.cardHeaderRow}>
+                    <View style={styles.iconCircle}>
+                        <MaterialIcons name={iconName} size={22} color={COLORS.primary} />
+                    </View>
+                    <View style={styles.categoryBadge}>
+                        <Text style={styles.categoryBadgeText}>{item.category}</Text>
+                    </View>
+                </View>
+                <Text style={styles.cardTitle}>{item.name}</Text>
+                <Text style={styles.cardDescription} numberOfLines={2}>{item.description}</Text>
+                <View style={styles.cardFooter}>
+                    <Text style={styles.priceText}>Rs. {item.price?.toFixed(2)}</Text>
+                    <View style={styles.availableBadge}>
+                        <View style={styles.greenDot} />
+                        <Text style={styles.availableText}>Available</Text>
+                    </View>
+                </View>
+            </View>
+        </View>
+    );
+}
 
-export default function ServicesScreen() {
-    const navigation = useNavigation();
-    const { unread } = useContext(NotificationsContext);
+export default function ServicesScreen({ navigation }) {
     const [services, setServices] = useState([]);
-    const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [searchText, setSearchText] = useState('');
+    const [activeFilter, setActiveFilter] = useState('All');
 
     const loadServices = useCallback(async () => {
         try {
@@ -52,175 +73,77 @@ export default function ServicesScreen() {
         }
     }, []);
 
-    const loadBookings = useCallback(async () => {
-        try {
-            const data = await fetchBookings();
-            setBookings(data);
-        } catch (e) {
-            // silently ignore
-        }
-    }, []);
-
-    // Refetch when the screen comes into focus (e.g. after admin adds a new service)
-    useFocusEffect(
-        useCallback(() => {
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('focus', () => {
             loadServices();
-            loadBookings();
-        }, [loadServices, loadBookings])
-    );
+        });
+
+        return unsubscribe;
+    }, [navigation, loadServices]);
 
     const onRefresh = () => {
         setRefreshing(true);
         loadServices();
-        loadBookings();
     };
 
-    const showNotifications = () => {
-        navigation.navigate('Notifications');
-    };
+    // Derive categories
+    const categories = ['All', ...new Set(services.map((s) => s.category))];
 
-    // Filter services by search text
-    const filteredServices = services.filter(s =>
-        s.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        s.category.toLowerCase().includes(searchText.toLowerCase()) ||
-        (s.description || '').toLowerCase().includes(searchText.toLowerCase())
-    );
+    const filteredServices =
+        activeFilter === 'All' ? services : services.filter((s) => s.category === activeFilter);
 
-    // Group services by category for display
-    const categories = [...new Set(filteredServices.map(s => s.category))];
+    if (loading) {
+        return (
+            <View style={[styles.container, styles.center]}>
+                <ActivityIndicator size="large" color={COLORS.primary} />
+                <Text style={{ marginTop: 12, color: COLORS.onSurfaceVariant }}>Loading services...</Text>
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
+            <View style={styles.header}>
+                <Text style={styles.title}>Pet Services</Text>
+                <Text style={styles.subtitle}>Discover grooming, walking, and boarding.</Text>
+            </View>
+
+            {/* Category filter */}
             <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.chipRow}
+            >
+                {categories.map((cat) => (
+                    <TouchableOpacity
+                        key={cat}
+                        style={[styles.chip, activeFilter === cat && styles.chipActive]}
+                        onPress={() => setActiveFilter(cat)}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={[styles.chipText, activeFilter === cat && styles.chipTextActive]}>
+                            {cat}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
+
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.secondary} />
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
                 }
             >
-                {/* Header */}
-                <View style={styles.header}>
-                    <View style={styles.headerTopRow}>
-                        <TouchableOpacity onPress={() => navigation.navigate('UserProfile')}>
-                        <Ionicons name="person-circle-outline" size={36} color="#fff" />
-                    </TouchableOpacity>
-                    <View style={{ flex: 1, alignItems: 'center' }}>
-                        <Text style={styles.headerBrand}>PetCare</Text>
-                        <Text style={styles.headerTitle}>Services</Text>
+                {filteredServices.length === 0 ? (
+                    <View style={styles.emptyState}>
+                        <MaterialIcons name="search-off" size={48} color={COLORS.outlineVariant} />
+                        <Text style={styles.emptyTitle}>No services available</Text>
+                        <Text style={styles.emptySubtitle}>Check back later for new pet care offerings</Text>
                     </View>
-                    <TouchableOpacity onPress={showNotifications}>
-                        <View>
-                            <Ionicons name="notifications" size={24} color="#fff" />
-                            {unread > 0 && (
-                                <View style={styles.notifBadge}>
-                                    <Text style={styles.notifBadgeText}>{unread > 99 ? '99+' : unread}</Text>
-                                </View>
-                            )}
-                        </View>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-
-                {/* Search Bar */}
-                <View style={styles.searchContainer}>
-                    <View style={styles.searchBar}>
-                        <Ionicons name="search" size={18} color={COLORS.textMuted} />
-                        <TextInput
-                            style={styles.searchInput}
-                            placeholder="Find the best care..."
-                            placeholderTextColor={COLORS.textPlaceholder}
-                            value={searchText}
-                            onChangeText={setSearchText}
-                        />
-                        {searchText.length > 0 && (
-                            <TouchableOpacity onPress={() => setSearchText('')}>
-                                <Ionicons name="close-circle" size={18} color={COLORS.textMuted} />
-                            </TouchableOpacity>
-                        )}
-                    </View>
-                </View>
-
-                {/* Content */}
-                <View style={styles.cardsContainer}>
-                    {loading ? (
-                        <View style={styles.loadingState}>
-                            <ActivityIndicator size="large" color={COLORS.secondary} />
-                            <Text style={styles.loadingText}>Loading services...</Text>
-                        </View>
-                    ) : filteredServices.length === 0 ? (
-                        <View style={styles.emptyState}>
-                            <MaterialCommunityIcons name="magnify-close" size={48} color={COLORS.textMuted} />
-                            <Text style={styles.emptyTitle}>
-                                {searchText ? 'No matching services' : 'No services available'}
-                            </Text>
-                            <Text style={styles.emptySubtitle}>
-                                {searchText
-                                    ? 'Try a different search term.'
-                                    : 'Check back later for new pet care offerings.'}
-                            </Text>
-                        </View>
-                    ) : (
-                        filteredServices.map((service) => {
-                            const catColors = CATEGORY_COLORS[service.category] || DEFAULT_CATEGORY_COLOR;
-                            const iconName = CATEGORY_ICONS[service.category] || 'paw';
-
-                            return (
-                                <View key={service._id} style={[styles.serviceCard, { backgroundColor: catColors.bgColor }]}>
-                                    {/* Service Image (if available from admin) */}
-                                    {service.imageUrl ? (
-                                        <Image
-                                            source={{ uri: service.imageUrl }}
-                                            style={styles.serviceImage}
-                                            resizeMode="cover"
-                                        />
-                                    ) : null}
-
-                                    <View style={styles.serviceCardBody}>
-                                        <View style={[styles.serviceIconCircle, { backgroundColor: catColors.color }]}>
-                                            <MaterialCommunityIcons name={iconName} size={28} color="#fff" />
-                                        </View>
-
-                                        {/* Category badge */}
-                                        <View style={styles.categoryBadge}>
-                                            <Text style={styles.categoryBadgeText}>{service.category}</Text>
-                                        </View>
-
-                                        <Text style={styles.serviceType}>{service.name}</Text>
-                                        <Text style={styles.serviceDesc} numberOfLines={3}>{service.description}</Text>
-
-                                        {/* Price */}
-                                        <View style={styles.priceRow}>
-                                            <Text style={styles.priceText}>Rs. {service.price?.toFixed(2)}</Text>
-                                            <Text style={styles.priceLabel}> / session</Text>
-                                        </View>
-
-                                        <TouchableOpacity
-                                            style={styles.serviceCta}
-                                            onPress={() => navigation.navigate('BookAService', {
-                                                serviceType: service.category,
-                                                serviceName: service.name,
-                                                serviceId: service._id,
-                                            })}
-                                        >
-                                            <Text style={styles.serviceCtaText}>Book Now  →</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-                            );
-                        })
-                    )}
-                </View>
-
-                {/* My Bookings Button */}
-                <TouchableOpacity
-                    style={styles.myBookingsBtn}
-                    onPress={() => navigation.navigate('MyBookings')}
-                >
-                    <Ionicons name="calendar" size={20} color="#fff" />
-                    <Text style={styles.myBookingsBtnText}>View My Bookings</Text>
-                </TouchableOpacity>
-
-
-                <View style={{ height: 30 }} />
+                ) : (
+                    filteredServices.map((item) => <ServiceCard key={item._id} item={item} />)
+                )}
             </ScrollView>
         </View>
     );
@@ -231,235 +154,87 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: COLORS.background,
     },
-
-    // ── Header ──
+    center: { justifyContent: 'center', alignItems: 'center' },
     header: {
         backgroundColor: COLORS.primary,
-        paddingHorizontal: 20,
+        padding: 25,
         paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 10 : 50,
-        paddingBottom: 25,
         borderBottomLeftRadius: 30,
         borderBottomRightRadius: 30,
+        alignItems: 'center',
         ...SHADOWS.header,
     },
-    headerTopRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    headerBrand: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#fff',
-        fontStyle: 'italic',
-    },
-    headerTitle: {
-        fontSize: 26,
+    title: {
+        fontSize: 28,
         fontWeight: 'bold',
-        color: '#fff',
+        color: COLORS.secondary,
     },
-
-    // ── Search ──
-    searchContainer: {
-        alignItems: 'center',
-        marginTop: -18,
-        paddingHorizontal: 30,
-    },
-    searchBar: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-        borderRadius: 25,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        width: '100%',
-        ...SHADOWS.card,
-    },
-    searchInput: {
-        flex: 1,
-        marginLeft: 8,
+    subtitle: {
         fontSize: 14,
-        color: COLORS.textPrimary,
+        color: COLORS.secondary,
+        marginTop: 5,
     },
 
-    // ── Service Cards ──
-    cardsContainer: {
-        paddingHorizontal: 24,
-        marginTop: 20,
+    /* Filter chips */
+    chipRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 20, paddingVertical: 16 },
+    chip: {
+        paddingHorizontal: 18,
+        paddingVertical: 8,
+        borderRadius: 999,
+        backgroundColor: COLORS.surfaceContainerHigh,
     },
-    serviceCard: {
-        borderRadius: 20,
-        marginBottom: 16,
+    chipActive: { backgroundColor: COLORS.primary },
+    chipText: { fontSize: 13, fontWeight: '600', color: COLORS.secondary },
+    chipTextActive: { color: '#fff' },
+
+    scrollContent: { paddingHorizontal: 20, paddingBottom: 40 },
+
+    /* Empty state */
+    emptyState: { alignItems: 'center', paddingVertical: 60 },
+    emptyTitle: { fontSize: 18, fontWeight: '700', color: COLORS.secondary, marginTop: 12 },
+    emptySubtitle: { fontSize: 13, color: COLORS.onSurfaceVariant, marginTop: 4 },
+
+    /* Service cards */
+    card: {
+        backgroundColor: COLORS.surfaceContainerLowest,
+        borderRadius: 16,
         overflow: 'hidden',
-        ...SHADOWS.card,
+        marginBottom: 20,
     },
-    serviceImage: {
+    cardImage: {
         width: '100%',
-        height: 150,
+        height: 160,
     },
-    serviceCardBody: {
-        padding: 22,
-    },
-    serviceIconCircle: {
-        width: 52,
-        height: 52,
-        borderRadius: 26,
-        justifyContent: 'center',
+    cardBody: { padding: 20 },
+    cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+    iconCircle: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: 'rgba(162,210,255,0.25)',
         alignItems: 'center',
-        marginBottom: 14,
+        justifyContent: 'center',
     },
     categoryBadge: {
-        alignSelf: 'flex-start',
-        backgroundColor: 'rgba(0,0,0,0.06)',
+        backgroundColor: COLORS.secondaryContainer,
         paddingHorizontal: 12,
         paddingVertical: 4,
         borderRadius: 10,
-        marginBottom: 10,
     },
-    categoryBadgeText: {
-        fontSize: 10,
-        fontWeight: '800',
-        color: COLORS.textMuted,
-        textTransform: 'uppercase',
-        letterSpacing: 1,
-    },
-    serviceType: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: COLORS.textPrimary,
-        fontStyle: 'italic',
-        marginBottom: 8,
-    },
-    serviceDesc: {
-        fontSize: 13,
-        color: COLORS.textMuted,
-        lineHeight: 19,
-        marginBottom: 14,
-    },
-    priceRow: {
+    categoryBadgeText: { fontSize: 10, fontWeight: '800', color: COLORS.onSecondaryContainer, textTransform: 'uppercase', letterSpacing: 1 },
+    cardTitle: { fontSize: 20, fontWeight: '800', color: COLORS.secondary, marginBottom: 6 },
+    cardDescription: { fontSize: 13, color: COLORS.onSurfaceVariant, lineHeight: 20 },
+    cardFooter: {
         flexDirection: 'row',
-        alignItems: 'baseline',
-        marginBottom: 14,
-    },
-    priceText: {
-        fontSize: 22,
-        fontWeight: '800',
-        color: COLORS.secondary,
-    },
-    priceLabel: {
-        fontSize: 13,
-        fontWeight: '500',
-        color: COLORS.textMuted,
-    },
-    serviceCta: {
-        alignSelf: 'flex-start',
-        backgroundColor: COLORS.secondary,
-        paddingVertical: 10,
-        paddingHorizontal: 24,
-        borderRadius: 20,
-    },
-    serviceCtaText: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#fff',
-    },
-
-    // ── Loading & Empty ──
-    loadingState: {
+        justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 60,
+        marginTop: 16,
+        paddingTop: 14,
+        borderTopWidth: 1,
+        borderTopColor: COLORS.surfaceContainerLow,
     },
-    loadingText: {
-        fontSize: 14,
-        color: COLORS.textMuted,
-        marginTop: 12,
-    },
-    emptyState: {
-        alignItems: 'center',
-        paddingVertical: 40,
-    },
-    emptyTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: COLORS.textPrimary,
-        marginTop: 12,
-    },
-    emptySubtitle: {
-        fontSize: 13,
-        color: COLORS.textMuted,
-        marginTop: 6,
-        textAlign: 'center',
-    },
-
-    // ── My Bookings Button ──
-    myBookingsBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: COLORS.secondary,
-        marginHorizontal: 40,
-        paddingVertical: 14,
-        borderRadius: 25,
-        marginTop: 6,
-        marginBottom: 20,
-        ...SHADOWS.button,
-    },
-    myBookingsBtnText: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 15,
-        marginLeft: 8,
-    },
-
-    // ── Membership Banner ──
-    membershipBanner: {
-        backgroundColor: COLORS.primary,
-        marginHorizontal: 24,
-        borderRadius: 24,
-        padding: 28,
-        alignItems: 'center',
-    },
-    membershipTitle: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: '#fff',
-        textAlign: 'center',
-        marginBottom: 10,
-    },
-    membershipDesc: {
-        fontSize: 13,
-        color: '#c7d9ea',
-        textAlign: 'center',
-        lineHeight: 19,
-        marginBottom: 16,
-    },
-    learnMoreBtn: {
-        backgroundColor: '#fff',
-        paddingVertical: 10,
-        paddingHorizontal: 28,
-        borderRadius: 20,
-    },
-    learnMoreText: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: COLORS.primary,
-    },
-
-    // ── Notification Badge ──
-    notifBadge: {
-        position: 'absolute',
-        top: -4,
-        right: -6,
-        backgroundColor: '#dc2626',
-        width: 18,
-        height: 18,
-        borderRadius: 9,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    notifBadgeText: {
-        fontSize: 10,
-        fontWeight: '800',
-        color: '#fff',
-    },
+    priceText: { fontSize: 22, fontWeight: '800', color: COLORS.secondary },
+    availableBadge: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    greenDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#10b981' },
+    availableText: { fontSize: 12, fontWeight: '700', color: '#10b981' },
 });

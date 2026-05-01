@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NotificationsContext } from '../context/NotificationsContext';
 import { MaterialIcons } from '@expo/vector-icons';
 
-export default function NotificationBell({ initialCount = 3 }) {
+export default function NotificationBell({ initialCount = 0 }) {
     const navigation = useNavigation();
     const { unread, setUnread, markAllRead } = useContext(NotificationsContext);
 

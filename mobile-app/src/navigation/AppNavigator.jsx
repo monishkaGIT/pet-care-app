@@ -22,12 +22,12 @@ import ChangePasswordScreen from '../screens/user/ChangePasswordScreen';
 import AskPawlyScreen from '../screens/main/AskPawlyScreen';
 import BookAServiceScreen from '../screens/service-booking/BookAServiceScreen';
 import MyBookingsScreen from '../screens/service-booking/MyBookingsScreen';
-import AddPetScreen from '../screens/main/AddPetScreen';
-import EditPetScreen from '../screens/main/EditPetScreen';
-import MyPetsList from '../screens/main/MyPetsList';
-import PetDetailScreen from '../screens/main/PetDetailScreen';
-import NewHealthRecordScreen from '../screens/main/NewHealthRecordScreen';
-import HealthRecordDetailScreen from '../screens/main/HealthRecordDetailScreen';
+import AddPetScreen from '../screens/pet-management/AddPetScreen';
+import EditPetScreen from '../screens/pet-management/EditPetScreen';
+import MyPetsList from '../screens/pet-management/MyPetsList';
+import PetDetailScreen from '../screens/pet-management/PetDetailScreen';
+import NewHealthRecordScreen from '../screens/health/NewHealthRecordScreen';
+import HealthRecordDetailScreen from '../screens/health/HealthRecordDetailScreen';
 import MainNotificationsScreen from '../screens/notifications/MainNotificationsScreen';
 
 // Social Screens

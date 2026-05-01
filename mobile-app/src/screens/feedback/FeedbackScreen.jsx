@@ -99,11 +99,19 @@ export default function FeedbackScreen() {
 
     const handleSubmit = async () => {
         if (!title.trim()) {
-            Alert.alert('Validation', 'Please enter a title');
+            Alert.alert('Missing Title', 'Please enter a title for your feedback.');
+            return;
+        }
+        if (title.trim().length < 3) {
+            Alert.alert('Title Too Short', 'Title must be at least 3 characters.');
             return;
         }
         if (!message.trim()) {
-            Alert.alert('Validation', 'Please enter a message');
+            Alert.alert('Missing Message', 'Please enter your feedback message.');
+            return;
+        }
+        if (message.trim().length < 10) {
+            Alert.alert('Message Too Short', 'Please provide at least 10 characters of feedback.');
             return;
         }
 
