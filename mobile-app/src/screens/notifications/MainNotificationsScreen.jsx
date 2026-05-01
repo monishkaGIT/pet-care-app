@@ -14,6 +14,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import NotificationSections from '../../components/NotificationSections';
 import { NotificationsContext } from '../../context/NotificationsContext';
+import { fetchBookings } from '../../api/bookingApi';
 
 function timeAgo(dateStr) {
     if (!dateStr) return '';
@@ -48,16 +49,28 @@ function resolveServiceIcon(message) {
 export default function MainNotificationsScreen() {
     const { notifications, fetchNotifications, markAllRead } = useContext(NotificationsContext);
     const [refreshing, setRefreshing] = React.useState(false);
+    const [bookings, setBookings] = React.useState([]);
 
     useFocusEffect(
         useCallback(() => {
             if (markAllRead) markAllRead();
+            const loadBookings = async () => {
+                try {
+                    const data = await fetchBookings();
+                    setBookings(data);
+                } catch(e) {}
+            };
+            loadBookings();
         }, [markAllRead])
     );
 
     const onRefresh = async () => {
         setRefreshing(true);
         await fetchNotifications();
+        try {
+            const data = await fetchBookings();
+            setBookings(data);
+        } catch(e) {}
         setRefreshing(false);
     };
 
@@ -100,12 +113,54 @@ export default function MainNotificationsScreen() {
             };
         });
 
+    // Add active bookings summary
+    const confirmedCount = bookings.filter(b => b.status === 'Confirmed').length;
+    const cancelledCount = bookings.filter(b => b.status === 'Cancelled').length;
+    const pendingCount = bookings.filter(b => b.status === 'Pending').length;
+
+    const summaryItems = [];
+    if (confirmedCount > 0) {
+        summaryItems.push({
+            id: 'summary-confirmed',
+            icon: SERVICE_ICON_MAP.Confirmed.icon,
+            iconColor: SERVICE_ICON_MAP.Confirmed.color,
+            iconBg: SERVICE_ICON_MAP.Confirmed.bg,
+            title: 'Active Bookings',
+            subtitle: `${confirmedCount} booking${confirmedCount > 1 ? 's' : ''} confirmed by admin`,
+            time: 'Active',
+        });
+    }
+    if (pendingCount > 0) {
+        summaryItems.push({
+            id: 'summary-pending',
+            icon: SERVICE_ICON_MAP.Pending.icon,
+            iconColor: SERVICE_ICON_MAP.Pending.color,
+            iconBg: SERVICE_ICON_MAP.Pending.bg,
+            title: 'Pending Approvals',
+            subtitle: `${pendingCount} booking${pendingCount > 1 ? 's' : ''} waiting for approval`,
+            time: 'Active',
+        });
+    }
+    if (cancelledCount > 0) {
+        summaryItems.push({
+            id: 'summary-cancelled',
+            icon: SERVICE_ICON_MAP.Cancelled.icon,
+            iconColor: SERVICE_ICON_MAP.Cancelled.color,
+            iconBg: SERVICE_ICON_MAP.Cancelled.bg,
+            title: 'Declined Bookings',
+            subtitle: `${cancelledCount} booking${cancelledCount > 1 ? 's' : ''} declined by admin`,
+            time: 'Recent',
+        });
+    }
+
+    const finalServiceItems = [...summaryItems, ...serviceItems];
+
     const sections = [
         { key: 'health', title: 'Health', items: healthItems },
-        { key: 'service', title: 'Service', items: serviceItems },
+        { key: 'service', title: 'Service', items: finalServiceItems },
     ];
 
-    const isEmpty = healthItems.length === 0 && serviceItems.length === 0;
+    const isEmpty = healthItems.length === 0 && finalServiceItems.length === 0;
 
     return (
         <SafeAreaView style={styles.safeArea}>

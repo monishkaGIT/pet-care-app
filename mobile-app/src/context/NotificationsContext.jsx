@@ -36,11 +36,18 @@ export function NotificationsProvider({ children }) {
         }
     };
 
-    // Load once on mount/user change
+    // Load once on mount/user change and start polling
     useEffect(() => {
+        let interval;
         if (user) {
             fetchNotifications();
+            interval = setInterval(() => {
+                fetchNotifications();
+            }, 30000);
         }
+        return () => {
+            if (interval) clearInterval(interval);
+        };
     }, [user, fetchNotifications]);
 
     return (

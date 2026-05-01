@@ -83,7 +83,7 @@ export default function ActivityScreen() {
                     <Text style={styles.pageTitle}>Social Activity</Text>
                     <Text style={styles.pageSub}>Likes and comments from the feed appear here.</Text>
 
-                    {notifications.length === 0 ? (
+                    {socialActivity.length === 0 ? (
                         <View style={styles.emptyState}>
                             <MaterialIcons name="notifications-none" size={64} color="rgba(162,210,255,0.5)" />
                             <Text style={styles.emptyTitle}>No notifications yet</Text>

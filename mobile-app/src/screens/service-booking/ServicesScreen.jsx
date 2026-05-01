@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput,
     ActivityIndicator, RefreshControl, Image, Platform, StatusBar, Alert
@@ -8,6 +8,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SHADOWS } from '../../constants/theme';
 import { fetchServices } from '../../api/serviceApi';
 import { fetchBookings } from '../../api/bookingApi';
+import { NotificationsContext } from '../../context/NotificationsContext';
 
 // Map category names to MaterialCommunityIcons
 const CATEGORY_ICONS = {
@@ -31,6 +32,7 @@ const DEFAULT_CATEGORY_COLOR = { color: '#a2d2ff', bgColor: '#eaf4ff' };
 
 export default function ServicesScreen() {
     const navigation = useNavigation();
+    const { unread } = useContext(NotificationsContext);
     const [services, setServices] = useState([]);
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -73,33 +75,8 @@ export default function ServicesScreen() {
         loadBookings();
     };
 
-    // Notification counts
-    const confirmedCount = bookings.filter(b => b.status === 'Confirmed').length;
-    const cancelledCount = bookings.filter(b => b.status === 'Cancelled').length;
-    const pendingCount = bookings.filter(b => b.status === 'Pending').length;
-    const completedCount = bookings.filter(b => b.status === 'Completed').length;
-    const notifCount = confirmedCount + cancelledCount;
-
     const showNotifications = () => {
-        if (bookings.length === 0) {
-            Alert.alert('🔔 No Notifications', 'You have no booking updates yet. Book a service to get started!');
-            return;
-        }
-
-        const lines = [];
-        if (confirmedCount > 0) lines.push(`✅ ${confirmedCount} booking${confirmedCount > 1 ? 's' : ''} confirmed by admin`);
-        if (cancelledCount > 0) lines.push(`❌ ${cancelledCount} booking${cancelledCount > 1 ? 's' : ''} declined by admin`);
-        if (pendingCount > 0) lines.push(`⏳ ${pendingCount} booking${pendingCount > 1 ? 's' : ''} waiting for approval`);
-        if (completedCount > 0) lines.push(`🎉 ${completedCount} booking${completedCount > 1 ? 's' : ''} completed`);
-
-        Alert.alert(
-            '🔔 Booking Notifications',
-            lines.join('\n'),
-            [
-                { text: 'View Bookings', onPress: () => navigation.navigate('MyBookings') },
-                { text: 'OK' },
-            ]
-        );
+        navigation.navigate('Notifications');
     };
 
     // Filter services by search text
@@ -133,9 +110,9 @@ export default function ServicesScreen() {
                     <TouchableOpacity onPress={showNotifications}>
                         <View>
                             <Ionicons name="notifications" size={24} color="#fff" />
-                            {notifCount > 0 && (
+                            {unread > 0 && (
                                 <View style={styles.notifBadge}>
-                                    <Text style={styles.notifBadgeText}>{notifCount}</Text>
+                                    <Text style={styles.notifBadgeText}>{unread > 99 ? '99+' : unread}</Text>
                                 </View>
                             )}
                         </View>

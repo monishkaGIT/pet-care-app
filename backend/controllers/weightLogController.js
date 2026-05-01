@@ -1,5 +1,6 @@
 const WeightLog = require('../models/WeightLog');
 const Pet = require('../models/Pet');
+const Notification = require('../models/Notification');
 
 // @desc    Get weight history for a pet
 // @route   GET /api/pets/:petId/health/weight
@@ -55,6 +56,14 @@ const addWeightEntry = async (req, res) => {
 
         // Also update the pet's weight field with latest value
         await Pet.findByIdAndUpdate(petId, { weight: req.body.weight });
+
+        // Fire a health notification
+        await Notification.create({
+            recipient: userId,
+            type: 'health',
+            message: `Weight entry of ${req.body.weight} ${req.body.unit || 'kg'} logged for ${pet.name}.`,
+            referenceId: weightLog._id,
+        });
 
         res.status(201).json(weightLog);
     } catch (error) {
