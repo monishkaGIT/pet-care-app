@@ -43,7 +43,7 @@ function ServiceCard({ item }) {
                 <Text style={styles.cardTitle}>{item.name}</Text>
                 <Text style={styles.cardDescription} numberOfLines={2}>{item.description}</Text>
                 <View style={styles.cardFooter}>
-                    <Text style={styles.priceText}>${item.price?.toFixed(2)}</Text>
+                    <Text style={styles.priceText}>Rs. {item.price?.toFixed(2)}</Text>
                     <View style={styles.availableBadge}>
                         <View style={styles.greenDot} />
                         <Text style={styles.availableText}>Available</Text>

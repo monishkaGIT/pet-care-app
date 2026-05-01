@@ -326,11 +326,11 @@ export default function AddNewServiceScreen({ navigation, route }) {
 
                             {/* Price */}
                             <View style={[styles.fieldGroup, { flex: 1 }]}>
-                                <Text style={styles.label}>Price per Session ($)</Text>
+                                <Text style={styles.label}>Price per Session (Rs.)</Text>
                                 <View style={styles.priceInputWrapper}>
-                                    <Text style={styles.dollarSign}>$</Text>
+                                    <Text style={styles.dollarSign}>Rs.</Text>
                                     <TextInput
-                                        style={[styles.input, { paddingLeft: 30 }, errors.price && styles.inputError]}
+                                        style={[styles.input, styles.priceInput, errors.price && styles.inputError]}
                                         placeholder="0.00"
                                         placeholderTextColor={COLORS.outlineVariant}
                                         keyboardType="decimal-pad"
@@ -605,6 +605,7 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: COLORS.secondary,
     },
+    priceInput: { paddingLeft: 52 },
 
     /* Toggle */
     toggleCard: {
