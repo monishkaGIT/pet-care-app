@@ -39,10 +39,11 @@ export default function CommentsModal({ visible, onClose, post, currentUserId, o
         setSubmitting(true);
         try {
             const { data } = await postApi.post(`/${post._id}/comments`, { text: inputText.trim() });
-            setComments(data);
+            const validComments = data.filter(c => c.author && c.author._id);
+            setComments(validComments);
             setInputText('');
             Keyboard.dismiss();
-            if (onCommentAdded) onCommentAdded(post._id, data);
+            if (onCommentAdded) onCommentAdded(post._id, validComments);
         } catch {
             showModal('error', 'Error', 'Could not post comment.');
         } finally {

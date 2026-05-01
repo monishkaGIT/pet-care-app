@@ -156,7 +156,12 @@ export default function MyPostsScreen({ navigation }) {
             }
 
             if (postsResult.status === 'fulfilled') {
-                const myPosts = postsResult.value.data.filter(p => p.author?._id === user?._id);
+                const myPosts = postsResult.value.data
+                    .filter(p => p.author?._id === user?._id)
+                    .map(post => ({
+                        ...post,
+                        comments: (post.comments || []).filter(c => c.author && c.author._id)
+                    }));
                 setPosts(myPosts);
             } else {
                 showModal('error', 'Error', 'Could not load your posts.');

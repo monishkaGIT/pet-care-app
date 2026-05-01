@@ -137,7 +137,12 @@ export default function SocialScreen({ navigation }) {
     const fetchPosts = useCallback(async () => {
         try {
             const { data } = await postApi.get('/');
-            const validPosts = (data || []).filter(post => post.author && post.author._id);
+            const validPosts = (data || [])
+                .filter(post => post.author && post.author._id)
+                .map(post => ({
+                    ...post,
+                    comments: (post.comments || []).filter(c => c.author && c.author._id)
+                }));
             setPosts(validPosts);
         } catch {
             showModal('error', 'Error', 'Could not load posts. Check your connection.');
