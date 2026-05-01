@@ -37,13 +37,11 @@ export default function LoginScreen({ navigation }) {
             >
                 <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                     
-                    {/* Decorative Ambient Glows */}
                     <View style={styles.glowTop} />
                     <View style={styles.glowBottom} />
 
                     <View style={styles.mainContainer}>
                         
-                        {/* Brand Identity Section */}
                         <View style={styles.brandSection}>
                             <View style={styles.iconBox}>
                                 <MaterialIcons name="pets" size={32} color="#124057" />
@@ -52,9 +50,7 @@ export default function LoginScreen({ navigation }) {
                             <Text style={styles.brandSubtitle}>Every pet deserves the best atelier experience.</Text>
                         </View>
 
-                        {/* Login Card */}
                         <View style={styles.card}>
-                            {/* Email Input */}
                             <View style={styles.inputGroup}>
                                 <Text style={styles.label}>EMAIL ADDRESS</Text>
                                 <View style={styles.inputContainer}>
@@ -71,11 +67,10 @@ export default function LoginScreen({ navigation }) {
                                 </View>
                             </View>
 
-                            {/* Password Input */}
                             <View style={styles.inputGroup}>
                                 <View style={styles.passwordHeader}>
                                     <Text style={styles.label}>PASSWORD</Text>
-                                    <TouchableOpacity>
+                                    <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword', { email: email.trim() })}>
                                         <Text style={styles.forgotText}>FORGOT?</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -92,7 +87,6 @@ export default function LoginScreen({ navigation }) {
                                 </View>
                             </View>
 
-                            {/* Submit Button */}
                             <TouchableOpacity style={styles.submitBtn} onPress={handleLogin} disabled={loading} activeOpacity={0.8}>
                                 {loading ? (
                                     <ActivityIndicator color="#fff" />
@@ -104,13 +98,11 @@ export default function LoginScreen({ navigation }) {
                                 )}
                             </TouchableOpacity>
 
-                            {/* Divider */}
                             <View style={styles.dividerContainer}>
                                 <View style={styles.dividerLine} />
                                 <Text style={styles.dividerText}>OR CONTINUE WITH</Text>
                             </View>
 
-                            {/* Social Logins */}
                             <View style={styles.socialContainer}>
                                 <TouchableOpacity style={styles.socialBtn}>
                                     <FontAwesome5 name="google" size={16} color="#383833" />
@@ -123,7 +115,6 @@ export default function LoginScreen({ navigation }) {
                             </View>
                         </View>
 
-                        {/* Bottom Action */}
                         <View style={styles.bottomAction}>
                             <Text style={styles.bottomText}>New to our atelier? </Text>
                             <TouchableOpacity onPress={() => navigation.navigate('Register')}>

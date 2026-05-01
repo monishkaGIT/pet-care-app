@@ -60,13 +60,23 @@ export const AuthProvider = ({ children }) => {
         return userData;
     };
 
+    const requestPasswordReset = async (email) => {
+        const response = await api.post('/forgot-password', { email });
+        return response.data;
+    };
+
+    const resetPassword = async (email, otp, newPassword) => {
+        const response = await api.post('/reset-password', { email, otp, newPassword });
+        return response.data;
+    };
+
     const logout = async () => {
         await AsyncStorage.removeItem('userData');
         setUser(null);
     };
 
     return (
-        <AuthContext.Provider value={{ user, setUser, isLoading, login, register, verifyOtp, logout }}>
+        <AuthContext.Provider value={{ user, setUser, isLoading, login, register, verifyOtp, requestPasswordReset, resetPassword, logout }}>
             {children}
         </AuthContext.Provider>
     );
