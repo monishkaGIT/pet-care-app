@@ -1,5 +1,6 @@
 const Vaccination = require('../models/Vaccination');
 const Pet = require('../models/Pet');
+const Notification = require('../models/Notification');
 
 // @desc    Get all vaccinations for a pet (vaccination passport)
 // @route   GET /api/pets/:petId/health/vaccinations
@@ -54,6 +55,19 @@ const createVaccination = async (req, res) => {
             administeredBy: req.body.administeredBy || '',
             clinicName: req.body.clinicName || '',
             notes: req.body.notes || '',
+        });
+
+        // Notify user: vaccination logged + optional next-due reminder
+        let message = `Vaccination "${req.body.vaccineName}" logged for ${pet.name}.`;
+        if (req.body.nextDueDate) {
+            const due = new Date(req.body.nextDueDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+            message += ` Next dose due on ${due}.`;
+        }
+        await Notification.create({
+            recipient: userId,
+            type: 'health',
+            message,
+            referenceId: vaccination._id,
         });
 
         res.status(201).json(vaccination);

@@ -2,6 +2,7 @@ const HealthRecord = require('../models/HealthRecord');
 const WeightLog = require('../models/WeightLog');
 const Vaccination = require('../models/Vaccination');
 const Pet = require('../models/Pet');
+const Notification = require('../models/Notification');
 
 // @desc    Get health summary (quick stats) for a pet
 // @route   GET /api/pets/:petId/health/summary
@@ -151,6 +152,19 @@ const createHealthRecord = async (req, res) => {
             treatment: req.body.treatment || [],
             medicines: req.body.medicines || [],
             notes: req.body.notes || '',
+        });
+
+        // Fire a health notification
+        const typeLabel = req.body.recordType === 'vaccination'
+            ? 'Vaccination'
+            : req.body.recordType === 'weight'
+                ? 'Weight Log'
+                : 'Health Record';
+        await Notification.create({
+            recipient: userId,
+            type: 'health',
+            message: `New ${typeLabel} added for ${pet.name}: "${req.body.title || typeLabel}".`,
+            referenceId: record._id,
         });
 
         res.status(201).json(record);

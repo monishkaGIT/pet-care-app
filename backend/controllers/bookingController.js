@@ -1,6 +1,7 @@
 const Booking = require('../models/Booking');
 const User = require('../models/User');
 const Pet = require('../models/Pet');
+const Notification = require('../models/Notification');
 
 // @desc    Create a new booking
 // @route   POST /api/bookings
@@ -20,6 +21,14 @@ const createBooking = async (req, res) => {
             bookingTime: req.body.bookingTime,
             notes: req.body.notes || '',
             status: req.body.status || 'Pending'
+        });
+
+        // Notify the user their booking request was received
+        await Notification.create({
+            recipient: userId,
+            type: 'service',
+            message: `Your booking for "${req.body.serviceType}" on ${req.body.bookingDate} at ${req.body.bookingTime} has been submitted and is pending confirmation.`,
+            referenceId: booking._id,
         });
 
         res.status(201).json(booking);
@@ -176,6 +185,22 @@ const adminUpdateBookingStatus = async (req, res) => {
 
         if (!booking) {
             return res.status(404).json({ message: 'Booking not found' });
+        }
+
+        // Build a human-friendly status message
+        const statusMessages = {
+            Confirmed: `Your "${booking.serviceType}" booking on ${booking.bookingDate} at ${booking.bookingTime} has been confirmed!`,
+            Completed: `Your "${booking.serviceType}" appointment on ${booking.bookingDate} is marked as completed. Thank you!`,
+            Cancelled: `Your "${booking.serviceType}" booking on ${booking.bookingDate} has been cancelled.`,
+        };
+
+        if (statusMessages[status]) {
+            await Notification.create({
+                recipient: booking.userId,
+                type: 'service',
+                message: statusMessages[status],
+                referenceId: booking._id,
+            });
         }
 
         res.json(booking);

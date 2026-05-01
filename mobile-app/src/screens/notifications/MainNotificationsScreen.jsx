@@ -7,56 +7,47 @@ import {
     SafeAreaView,
     Platform,
     StatusBar,
+    ActivityIndicator,
+    RefreshControl,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import NotificationSections from '../../components/NotificationSections';
 import { NotificationsContext } from '../../context/NotificationsContext';
 
-const healthNotifications = [
-    {
-        id: 'health-1',
-        icon: 'health-and-safety',
-        iconColor: '#1f5f91',
-        iconBg: 'rgba(31,95,145,0.08)',
-        title: 'Health reminder',
-        subtitle: 'Bella vaccination is due in 3 days.',
-        time: '2d ago',
-    },
-    {
-        id: 'health-2',
-        icon: 'monitor-weight',
-        iconColor: '#30628a',
-        iconBg: 'rgba(162,210,255,0.25)',
-        title: 'Weight log check-in',
-        subtitle: 'It has been 7 days since Milo\'s last weight update.',
-        time: '1w ago',
-    },
-];
+function timeAgo(dateStr) {
+    if (!dateStr) return '';
+    const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+    return `${Math.floor(diff / 604800)}w ago`;
+}
 
-const serviceNotifications = [
-    {
-        id: 'service-1',
-        icon: 'room-service',
-        iconColor: '#7a5840',
-        iconBg: 'rgba(122,88,64,0.08)',
-        title: 'Service confirmed',
-        subtitle: 'Grooming appointment confirmed for Milo on May 5.',
-        time: '1h ago',
-    },
-    {
-        id: 'service-2',
-        icon: 'event-available',
-        iconColor: '#79573f',
-        iconBg: 'rgba(255,209,179,0.35)',
-        title: 'Upcoming booking',
-        subtitle: 'Vet consultation starts tomorrow at 10:00 AM.',
-        time: '1d ago',
-    },
-];
+const HEALTH_ICON_MAP = {
+    vaccination: { icon: 'vaccines', color: '#1f5f91', bg: 'rgba(31,95,145,0.08)' },
+    weight: { icon: 'monitor-weight', color: '#30628a', bg: 'rgba(162,210,255,0.25)' },
+    medical: { icon: 'health-and-safety', color: '#1f5f91', bg: 'rgba(31,95,145,0.08)' },
+};
+
+const SERVICE_ICON_MAP = {
+    Confirmed: { icon: 'event-available', color: '#2e7d32', bg: 'rgba(46,125,50,0.08)' },
+    Completed: { icon: 'check-circle', color: '#1565c0', bg: 'rgba(21,101,192,0.08)' },
+    Cancelled: { icon: 'cancel', color: '#c62828', bg: 'rgba(198,40,40,0.08)' },
+    Pending: { icon: 'room-service', color: '#7a5840', bg: 'rgba(122,88,64,0.08)' },
+};
+
+function resolveServiceIcon(message) {
+    if (message.includes('confirmed')) return SERVICE_ICON_MAP.Confirmed;
+    if (message.includes('completed')) return SERVICE_ICON_MAP.Completed;
+    if (message.includes('cancelled')) return SERVICE_ICON_MAP.Cancelled;
+    return SERVICE_ICON_MAP.Pending;
+}
 
 export default function MainNotificationsScreen() {
-    const { notifications, markAllRead } = useContext(NotificationsContext);
+    const { notifications, fetchNotifications, markAllRead } = useContext(NotificationsContext);
+    const [refreshing, setRefreshing] = React.useState(false);
 
     useFocusEffect(
         useCallback(() => {
@@ -64,41 +55,57 @@ export default function MainNotificationsScreen() {
         }, [markAllRead])
     );
 
-    // Helpers to format real notifications
-    function timeAgo(dateStr) {
-        if (!dateStr) return '';
-        const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
-        if (diff < 60) return 'Just now';
-        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-        if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
-        return `${Math.floor(diff / 604800)}w ago`;
-    }
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await fetchNotifications();
+        setRefreshing(false);
+    };
 
-    const realHealth = notifications.filter(n => n.type === 'health').map(n => ({
-        id: n._id,
-        icon: 'health-and-safety',
-        iconColor: '#1f5f91',
-        iconBg: 'rgba(31,95,145,0.08)',
-        title: 'Health Update',
-        subtitle: n.message,
-        time: timeAgo(n.createdAt),
-    }));
+    // Map real health notifications
+    const healthItems = notifications
+        .filter(n => n.type === 'health')
+        .map(n => {
+            // Try to guess record type from message
+            const msgLower = n.message.toLowerCase();
+            const typeKey = msgLower.includes('vaccination')
+                ? 'vaccination'
+                : msgLower.includes('weight')
+                    ? 'weight'
+                    : 'medical';
+            const style = HEALTH_ICON_MAP[typeKey];
+            return {
+                id: n._id,
+                icon: style.icon,
+                iconColor: style.color,
+                iconBg: style.bg,
+                title: 'Health Update',
+                subtitle: n.message,
+                time: timeAgo(n.createdAt),
+            };
+        });
 
-    const realService = notifications.filter(n => n.type === 'service').map(n => ({
-        id: n._id,
-        icon: 'room-service',
-        iconColor: '#7a5840',
-        iconBg: 'rgba(122,88,64,0.08)',
-        title: 'Service Update',
-        subtitle: n.message,
-        time: timeAgo(n.createdAt),
-    }));
+    // Map real service notifications
+    const serviceItems = notifications
+        .filter(n => n.type === 'service')
+        .map(n => {
+            const style = resolveServiceIcon(n.message.toLowerCase());
+            return {
+                id: n._id,
+                icon: style.icon,
+                iconColor: style.color,
+                iconBg: style.bg,
+                title: 'Service Update',
+                subtitle: n.message,
+                time: timeAgo(n.createdAt),
+            };
+        });
 
     const sections = [
-        { key: 'health', title: 'Health', items: [...realHealth, ...healthNotifications] },
-        { key: 'service', title: 'Service', items: [...realService, ...serviceNotifications] },
+        { key: 'health', title: 'Health', items: healthItems },
+        { key: 'service', title: 'Service', items: serviceItems },
     ];
+
+    const isEmpty = healthItems.length === 0 && serviceItems.length === 0;
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -109,11 +116,32 @@ export default function MainNotificationsScreen() {
                 </View>
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={['#a2d2ff']}
+                        tintColor="#a2d2ff"
+                    />
+                }
+            >
                 <Text style={styles.pageTitle}>Health & Services</Text>
                 <Text style={styles.pageSub}>Updates about pet health records and booked services.</Text>
 
-                <NotificationSections sections={sections} />
+                {isEmpty ? (
+                    <View style={styles.emptyState}>
+                        <MaterialIcons name="notifications-none" size={64} color="rgba(162,210,255,0.5)" />
+                        <Text style={styles.emptyTitle}>All caught up!</Text>
+                        <Text style={styles.emptySub}>
+                            Health records, vaccinations, and booking updates will appear here.
+                        </Text>
+                    </View>
+                ) : (
+                    <NotificationSections sections={sections} />
+                )}
             </ScrollView>
         </SafeAreaView>
     );
@@ -139,4 +167,7 @@ const styles = StyleSheet.create({
     scrollContent: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 80 },
     pageTitle: { fontSize: 30, fontWeight: '800', color: '#79573f', marginBottom: 6 },
     pageSub: { fontSize: 14, color: '#41474e', marginBottom: 22 },
+    emptyState: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 20 },
+    emptyTitle: { fontSize: 20, fontWeight: 'bold', color: '#79573f', marginTop: 20 },
+    emptySub: { fontSize: 14, color: '#72787f', marginTop: 8, textAlign: 'center', lineHeight: 22 },
 });
