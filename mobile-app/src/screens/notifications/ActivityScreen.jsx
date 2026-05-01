@@ -4,6 +4,7 @@ import {
     SafeAreaView, ActivityIndicator, RefreshControl,
     Platform, StatusBar
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { postApi } from '../../api/axiosConfig';
 import { AuthContext } from '../../context/AuthContext';
@@ -21,8 +22,15 @@ function timeAgo(dateStr) {
 }
 
 export default function ActivityScreen() {
-    const { notifications, fetchNotifications } = useContext(NotificationsContext);
+    const { notifications, fetchNotifications, markAllRead } = useContext(NotificationsContext);
     const [refreshing, setRefreshing] = useState(false);
+
+    // Clear the badge whenever this screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            markAllRead();
+        }, [markAllRead])
+    );
 
     const onRefresh = async () => {
         setRefreshing(true);

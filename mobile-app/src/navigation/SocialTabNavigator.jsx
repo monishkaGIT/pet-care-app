@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
+import { NotificationsContext } from '../context/NotificationsContext';
 
 // Social screens
 import SocialFeedScreen from '../screens/social/SocialScreen';
@@ -12,6 +13,8 @@ const Tab = createBottomTabNavigator();
 
 // Custom bottom tab bar component matching pet-stagram nav design
 function SocialTabBar({ state, descriptors, navigation }) {
+    const { unread } = useContext(NotificationsContext);
+
     const TABS = [
         { name: 'Feed', icon: 'home', activeIcon: 'home', label: 'Feed' },
         { name: 'Create', icon: 'add-circle-outline', activeIcon: 'add-circle', label: 'Create' },
@@ -56,6 +59,9 @@ function SocialTabBar({ state, descriptors, navigation }) {
                         );
                     }
 
+                    const isActivity = route.name === 'Activity';
+                    const showBadge = isActivity && unread > 0;
+
                     return (
                         <TouchableOpacity
                             key={route.key}
@@ -69,6 +75,13 @@ function SocialTabBar({ state, descriptors, navigation }) {
                                     size={24}
                                     color={isFocused ? '#79573f' : '#a2d2ff'}
                                 />
+                                {showBadge && (
+                                    <View style={styles.badge}>
+                                        <Text style={styles.badgeText}>
+                                            {unread > 9 ? '9+' : unread}
+                                        </Text>
+                                    </View>
+                                )}
                             </View>
                             <Text style={[styles.tabLabel, isFocused && styles.tabLabelActive]}>
                                 {tab.label}
@@ -177,5 +190,27 @@ const styles = StyleSheet.create({
     },
     createBtnActive: {
         backgroundColor: '#d97706',
+    },
+
+    // Unread badge
+    badge: {
+        position: 'absolute',
+        top: 2,
+        right: 2,
+        minWidth: 17,
+        height: 17,
+        borderRadius: 9,
+        backgroundColor: '#ef4444',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 3,
+        borderWidth: 2,
+        borderColor: '#fff9ec',
+    },
+    badgeText: {
+        fontSize: 9,
+        fontWeight: '800',
+        color: '#ffffff',
+        lineHeight: 12,
     },
 });
