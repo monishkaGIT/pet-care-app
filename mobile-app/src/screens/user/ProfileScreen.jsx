@@ -15,6 +15,7 @@ export default function ProfileScreen({ navigation }) {
     const [loading, setLoading] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('grid');
+    const [isEditing, setIsEditing] = useState(false);
 
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
@@ -49,6 +50,7 @@ export default function ProfileScreen({ navigation }) {
                 profileImage,
             });
             setUser(data);
+            setIsEditing(false);
             Alert.alert('Success', 'Profile updated successfully!');
         } catch (error) {
             Alert.alert('Error', error.response?.data?.message || 'Update failed');
@@ -108,7 +110,7 @@ export default function ProfileScreen({ navigation }) {
                             )}
                         </View>
                         <View style={styles.editBadge}>
-                            <MaterialIcons name="edit" size={14} color="#ffffff" />
+                            <MaterialIcons name="camera-alt" size={16} color="#ffffff" />
                         </View>
                     </TouchableOpacity>
 
@@ -117,15 +119,27 @@ export default function ProfileScreen({ navigation }) {
                         <View style={styles.profileNameRow}>
                             <Text style={styles.profileUsername} numberOfLines={1} adjustsFontSizeToFit>{user?.name || 'User'}</Text>
                         </View>
-                        <Text style={styles.profileBio}>{user?.bio?.trim() || 'Proud pet parent 🐾'}</Text>
                         <Text style={styles.profileEmail}>{user?.email}</Text>
-
+                        <Text style={styles.profileBio}>{user?.bio?.trim() || 'Proud pet parent 🐾'}</Text>
+                        
+                        {!isEditing && (
+                            <TouchableOpacity style={styles.toggleEditBtn} onPress={() => setIsEditing(true)} activeOpacity={0.8}>
+                                <MaterialIcons name="edit" size={16} color="#ffffff" />
+                                <Text style={styles.toggleEditBtnText}>Edit Profile</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </View>
 
                 {/* Edit Fields */}
+                {isEditing && (
                 <View style={styles.editSection}>
-                    <Text style={styles.editSectionTitle}>Edit Profile</Text>
+                    <View style={styles.editSectionHeader}>
+                        <Text style={styles.editSectionTitle}>Edit Profile</Text>
+                        <TouchableOpacity onPress={() => setIsEditing(false)} style={styles.closeEditBtn}>
+                            <MaterialIcons name="close" size={20} color="#79573f" />
+                        </TouchableOpacity>
+                    </View>
                     <Text style={styles.fieldLabel}>Full Name</Text>
                     <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Your name" placeholderTextColor="#72787f" />
                     <Text style={styles.fieldLabel}>Email (Cannot be changed)</Text>
@@ -154,6 +168,7 @@ export default function ProfileScreen({ navigation }) {
                         )}
                     </TouchableOpacity>
                 </View>
+                )}
 
                 {/* Action buttons */}
                 <View style={styles.actionSection}>
@@ -190,41 +205,44 @@ const styles = StyleSheet.create({
     headerBtn: { padding: 8, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 20 },
     headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#30628a', fontStyle: 'italic' },
     scrollContent: { paddingHorizontal: 20, paddingBottom: 100 },
-    profileHeader: { flexDirection: 'row', gap: 20, paddingTop: 28, paddingBottom: 20 },
-    avatarWrapper: { position: 'relative' },
+    profileHeader: { alignItems: 'center', paddingTop: 24, paddingBottom: 24 },
+    avatarWrapper: { position: 'relative', marginBottom: 16 },
     avatarRing: {
-        width: 110, height: 110, borderRadius: 55,
+        width: 120, height: 120, borderRadius: 60,
         borderWidth: 4, borderColor: '#a2d2ff',
-        padding: 3,
+        padding: 4,
         shadowColor: '#30628a', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 4,
         overflow: 'hidden', backgroundColor: '#faf3e0',
     },
-    avatarImg: { width: '100%', height: '100%', borderRadius: 55 },
+    avatarImg: { width: '100%', height: '100%', borderRadius: 60 },
     avatarPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
     editBadge: {
         position: 'absolute', bottom: 4, right: 4,
-        backgroundColor: '#f59e0b', width: 28, height: 28, borderRadius: 14,
+        backgroundColor: '#30628a', width: 32, height: 32, borderRadius: 16,
         alignItems: 'center', justifyContent: 'center',
-        borderWidth: 2, borderColor: '#fff9ec',
+        borderWidth: 3, borderColor: '#fff9ec',
         shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 3,
     },
-    profileInfo: { flex: 1, paddingTop: 4 },
-    profileNameRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' },
-    profileUsername: { fontSize: 22, fontWeight: '800', color: '#79573f', flex: 1 },
-    editProfileBtn: {
-        backgroundColor: '#f59e0b', paddingVertical: 8, paddingHorizontal: 16,
-        borderRadius: 20,
+    profileInfo: { alignItems: 'center', width: '100%', paddingHorizontal: 20 },
+    profileNameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 4, width: '100%' },
+    profileUsername: { fontSize: 24, fontWeight: '800', color: '#79573f', textAlign: 'center' },
+    profileBio: { fontSize: 15, color: '#41474e', lineHeight: 22, marginBottom: 16, textAlign: 'center', fontStyle: 'italic' },
+    profileEmail: { fontSize: 14, color: '#72787f', marginBottom: 8, textAlign: 'center' },
+    toggleEditBtn: {
+        flexDirection: 'row', alignItems: 'center', gap: 8,
+        backgroundColor: '#f59e0b', paddingVertical: 10, paddingHorizontal: 20,
+        borderRadius: 24, marginTop: 8,
         shadowColor: '#f59e0b', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 3,
     },
-    editProfileBtnText: { color: '#ffffff', fontWeight: 'bold', fontSize: 13 },
-    profileBio: { fontSize: 13, color: '#41474e', lineHeight: 18, marginBottom: 12 },
-    profileEmail: { fontSize: 12, color: '#72787f', marginBottom: 12 },
+    toggleEditBtnText: { color: '#ffffff', fontWeight: 'bold', fontSize: 14 },
     statsRow: { flexDirection: 'row', gap: 20, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#e9e2d0' },
     statItem: { alignItems: 'flex-start' },
     statValue: { fontSize: 18, fontWeight: '800', color: '#79573f' },
     statLabel: { fontSize: 9, color: 'rgba(65,71,78,0.7)', letterSpacing: 1, textTransform: 'uppercase', fontWeight: 'bold' },
     editSection: { backgroundColor: '#faf3e0', borderRadius: 16, padding: 20, marginBottom: 20 },
-    editSectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#79573f', marginBottom: 16 },
+    editSectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+    editSectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#79573f' },
+    closeEditBtn: { padding: 6, backgroundColor: 'rgba(121,87,63,0.1)', borderRadius: 16 },
     fieldLabel: { fontSize: 13, color: '#79573f', fontWeight: '600', marginBottom: 6 },
     input: {
         backgroundColor: '#ffffff', borderWidth: 1.5, borderColor: '#D9CFBC',
