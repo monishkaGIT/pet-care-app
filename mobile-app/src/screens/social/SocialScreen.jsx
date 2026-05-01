@@ -13,17 +13,11 @@ import CommentsModal from '../../components/CommentsModal';
 
 function timeAgo(dateStr) {
     const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
-    if (diff < 60) return 'JUST NOW';
-    if (diff < 3600) return `${Math.floor(diff / 60)}M AGO`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}H AGO`;
-    return `${Math.floor(diff / 86400)}D AGO`;
-}
-
-function getPetChipStyle(type) {
-    if (!type) return null;
-    return type.toLowerCase() === 'cat'
-        ? { bg: '#E8D5F0', text: '#6B21A8' }
-        : { bg: '#D5E8F0', text: '#1E4D8C' };
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    const days = Math.floor(diff / 86400);
+    return days === 1 ? 'Yesterday' : `${days}d ago`;
 }
 
 // ─── PostCard Component ─────────────────────────────────────────────────────
@@ -31,8 +25,6 @@ function getPetChipStyle(type) {
 function PostCard({ post, currentUserId, onLike, onDelete, onEdit, onOpenComments }) {
     const isOwner = post.author?._id === currentUserId;
     const isLiked = post.likes?.includes(currentUserId);
-    const petTypeOrBreed = post.pet?.type || post.pet?.breed;
-    const petChip = petTypeOrBreed ? getPetChipStyle(petTypeOrBreed) : null;
 
     const handleOptions = () => {
         Alert.alert(
@@ -40,7 +32,7 @@ function PostCard({ post, currentUserId, onLike, onDelete, onEdit, onOpenComment
             '',
             [
                 { text: 'Edit Post', onPress: () => onEdit(post) },
-                { text: 'Delete Post', style: 'destructive', onPress: () => confirmDelete() },
+                { text: 'Delete Post', style: 'destructive', onPress: confirmDelete },
                 { text: 'Cancel', style: 'cancel' },
             ]
         );
@@ -62,90 +54,76 @@ function PostCard({ post, currentUserId, onLike, onDelete, onEdit, onOpenComment
             {/* Post Header */}
             <View style={styles.postHeader}>
                 <View style={styles.postHeaderLeft}>
-                    {/* Avatar */}
                     <View style={styles.postAvatar}>
                         {post.author?.profileImage ? (
                             <Image source={{ uri: post.author.profileImage }} style={styles.avatarImg} />
                         ) : (
-                            <MaterialIcons name="person" size={20} color="#30628a" />
+                            <Text style={styles.avatarInitial}>
+                                {(post.author?.name || 'P')[0].toUpperCase()}
+                            </Text>
                         )}
                     </View>
                     <View>
-                        <View style={styles.nameRow}>
-                            <Text style={styles.postUsername}>{post.author?.name || 'Pet Parent'}</Text>
-                            {/* Pet chip */}
-                            {petChip && (
-                                <View style={[styles.petChip, { backgroundColor: petChip.bg }]}>
-                                    <Text style={[styles.petChipText, { color: petChip.text }]}>
-                                        {petTypeOrBreed.toUpperCase()}
-                                    </Text>
-                                </View>
-                            )}
-                        </View>
-                        {post.pet && (
-                            <Text style={styles.petName}>{post.pet.name}</Text>
-                        )}
+                        <Text style={styles.postUsername}>{post.author?.name || 'Pet Parent'}</Text>
+                        <Text style={styles.postTimestamp}>{timeAgo(post.createdAt)}</Text>
                     </View>
                 </View>
-                {/* Options button — only for post owner */}
                 {isOwner && (
-                    <TouchableOpacity onPress={handleOptions} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                        <MaterialIcons name="more-horiz" size={24} color="#72787f" />
+                    <TouchableOpacity onPress={handleOptions} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                        <MaterialIcons name="more-horiz" size={22} color="#b5a99a" />
                     </TouchableOpacity>
                 )}
             </View>
 
             {/* Post Image */}
-            <View style={styles.postImageContainer}>
-                {post.image ? (
+            {post.image ? (
+                <View style={styles.postImageContainer}>
                     <Image source={{ uri: post.image }} style={styles.postImage} resizeMode="cover" />
-                ) : (
-                    <View style={styles.postImagePlaceholder}>
-                        <MaterialIcons name="pets" size={72} color="rgba(162,210,255,0.4)" />
-                    </View>
-                )}
-                {/* Label badge */}
-                {!!post.label && (
-                    <View style={styles.postBadge}>
-                        <MaterialIcons name="wb-sunny" size={14} color="#f59e0b" />
-                        <Text style={styles.postBadgeText}>{post.label.toUpperCase()}</Text>
-                    </View>
-                )}
-            </View>
-
-            {/* Action Bar */}
-            <View style={styles.actionBar}>
-                <View style={styles.actionLeft}>
-                    <TouchableOpacity style={styles.actionBtn} onPress={() => onLike(post._id)}>
-                        <MaterialIcons
-                            name={isLiked ? 'favorite' : 'favorite-outline'}
-                            size={26}
-                            color={isLiked ? '#ef4444' : '#79573f'}
-                        />
-                    </TouchableOpacity>
-                    <Text style={styles.actionCount}>{post.likes?.length || 0}</Text>
-                    <TouchableOpacity style={[styles.actionBtn, { marginLeft: 12 }]} onPress={() => onOpenComments(post)}>
-                        <MaterialIcons name="chat-bubble-outline" size={24} color="#79573f" />
-                    </TouchableOpacity>
-                    <Text style={styles.actionCount}>{post.comments?.length || 0}</Text>
+                    {!!post.label && (
+                        <View style={styles.postBadge}>
+                            <MaterialIcons name="wb-sunny" size={12} color="#f59e0b" />
+                            <Text style={styles.postBadgeText}>{post.label.toUpperCase()}</Text>
+                        </View>
+                    )}
                 </View>
-                <TouchableOpacity>
-                    <MaterialIcons name="bookmark-outline" size={26} color="#79573f" />
-                </TouchableOpacity>
-            </View>
+            ) : (
+                <View style={styles.postImagePlaceholder}>
+                    <MaterialIcons name="pets" size={56} color="rgba(162,210,255,0.35)" />
+                </View>
+            )}
 
             {/* Caption */}
-            <View style={styles.captionContainer}>
-                <Text style={styles.captionText} numberOfLines={3}>
-                    <Text style={styles.captionUsername}>{post.author?.name?.replace(/\s+/g, '_').toLowerCase()} </Text>
-                    {post.caption}
-                </Text>
-                {post.comments?.length > 0 && (
-                    <TouchableOpacity onPress={() => onOpenComments(post)}>
-                        <Text style={styles.viewCommentsText}>View all {post.comments.length} comments</Text>
-                    </TouchableOpacity>
-                )}
-                <Text style={styles.timestampText}>{timeAgo(post.createdAt)}</Text>
+            {!!post.caption && (
+                <View style={styles.captionContainer}>
+                    <Text style={styles.captionText} numberOfLines={3}>
+                        <Text style={styles.captionUsername}>
+                            {post.author?.name?.replace(/\s+/g, '_').toLowerCase()}{' '}
+                        </Text>
+                        {post.caption}
+                    </Text>
+                </View>
+            )}
+
+            {/* Divider */}
+            <View style={styles.divider} />
+
+            {/* Action Bar — likes & comments only */}
+            <View style={styles.actionBar}>
+                <TouchableOpacity style={styles.actionBtn} onPress={() => onLike(post._id)} activeOpacity={0.7}>
+                    <MaterialIcons
+                        name={isLiked ? 'favorite' : 'favorite-outline'}
+                        size={22}
+                        color={isLiked ? '#ef4444' : '#b5a99a'}
+                    />
+                    <Text style={[styles.actionCount, isLiked && styles.actionCountLiked]}>
+                        {post.likes?.length || 0}
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.actionBtn} onPress={() => onOpenComments(post)} activeOpacity={0.7}>
+                    <MaterialIcons name="chat-bubble-outline" size={21} color="#b5a99a" />
+                    <Text style={styles.actionCount}>{post.comments?.length || 0}</Text>
+                </TouchableOpacity>
             </View>
         </View>
     );
@@ -158,15 +136,13 @@ export default function SocialScreen({ navigation }) {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    
-    // Comments Modal State
     const [selectedPost, setSelectedPost] = useState(null);
 
     const fetchPosts = useCallback(async () => {
         try {
             const { data } = await postApi.get('/');
             setPosts(data);
-        } catch (err) {
+        } catch {
             Alert.alert('Error', 'Could not load posts. Check your connection.');
         } finally {
             setLoading(false);
@@ -174,11 +150,8 @@ export default function SocialScreen({ navigation }) {
         }
     }, []);
 
-    useEffect(() => {
-        fetchPosts();
-    }, [fetchPosts]);
+    useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
-    // Called when CreatePost / EditPost navigates back
     useEffect(() => {
         const unsubscribe = navigation.addListener('focus', fetchPosts);
         return unsubscribe;
@@ -187,9 +160,7 @@ export default function SocialScreen({ navigation }) {
     const handleLike = async (postId) => {
         try {
             const { data } = await postApi.put(`/${postId}/like`);
-            setPosts(prev => prev.map(p =>
-                p._id === postId ? { ...p, likes: data.likes } : p
-            ));
+            setPosts(prev => prev.map(p => p._id === postId ? { ...p, likes: data.likes } : p));
         } catch {
             Alert.alert('Error', 'Could not update like');
         }
@@ -206,86 +177,62 @@ export default function SocialScreen({ navigation }) {
 
     const handleEdit = (post) => {
         const parentNav = navigation.getParent();
-        if (parentNav) {
-            parentNav.navigate('EditPost', { post });
-            return;
-        }
-        navigation.navigate('EditPost', { post });
+        (parentNav || navigation).navigate('EditPost', { post });
     };
 
     const handleCommentAdded = (postId, updatedComments) => {
         setPosts(prev => prev.map(p => p._id === postId ? { ...p, comments: updatedComments } : p));
-        if (selectedPost && selectedPost._id === postId) {
-            setSelectedPost({ ...selectedPost, comments: updatedComments });
-        }
+        if (selectedPost?._id === postId) setSelectedPost(s => ({ ...s, comments: updatedComments }));
     };
 
     const handleCommentDeleted = (postId, updatedComments) => {
         setPosts(prev => prev.map(p => p._id === postId ? { ...p, comments: updatedComments } : p));
-        if (selectedPost && selectedPost._id === postId) {
-            setSelectedPost({ ...selectedPost, comments: updatedComments });
-        }
+        if (selectedPost?._id === postId) setSelectedPost(s => ({ ...s, comments: updatedComments }));
     };
 
     const handleHomePress = () => {
-        Alert.alert(
-            'Quit Social',
-            'Are you sure you want to go back to main home?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Yes',
-                    onPress: () => {
-                        const parentNav = navigation.getParent();
-                        if (parentNav) {
-                            parentNav.navigate('MyPets');
-                        } else {
-                            navigation.navigate('MyPets');
-                        }
-                    },
+        Alert.alert('Quit Social', 'Are you sure you want to go back to main home?', [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Yes',
+                onPress: () => {
+                    const parentNav = navigation.getParent();
+                    (parentNav || navigation).navigate('MyPets');
                 },
-            ]
-        );
+            },
+        ]);
     };
 
     const renderHeader = () => (
-        <>
-            {/* App Bar */}
-            <View style={styles.headerWrapper}>
-                <View style={styles.headerLeft}>
-                    <TouchableOpacity style={styles.headerBtn} activeOpacity={0.8} onPress={handleHomePress}>
-                        <MaterialIcons name="home" size={24} color="#30628a" />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Social Feed</Text>
-                </View>
-                <TouchableOpacity
-                    style={styles.headerBtn}
-                    activeOpacity={0.8}
-                    onPress={() => {
-                        const parentNav = navigation.getParent();
-                        if (parentNav) {
-                            parentNav.navigate('MyPosts');
-                        } else {
-                            navigation.navigate('MyPosts');
-                        }
-                    }}
-                >
-                    <MaterialIcons name="account-circle" size={24} color="#30628a" />
+        <View style={styles.headerWrapper}>
+            <View style={styles.headerLeft}>
+                <TouchableOpacity style={styles.headerBtn} activeOpacity={0.8} onPress={handleHomePress}>
+                    <MaterialIcons name="home" size={24} color="#30628a" />
                 </TouchableOpacity>
+                <Text style={styles.headerTitle}>Social Feed</Text>
             </View>
-        </>
+            <TouchableOpacity
+                style={styles.headerBtn}
+                activeOpacity={0.8}
+                onPress={() => {
+                    const parentNav = navigation.getParent();
+                    (parentNav || navigation).navigate('MyPosts');
+                }}
+            >
+                <MaterialIcons name="account-circle" size={24} color="#30628a" />
+            </TouchableOpacity>
+        </View>
     );
 
     const renderEmpty = () => (
         <View style={styles.emptyState}>
-            <MaterialIcons name="pets" size={64} color="rgba(162,210,255,0.5)" />
+            <View style={styles.emptyIconWrap}>
+                <MaterialIcons name="pets" size={48} color="rgba(162,210,255,0.6)" />
+            </View>
             <Text style={styles.emptyTitle}>No posts yet</Text>
             <Text style={styles.emptySubtitle}>Be the first to share a pet moment!</Text>
-            <TouchableOpacity
-                style={styles.emptyBtn}
-                onPress={() => navigation.navigate('Create')}
-            >
-                <MaterialIcons name="add" size={18} color="#ffffff" />
+            <TouchableOpacity style={styles.emptyBtn} onPress={() => navigation.navigate('Create')}>
+                <MaterialIcons name="add" size={18} color="#fff" />
                 <Text style={styles.emptyBtnText}>Create Post</Text>
             </TouchableOpacity>
         </View>
@@ -298,7 +245,7 @@ export default function SocialScreen({ navigation }) {
                     {renderHeader()}
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color="#a2d2ff" />
-                        <Text style={styles.loadingText}>Loading feed...</Text>
+                        <Text style={styles.loadingText}>Loading feed…</Text>
                     </View>
                 </>
             ) : (
@@ -324,10 +271,10 @@ export default function SocialScreen({ navigation }) {
                             onLike={handleLike}
                             onDelete={handleDelete}
                             onEdit={handleEdit}
-                            onOpenComments={(post) => setSelectedPost(post)}
+                            onOpenComments={setSelectedPost}
                         />
                     )}
-                    ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+                    ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
                 />
             )}
 
@@ -346,9 +293,9 @@ export default function SocialScreen({ navigation }) {
 // ─── Styles ─────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-    safeArea: { flex: 1, backgroundColor: '#fff9ec' },
+    safeArea: { flex: 1, backgroundColor: '#faf3e0' },
 
-    // Header
+    // ── Header (keep exactly as before) ──
     headerWrapper: {
         backgroundColor: '#a2d2ff',
         borderBottomLeftRadius: 30,
@@ -377,96 +324,122 @@ const styles = StyleSheet.create({
         fontStyle: 'italic', marginLeft: 10,
     },
 
-    // Feed
-    scrollContent: { paddingBottom: 120, paddingTop: 12 },
+    // ── Feed ──
+    scrollContent: { paddingTop: 16, paddingBottom: 120 },
 
-    // Post Card
+    // ── Post Card ──
     postCard: {
         backgroundColor: '#ffffff',
-        borderRadius: 16,
+        borderRadius: 20,
         marginHorizontal: 16,
-        shadowColor: 'rgba(56,56,51,0.04)',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 1,
-        shadowRadius: 10,
-        elevation: 2,
+        shadowColor: '#6f4e37',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+        elevation: 3,
         overflow: 'hidden',
     },
+
+    // Card header
     postHeader: {
-        flexDirection: 'row', justifyContent: 'space-between',
-        alignItems: 'center', padding: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        paddingTop: 14,
+        paddingBottom: 12,
     },
     postHeaderLeft: { flexDirection: 'row', alignItems: 'center' },
     postAvatar: {
-        width: 40, height: 40, borderRadius: 20,
-        backgroundColor: 'rgba(162,210,255,0.3)',
-        alignItems: 'center', justifyContent: 'center', marginRight: 12,
+        width: 42, height: 42, borderRadius: 21,
+        backgroundColor: '#e8f4fd',
+        alignItems: 'center', justifyContent: 'center',
+        marginRight: 11,
         overflow: 'hidden',
+        borderWidth: 2,
+        borderColor: '#a2d2ff',
     },
     avatarImg: { width: '100%', height: '100%' },
-    nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    postUsername: { fontSize: 14, fontWeight: 'bold', color: '#79573f' },
-    petChip: {
-        paddingHorizontal: 7, paddingVertical: 2,
-        borderRadius: 4, borderWidth: 1.5, borderColor: '#00000022',
+    avatarInitial: {
+        fontSize: 17, fontWeight: '800', color: '#30628a',
     },
-    petChipText: { fontSize: 9, fontWeight: 'bold', letterSpacing: 0.5 },
-    petName: { fontSize: 11, color: '#72787f', marginTop: 1 },
+    postUsername: { fontSize: 14, fontWeight: '700', color: '#5c3d2e' },
+    postTimestamp: { fontSize: 11, color: '#b5a99a', marginTop: 1 },
 
-    // Post Image
+    // Image
     postImageContainer: {
         width: '100%', aspectRatio: 4 / 3,
-        backgroundColor: '#faf3e0', position: 'relative',
+        backgroundColor: '#f5ede0',
+        position: 'relative',
     },
     postImage: { width: '100%', height: '100%' },
     postImagePlaceholder: {
-        flex: 1, alignItems: 'center', justifyContent: 'center',
+        width: '100%', aspectRatio: 4 / 3,
+        backgroundColor: '#f5ede0',
+        alignItems: 'center', justifyContent: 'center',
     },
     postBadge: {
-        position: 'absolute', bottom: 16, left: 16,
-        backgroundColor: 'rgba(255,255,255,0.85)',
-        paddingHorizontal: 12, paddingVertical: 5,
-        borderRadius: 20, flexDirection: 'row', alignItems: 'center',
-        shadowColor: 'rgba(0,0,0,0.1)', shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 4, shadowOpacity: 1,
+        position: 'absolute', bottom: 12, left: 12,
+        backgroundColor: 'rgba(255,255,255,0.92)',
+        paddingHorizontal: 10, paddingVertical: 4,
+        borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 4,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.08, shadowRadius: 4, elevation: 2,
     },
     postBadgeText: {
-        fontSize: 10, fontWeight: 'bold', color: '#79573f',
-        letterSpacing: 1, marginLeft: 5,
+        fontSize: 10, fontWeight: '800', color: '#79573f', letterSpacing: 0.8,
     },
+
+    // Caption
+    captionContainer: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
+    captionText: { fontSize: 14, color: '#3d2b1f', lineHeight: 21 },
+    captionUsername: { fontWeight: '700', color: '#79573f' },
+
+    // Divider
+    divider: { height: 1, backgroundColor: '#f3ede3', marginHorizontal: 16, marginTop: 8 },
 
     // Action bar
     actionBar: {
-        flexDirection: 'row', justifyContent: 'space-between',
-        alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        gap: 4,
     },
-    actionLeft: { flexDirection: 'row', alignItems: 'center' },
-    actionBtn: { marginRight: 4 },
-    actionCount: { fontSize: 13, fontWeight: '600', color: '#79573f', marginRight: 4 },
-
-    // Caption
-    captionContainer: { paddingHorizontal: 16, paddingBottom: 20 },
-    captionText: { fontSize: 14, color: '#1e1c10', lineHeight: 20 },
-    captionUsername: { fontWeight: 'bold', color: '#79573f' },
-    viewCommentsText: { fontSize: 12, color: '#41474e', fontWeight: '500', marginTop: 8 },
-    timestampText: { fontSize: 10, color: '#72787f', letterSpacing: 0.5, marginTop: 4 },
+    actionBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 20,
+        backgroundColor: '#faf3e0',
+        marginRight: 6,
+    },
+    actionCount: { fontSize: 13, fontWeight: '600', color: '#b5a99a' },
+    actionCountLiked: { color: '#ef4444' },
 
     // Loading
     loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-    loadingText: { fontSize: 14, color: '#72787f' },
+    loadingText: { fontSize: 14, color: '#b5a99a' },
 
     // Empty state
-    emptyState: {
-        alignItems: 'center', paddingTop: 60, paddingHorizontal: 40,
+    emptyState: { alignItems: 'center', paddingTop: 70, paddingHorizontal: 40 },
+    emptyIconWrap: {
+        width: 100, height: 100, borderRadius: 50,
+        backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
+        shadowColor: '#6f4e37', shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.07, shadowRadius: 10, elevation: 3,
+        marginBottom: 20,
     },
-    emptyTitle: { fontSize: 20, fontWeight: 'bold', color: '#79573f', marginTop: 20 },
-    emptySubtitle: { fontSize: 14, color: '#72787f', marginTop: 8, textAlign: 'center' },
+    emptyTitle: { fontSize: 20, fontWeight: '800', color: '#5c3d2e' },
+    emptySubtitle: { fontSize: 14, color: '#b5a99a', marginTop: 8, textAlign: 'center', lineHeight: 20 },
     emptyBtn: {
         flexDirection: 'row', alignItems: 'center', gap: 8,
-        backgroundColor: '#f59e0b', paddingVertical: 12, paddingHorizontal: 24,
-        borderRadius: 24, marginTop: 24,
+        backgroundColor: '#f59e0b', paddingVertical: 13, paddingHorizontal: 28,
+        borderRadius: 28, marginTop: 28,
         shadowColor: '#f59e0b', shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
+        shadowOpacity: 0.35, shadowRadius: 10, elevation: 5,
     },
-    emptyBtnText: { color: '#ffffff', fontWeight: 'bold', fontSize: 15 },
+    emptyBtnText: { color: '#fff', fontWeight: '800', fontSize: 15 },
 });
