@@ -99,7 +99,7 @@ export default function ProfileScreen({ navigation }) {
                 {/* Profile Header */}
                 <View style={styles.profileHeader}>
                     {/* Avatar */}
-                    <TouchableOpacity style={styles.avatarWrapper} onPress={pickImage} activeOpacity={0.85}>
+                    <TouchableOpacity style={styles.avatarWrapper} onPress={pickImage} activeOpacity={0.85} disabled={!isEditing}>
                         <View style={styles.avatarRing}>
                             {profileImage ? (
                                 <Image source={{ uri: profileImage }} style={styles.avatarImg} />
@@ -109,9 +109,11 @@ export default function ProfileScreen({ navigation }) {
                                 </View>
                             )}
                         </View>
-                        <View style={styles.editBadge}>
-                            <MaterialIcons name="camera-alt" size={16} color="#ffffff" />
-                        </View>
+                        {isEditing && (
+                            <View style={styles.editBadge}>
+                                <MaterialIcons name="camera-alt" size={16} color="#ffffff" />
+                            </View>
+                        )}
                     </TouchableOpacity>
 
                     {/* Profile Info */}
