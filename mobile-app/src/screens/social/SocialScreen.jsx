@@ -27,14 +27,11 @@ function timeAgo(dateStr) {
 
 function PostCard({ post, currentUserId, onLike, onDelete, onEdit, onOpenComments, showModal }) {
     const isOwner = post.author?._id === currentUserId;
-    const isLiked = post.likes?.includes(currentUserId);
+    const isLiked = post.likes?.some(id => id?.toString() === currentUserId);
+    const [imgError, setImgError] = useState(false);
 
-    const handleOptions = () => {
-        showModal('info', 'Post Options', 'What would you like to do?', [
-            { text: 'Edit Post', style: 'primary', onPress: () => onEdit(post) },
-            { text: 'Delete', style: 'destructive', onPress: confirmDelete },
-        ]);
-    };
+    // Reset error state when post changes (e.g. after edit)
+    useEffect(() => { setImgError(false); }, [post._id, post.image]);
 
     const confirmDelete = () => {
         showModal('warning', 'Delete Post', 'Are you sure you want to delete this post?', [
@@ -43,8 +40,15 @@ function PostCard({ post, currentUserId, onLike, onDelete, onEdit, onOpenComment
         ]);
     };
 
+    const handleOptions = () => {
+        showModal('info', 'Post Options', 'What would you like to do?', [
+            { text: 'Edit Post', style: 'primary', onPress: () => onEdit(post) },
+            { text: 'Delete', style: 'destructive', onPress: confirmDelete },
+        ]);
+    };
+
     return (
-        <View style={[styles.postCard, isLiked && { borderLeftWidth: 3, borderLeftColor: '#ef4444' }]}>
+        <View style={[styles.postCard, { borderLeftWidth: 3, borderLeftColor: isLiked ? '#ef4444' : 'transparent' }]}>
             {/* Post Header */}
             <View style={styles.postHeader}>
                 <View style={styles.postHeaderLeft}>
@@ -70,9 +74,14 @@ function PostCard({ post, currentUserId, onLike, onDelete, onEdit, onOpenComment
             </View>
 
             {/* Post Image */}
-            {post.image ? (
+            {post.image && post.image.trim() && !imgError ? (
                 <View style={styles.postImageContainer}>
-                    <Image source={{ uri: post.image }} style={styles.postImage} resizeMode="cover" />
+                    <Image
+                        source={{ uri: post.image }}
+                        style={styles.postImage}
+                        resizeMode="cover"
+                        onError={() => setImgError(true)}
+                    />
                     {!!post.label && (
                         <View style={styles.postBadge}>
                             <MaterialIcons name="wb-sunny" size={12} color="#f59e0b" />
@@ -105,7 +114,7 @@ function PostCard({ post, currentUserId, onLike, onDelete, onEdit, onOpenComment
             <View style={styles.actionBar}>
                 <TouchableOpacity style={styles.actionBtn} onPress={() => onLike(post._id)} activeOpacity={0.7}>
                     <MaterialIcons
-                        name={isLiked ? 'favorite' : 'favorite-outline'}
+                        name={isLiked ? 'favorite' : 'favorite-border'}
                         size={22}
                         color={isLiked ? '#ef4444' : '#b5a99a'}
                     />
@@ -163,10 +172,34 @@ export default function SocialScreen({ navigation }) {
     }, [navigation, fetchPosts]);
 
     const handleLike = async (postId) => {
+        const userId = user?._id;
+        if (!userId) return;
+
+        // Optimistic toggle — flip instantly so the UI feels responsive
+        let previousLikes;
+        setPosts(prev => prev.map(p => {
+            if (p._id !== postId) return p;
+            previousLikes = p.likes;
+            const alreadyLiked = p.likes?.some(id => id?.toString() === userId);
+            const newLikes = alreadyLiked
+                ? p.likes.filter(id => id?.toString() !== userId)
+                : [...(p.likes || []), userId];
+            return { ...p, likes: newLikes };
+        }));
+
         try {
             const { data } = await postApi.put(`/${postId}/like`);
-            setPosts(prev => prev.map(p => p._id === postId ? { ...p, likes: data.likes } : p));
+            // Reconcile with server truth (normalize to strings)
+            if (Array.isArray(data.likes)) {
+                setPosts(prev => prev.map(p =>
+                    p._id !== postId ? p : { ...p, likes: data.likes.map(String) }
+                ));
+            }
         } catch {
+            // Revert on failure
+            setPosts(prev => prev.map(p =>
+                p._id !== postId ? p : { ...p, likes: previousLikes }
+            ));
             showModal('error', 'Error', 'Could not update like');
         }
     };
