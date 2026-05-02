@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useContext } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { fetchUserPets } from '../../api/petApi';
 import PetCareModal from '../../components/PetCareModal';
 import usePetCareModal from '../../hooks/usePetCareModal';
+import { AuthContext } from '../../context/AuthContext';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -91,6 +92,7 @@ function PetCard({ pet, index, onPress }) {
 
 export default function MyPetsList() {
   const navigation = useNavigation();
+  const { user } = useContext(AuthContext);
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -150,18 +152,20 @@ export default function MyPetsList() {
                   onPress={() => navigation.navigate('UserProfile')}
                   activeOpacity={0.8}
                 >
-                  <MaterialIcons name="person" size={22} color="#30628a" />
+                  {user?.profileImage ? (
+                    <Image source={{ uri: user.profileImage }} style={styles.profileImage} />
+                  ) : (
+                    <MaterialIcons name="person" size={22} color="#30628a" />
+                  )}
                 </TouchableOpacity>
               </View>
 
               {/* Title Row */}
               <View style={styles.heroTitleRow}>
-                <View>
-                  <Text style={styles.heroTitle}>My Pets</Text>
-                  {totalPets > 0 && (
-                    <Text style={styles.heroPalCount}>{totalPets} pal{totalPets !== 1 ? 's' : ''}</Text>
-                  )}
-                </View>
+                <Text style={styles.heroTitle}>My Pets</Text>
+                {totalPets > 0 && (
+                  <Text style={styles.heroPalCount}>{totalPets} pal{totalPets !== 1 ? 's' : ''}</Text>
+                )}
               </View>
             </View>
 
@@ -334,23 +338,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.6)',
+    overflow: 'hidden',
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 24,
   },
   heroTitleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    alignItems: 'center',
+    width: '100%',
   },
   heroTitle: {
     fontSize: 38,
     fontWeight: '900',
-    color: '#30628a',
+    color: '#1b3d5e',
     lineHeight: 42,
+    textAlign: 'center',
   },
   heroPalCount: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#275b82',
+    color: '#3a6d94',
     marginTop: 4,
+    textAlign: 'center',
   },
 
   // ── Section Label ──
