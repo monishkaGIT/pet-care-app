@@ -53,7 +53,9 @@ export default function PetDetailScreen() {
                 onPress: async () => {
                     try {
                         await deletePet(petId);
-                        navigation.goBack();
+                        showModal('success', 'Success', 'Pet deleted successfully!', [
+                            { text: 'OK', style: 'primary', onPress: () => navigation.goBack() },
+                        ]);
                     } catch {
                         showModal('error', 'Error', 'Failed to delete pet.');
                     }

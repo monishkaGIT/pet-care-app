@@ -71,7 +71,9 @@ export default function AddPetScreen() {
                 age: parseFloat(form.age) || 0,
                 weight: parseFloat(form.weight) || 0,
             });
-            navigation.goBack();
+            showModal('success', 'Success', 'Pet added successfully!', [
+                { text: 'OK', style: 'primary', onPress: () => navigation.goBack() },
+            ]);
         } catch (e) {
             showModal('error', 'Error', 'Failed to save pet profile.');
             console.error(e);

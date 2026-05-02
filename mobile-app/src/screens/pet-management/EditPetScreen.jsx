@@ -92,7 +92,9 @@ export default function EditPetScreen() {
                 age: parseFloat(form.age) || 0,
                 weight: parseFloat(form.weight) || 0,
             });
-            navigation.goBack();
+            showModal('success', 'Success', 'Pet updated successfully!', [
+                { text: 'OK', style: 'primary', onPress: () => navigation.goBack() },
+            ]);
         } catch (e) {
             showModal('error', 'Error', 'Failed to update pet profile.');
         } finally {
