@@ -348,14 +348,16 @@ const styles = StyleSheet.create({
     heroTitle: {
         fontSize: 30,
         fontWeight: '900',
-        color: '#30628a',
+        color: '#1b3d5e',
         marginBottom: 6,
+        textAlign: 'center',
     },
     heroSubtitle: {
         fontSize: 14,
         color: '#275b82',
         lineHeight: 20,
         fontWeight: '500',
+        textAlign: 'center',
     },
 
     // ── Photo Picker ──
