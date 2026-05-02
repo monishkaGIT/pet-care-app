@@ -11,6 +11,7 @@ import {
   RefreshControl,
   Platform,
   StatusBar,
+  Dimensions,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -18,40 +19,75 @@ import { fetchUserPets } from '../../api/petApi';
 import PetCareModal from '../../components/PetCareModal';
 import usePetCareModal from '../../hooks/usePetCareModal';
 
+const { width: SCREEN_W } = Dimensions.get('window');
+
 const PET_COLORS = [
-  { bg: 'rgba(162,210,255,0.35)', icon: '#30628a' },
-  { bg: 'rgba(255,209,179,0.4)', icon: '#79573f' },
-  { bg: 'rgba(255,192,146,0.4)', icon: '#8e4e14' },
-  { bg: 'rgba(162,210,255,0.2)', icon: '#275b82' },
-  { bg: '#faf3e0', icon: '#79573f' },
+  { bg: 'rgba(162,210,255,0.30)', accent: '#30628a', ring: 'rgba(48,98,138,0.18)' },
+  { bg: 'rgba(255,209,179,0.35)', accent: '#79573f', ring: 'rgba(121,87,63,0.18)' },
+  { bg: 'rgba(255,192,146,0.35)', accent: '#8e4e14', ring: 'rgba(142,78,20,0.18)' },
+  { bg: 'rgba(162,210,255,0.20)', accent: '#275b82', ring: 'rgba(39,91,130,0.15)' },
+  { bg: '#faf3e0', accent: '#79573f', ring: 'rgba(121,87,63,0.12)' },
 ];
 
-function PetRow({ pet, index, onPress }) {
+// ─── Pet Card ─────────────────────────────────────────────────────────────────
+
+function PetCard({ pet, index, onPress }) {
   const scheme = PET_COLORS[index % PET_COLORS.length];
+  const vaccinated = pet.isVaccinated;
 
   return (
-    <TouchableOpacity style={styles.petCard} onPress={onPress} activeOpacity={0.85}>
-      {pet.profileImage ? (
-        <Image source={{ uri: pet.profileImage }} style={styles.petAvatar} />
-      ) : (
-        <View style={[styles.petAvatarPlaceholder, { backgroundColor: scheme.bg }]}>
-          <MaterialIcons name="pets" size={28} color={scheme.icon} />
-        </View>
-      )}
-
-      <View style={styles.petInfo}>
-        <Text style={styles.petName}>{pet.name}</Text>
-        <Text style={styles.petBreed}>{pet.breed || pet.type || 'Unknown breed'}</Text>
-        <Text style={styles.petMeta}>
-          {pet.age > 0 ? `${pet.age} yr${pet.age !== 1 ? 's' : ''} old` : 'Age unknown'}
-          {pet.weight > 0 ? ` · ${pet.weight} kg` : ''}
-        </Text>
+    <TouchableOpacity style={styles.petCard} onPress={onPress} activeOpacity={0.88}>
+      {/* Avatar */}
+      <View style={[styles.petAvatarWrap, { borderColor: scheme.ring }]}>
+        {pet.profileImage ? (
+          <Image source={{ uri: pet.profileImage }} style={styles.petAvatar} />
+        ) : (
+          <View style={[styles.petAvatarPlaceholder, { backgroundColor: scheme.bg }]}>
+            <MaterialIcons name="pets" size={26} color={scheme.accent} />
+          </View>
+        )}
+        {vaccinated && (
+          <View style={styles.petBadge}>
+            <MaterialIcons name="verified" size={14} color="#22c55e" />
+          </View>
+        )}
       </View>
 
-      <MaterialIcons name="chevron-right" size={24} color="#72787f" />
+      {/* Info */}
+      <View style={styles.petInfo}>
+        <Text style={styles.petName} numberOfLines={1}>{pet.name}</Text>
+        <Text style={styles.petBreed} numberOfLines={1}>{pet.breed || pet.type || 'Unknown breed'}</Text>
+        <View style={styles.petMetaRow}>
+          {pet.age > 0 && (
+            <View style={styles.metaTag}>
+              <MaterialIcons name="cake" size={12} color="#79573f" />
+              <Text style={styles.metaTagText}>{pet.age} yr{pet.age !== 1 ? 's' : ''}</Text>
+            </View>
+          )}
+          {pet.weight > 0 && (
+            <View style={styles.metaTag}>
+              <MaterialIcons name="fitness-center" size={12} color="#79573f" />
+              <Text style={styles.metaTagText}>{pet.weight} kg</Text>
+            </View>
+          )}
+          {pet.gender && (
+            <View style={styles.metaTag}>
+              <MaterialIcons name={pet.gender === 'Female' ? 'female' : 'male'} size={12} color="#79573f" />
+              <Text style={styles.metaTagText}>{pet.gender}</Text>
+            </View>
+          )}
+        </View>
+      </View>
+
+      {/* Arrow */}
+      <View style={styles.petArrow}>
+        <MaterialIcons name="chevron-right" size={22} color="#b0a898" />
+      </View>
     </TouchableOpacity>
   );
 }
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function MyPetsList() {
   const navigation = useNavigation();
@@ -84,6 +120,9 @@ export default function MyPetsList() {
     loadPets();
   };
 
+  const totalPets = pets.length;
+  const vaccinatedCount = pets.filter(p => p.isVaccinated).length;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <PetCareModal {...modalProps} />
@@ -94,184 +133,507 @@ export default function MyPetsList() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#30628a" />}
         ListHeaderComponent={
           <>
-            <View style={styles.header}>
-              <View style={styles.headerTopRow}>
-                <View>
-                  <Text style={styles.brand}>PetCare</Text>
-                  <Text style={styles.title}>MyPets</Text>
+            {/* ── Hero Header ─────────────────────────────────────── */}
+            <View style={styles.hero}>
+              {/* Decorative circles */}
+              <View style={styles.heroCircle1} />
+              <View style={styles.heroCircle2} />
+
+              {/* Top bar */}
+              <View style={styles.heroTopBar}>
+                <View style={styles.heroLeftCol}>
+                  <Text style={styles.heroBrand}>PetCare</Text>
+                  <Text style={styles.heroGreeting}>Hi there 👋</Text>
                 </View>
-                <TouchableOpacity style={styles.profileBtn} onPress={() => navigation.navigate('UserProfile')} activeOpacity={0.8}>
+                <TouchableOpacity
+                  style={styles.profileBtn}
+                  onPress={() => navigation.navigate('UserProfile')}
+                  activeOpacity={0.8}
+                >
                   <MaterialIcons name="person" size={22} color="#30628a" />
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.subtitle}>Your furry family</Text>
-              <Text style={styles.helperText}>Keep track of your beloved pets' health and activities.</Text>
+              {/* Title Row */}
+              <View style={styles.heroTitleRow}>
+                <View>
+                  <Text style={styles.heroTitle}>My Pets</Text>
+                  {totalPets > 0 && (
+                    <Text style={styles.heroPalCount}>{totalPets} pal{totalPets !== 1 ? 's' : ''}</Text>
+                  )}
+                </View>
+              </View>
             </View>
 
-            <View style={styles.quickInsightRow}>
-              <View style={[styles.insightCard, styles.insightCardWarm]}>
-                <MaterialIcons name="vaccines" size={20} color="#30628a" />
-                <Text style={styles.insightLabel}>Upcoming</Text>
-                <Text style={styles.insightValue}>Vaccination (2d)</Text>
-              </View>
-              <View style={[styles.insightCard, styles.insightCardCool]}>
-                <MaterialIcons name="schedule" size={20} color="#30628a" />
-                <Text style={styles.insightLabel}>Next Walk</Text>
-                <Text style={styles.insightValue}>6:30 PM Today</Text>
-              </View>
+            {/* ── Section Label ────────────────────────────────────── */}
+            <View style={styles.sectionRow}>
+              <Text style={styles.sectionTitle}>Your furry family</Text>
+              {totalPets > 0 && (
+                <Text style={styles.sectionCount}>{totalPets} pet{totalPets !== 1 ? 's' : ''}</Text>
+              )}
             </View>
+
+            {/* ── Quick Stats ──────────────────────────────────────── */}
+            {totalPets > 0 && (
+              <View style={styles.statsRow}>
+                <View style={[styles.statCard, styles.statCardWarm]}>
+                  <View style={styles.statIconWrap}>
+                    <MaterialIcons name="pets" size={20} color="#79573f" />
+                  </View>
+                  <Text style={styles.statNumber}>{totalPets}</Text>
+                  <Text style={styles.statLabel}>Total Pets</Text>
+                </View>
+                <View style={[styles.statCard, styles.statCardCool]}>
+                  <View style={[styles.statIconWrap, { backgroundColor: 'rgba(162,210,255,0.35)' }]}>
+                    <MaterialIcons name="vaccines" size={20} color="#30628a" />
+                  </View>
+                  <Text style={styles.statNumber}>{vaccinatedCount}</Text>
+                  <Text style={styles.statLabel}>Vaccinated</Text>
+                </View>
+                <View style={[styles.statCard, styles.statCardAccent]}>
+                  <View style={[styles.statIconWrap, { backgroundColor: 'rgba(34,197,94,0.15)' }]}>
+                    <MaterialIcons name="favorite" size={20} color="#22c55e" />
+                  </View>
+                  <Text style={styles.statNumber}>{totalPets}</Text>
+                  <Text style={styles.statLabel}>Active</Text>
+                </View>
+              </View>
+            )}
           </>
         }
         ListEmptyComponent={
           loading ? (
             <View style={styles.loadingWrap}>
               <ActivityIndicator size="large" color="#30628a" />
+              <Text style={styles.loadingText}>Loading your pets...</Text>
             </View>
           ) : (
             <View style={styles.emptyState}>
-              <MaterialIcons name="pets" size={64} color="rgba(162,210,255,0.5)" />
+              <View style={styles.emptyIconWrap}>
+                <MaterialIcons name="pets" size={52} color="rgba(162,210,255,0.6)" />
+              </View>
               <Text style={styles.emptyTitle}>No pets yet</Text>
-              <Text style={styles.emptyText}>Add your first pet to start tracking their profile, health, and activities.</Text>
-              <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate('AddPet')} activeOpacity={0.85}>
+              <Text style={styles.emptyText}>
+                Add your first pet to start tracking their profile, health, and activities.
+              </Text>
+              <TouchableOpacity
+                style={styles.emptyAddBtn}
+                onPress={() => navigation.navigate('AddPet')}
+                activeOpacity={0.85}
+              >
                 <MaterialIcons name="add-circle" size={20} color="#ffffff" />
-                <Text style={styles.addBtnText}>Add Your First Pet</Text>
+                <Text style={styles.emptyAddBtnText}>Add Your First Pet</Text>
               </TouchableOpacity>
             </View>
           )
         }
         renderItem={({ item, index }) => (
-          <PetRow pet={item} index={index} onPress={() => navigation.navigate('PetDetail', { petId: item._id })} />
+          <PetCard
+            pet={item}
+            index={index}
+            onPress={() => navigation.navigate('PetDetail', { petId: item._id })}
+          />
         )}
         ListFooterComponent={
-          <View style={styles.footerActions}>
-            <TouchableOpacity style={styles.primaryAction} onPress={() => navigation.navigate('AddPet')} activeOpacity={0.9}>
-              <View>
-                <Text style={styles.primaryActionTitle}>Add a Pet</Text>
-                <Text style={styles.primaryActionSub}>Register a new furry friend to your profile.</Text>
+          totalPets > 0 ? (
+            <TouchableOpacity
+              style={styles.addPetRow}
+              onPress={() => navigation.navigate('AddPet')}
+              activeOpacity={0.88}
+            >
+              <View style={styles.addPetIcon}>
+                <MaterialIcons name="add" size={22} color="#30628a" />
               </View>
-              <MaterialIcons name="arrow-forward" size={18} color="#30628a" />
+              <View style={styles.addPetInfo}>
+                <Text style={styles.addPetTitle}>Add another pet</Text>
+                <Text style={styles.addPetSub}>Register a new furry friend</Text>
+              </View>
+              <MaterialIcons name="arrow-forward-ios" size={14} color="#b0a898" />
             </TouchableOpacity>
-
-          </View>
+          ) : null
         }
-        ListHeaderComponentStyle={styles.listHeader}
         showsVerticalScrollIndicator={false}
       />
 
-      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('AddPet')} activeOpacity={0.85}>
+      {/* ── FAB ────────────────────────────────────────────────── */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate('AddPet')}
+        activeOpacity={0.88}
+      >
         <MaterialIcons name="add" size={28} color="#ffffff" />
       </TouchableOpacity>
     </SafeAreaView>
   );
 }
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#fff9ec' },
-  content: { paddingBottom: 120, paddingHorizontal: 20 },
-  listHeader: { paddingBottom: 8 },
-  header: {
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff9ec',
+  },
+  content: {
+    paddingBottom: 120,
+  },
+
+  // ── Hero ──
+  hero: {
     backgroundColor: '#a2d2ff',
     borderBottomLeftRadius: 36,
     borderBottomRightRadius: 36,
     paddingHorizontal: 24,
-    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 10 : 18,
-    paddingBottom: 24,
-    marginHorizontal: -20,
-    marginBottom: 16,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 40) + 12 : 18,
+    paddingBottom: 36,
+    overflow: 'hidden',
+    position: 'relative',
   },
-  headerTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 },
-  brand: { fontSize: 22, fontWeight: '800', color: '#79573f' },
-  title: { fontSize: 34, fontWeight: '900', color: '#30628a', marginTop: 2 },
+  heroCircle1: {
+    position: 'absolute',
+    top: -30,
+    right: -40,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  heroCircle2: {
+    position: 'absolute',
+    top: 40,
+    right: 30,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
+  heroTopBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  heroLeftCol: {},
+  heroBrand: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#79573f',
+  },
+  heroGreeting: {
+    fontSize: 14,
+    color: '#275b82',
+    fontWeight: '600',
+    marginTop: 2,
+  },
   profileBtn: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: 'rgba(255,255,255,0.45)',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.6)',
   },
-  subtitle: { fontSize: 18, fontWeight: '700', color: '#79573f', marginBottom: 4 },
-  helperText: { fontSize: 13, color: '#41474e', lineHeight: 19 },
-  quickInsightRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
-  insightCard: {
-    flex: 1,
-    minHeight: 120,
-    borderRadius: 18,
-    padding: 16,
+  heroTitleRow: {
+    flexDirection: 'row',
     justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: '#efe8d5',
+    alignItems: 'flex-end',
   },
-  insightCardWarm: { backgroundColor: '#faf3e0' },
-  insightCardCool: { backgroundColor: 'rgba(162,210,255,0.18)' },
-  insightLabel: { fontSize: 11, fontWeight: '700', color: '#41474e', textTransform: 'uppercase', letterSpacing: 1 },
-  insightValue: { fontSize: 15, fontWeight: '700', color: '#79573f', marginTop: 4 },
-  petCard: {
+  heroTitle: {
+    fontSize: 38,
+    fontWeight: '900',
+    color: '#30628a',
+    lineHeight: 42,
+  },
+  heroPalCount: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#275b82',
+    marginTop: 4,
+  },
+
+  // ── Section Label ──
+  sectionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    marginTop: 24,
+    marginBottom: 14,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#79573f',
+  },
+  sectionCount: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#72787f',
+  },
+
+  // ── Stats Row ──
+  statsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  statCard: {
+    flex: 1,
     backgroundColor: '#ffffff',
     borderRadius: 18,
-    padding: 16,
-    flexDirection: 'row',
+    padding: 14,
     alignItems: 'center',
-    gap: 14,
-    marginBottom: 12,
     borderWidth: 1,
     borderColor: '#efe8d5',
     shadowColor: 'rgba(111,78,55,0.04)',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
     shadowRadius: 12,
+    shadowOpacity: 1,
     elevation: 1,
   },
-  petAvatar: { width: 60, height: 60, borderRadius: 30 },
-  petAvatarPlaceholder: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center' },
-  petInfo: { flex: 1 },
-  petName: { fontSize: 17, fontWeight: '800', color: '#79573f' },
-  petBreed: { fontSize: 13, color: '#41474e', marginTop: 2, textTransform: 'capitalize' },
-  petMeta: { fontSize: 12, color: '#72787f', marginTop: 2 },
-  loadingWrap: { paddingVertical: 60 },
+  statCardWarm: { backgroundColor: '#fff9ec' },
+  statCardCool: { backgroundColor: 'rgba(162,210,255,0.08)' },
+  statCardAccent: { backgroundColor: '#ffffff' },
+  statIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#faf3e0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  statNumber: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#1e1c10',
+  },
+  statLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#72787f',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginTop: 2,
+  },
+
+  // ── Pet Card ──
+  petCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#efe8d5',
+    shadowColor: 'rgba(111,78,55,0.06)',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    elevation: 2,
+  },
+  petAvatarWrap: {
+    position: 'relative',
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    borderWidth: 2.5,
+    padding: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  petAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  petAvatarPlaceholder: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  petBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#efe8d5',
+  },
+  petInfo: {
+    flex: 1,
+  },
+  petName: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#1e1c10',
+    marginBottom: 2,
+  },
+  petBreed: {
+    fontSize: 13,
+    color: '#41474e',
+    textTransform: 'capitalize',
+    fontWeight: '500',
+    marginBottom: 6,
+  },
+  petMetaRow: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  metaTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#faf3e0',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  metaTagText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#79573f',
+  },
+  petArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#faf3e0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // ── Loading ──
+  loadingWrap: {
+    paddingVertical: 60,
+    alignItems: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#72787f',
+    fontWeight: '500',
+  },
+
+  // ── Empty State ──
   emptyState: {
     alignItems: 'center',
-    paddingVertical: 32,
-    marginBottom: 10,
+    paddingVertical: 40,
+    paddingHorizontal: 32,
   },
-  emptyTitle: { fontSize: 20, fontWeight: '800', color: '#79573f', marginTop: 10, marginBottom: 8 },
-  emptyText: { fontSize: 14, color: '#41474e', textAlign: 'center', lineHeight: 20, paddingHorizontal: 20, marginBottom: 18 },
-  addBtn: {
+  emptyIconWrap: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(162,210,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: 'rgba(162,210,255,0.25)',
+  },
+  emptyTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#79573f',
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#41474e',
+    textAlign: 'center',
+    lineHeight: 21,
+    marginBottom: 24,
+    fontWeight: '500',
+  },
+  emptyAddBtn: {
     backgroundColor: '#30628a',
-    paddingVertical: 14,
-    paddingHorizontal: 22,
+    paddingVertical: 15,
+    paddingHorizontal: 28,
     borderRadius: 28,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    shadowColor: '#30628a',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 5,
   },
-  addBtnText: { color: '#ffffff', fontWeight: '700', fontSize: 15 },
-  footerActions: { marginTop: 8, gap: 12 },
-  primaryAction: {
-    backgroundColor: '#faf3e0',
-    borderRadius: 18,
-    padding: 18,
+  emptyAddBtnText: {
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: 15,
+  },
+
+  // ── Add Pet Row (Footer) ──
+  addPetRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 14,
+    marginHorizontal: 20,
+    marginTop: 4,
+    backgroundColor: '#faf3e0',
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#efe8d5',
+    borderStyle: 'dashed',
   },
-  primaryActionTitle: { fontSize: 16, fontWeight: '800', color: '#79573f' },
-  primaryActionSub: { fontSize: 13, color: '#41474e', marginTop: 4, maxWidth: 250 },
+  addPetIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(162,210,255,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addPetInfo: {
+    flex: 1,
+  },
+  addPetTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#30628a',
+  },
+  addPetSub: {
+    fontSize: 12,
+    color: '#72787f',
+    marginTop: 2,
+    fontWeight: '500',
+  },
+
+  // ── FAB ──
   fab: {
     position: 'absolute',
     bottom: 96,
     right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#D4A017',
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: '#30628a',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#D4A017',
-    shadowOffset: { width: 0, height: 6 },
+    shadowColor: '#30628a',
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 8,
+    shadowRadius: 14,
+    elevation: 10,
+    borderWidth: 3,
+    borderColor: 'rgba(162,210,255,0.4)',
   },
 });
