@@ -9,6 +9,7 @@ import { COLORS, SHADOWS } from '../../constants/theme';
 import { fetchServices } from '../../api/serviceApi';
 import { fetchBookings } from '../../api/bookingApi';
 import { NotificationsContext } from '../../context/NotificationsContext';
+import { AuthContext } from '../../context/AuthContext';
 
 // Map category names to MaterialCommunityIcons
 const CATEGORY_ICONS = {
@@ -33,6 +34,7 @@ const DEFAULT_CATEGORY_COLOR = { color: '#a2d2ff', bgColor: '#eaf4ff' };
 export default function ServicesScreen() {
     const navigation = useNavigation();
     const { unread } = useContext(NotificationsContext);
+    const { user } = useContext(AuthContext);
     const [services, setServices] = useState([]);
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -100,8 +102,12 @@ export default function ServicesScreen() {
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.headerTopRow}>
-                        <TouchableOpacity onPress={() => navigation.navigate('UserProfile')}>
-                        <Ionicons name="person-circle-outline" size={36} color="#fff" />
+                        <TouchableOpacity style={styles.profileBtn} onPress={() => navigation.navigate('UserProfile')}>
+                        {user?.profileImage ? (
+                            <Image source={{ uri: user.profileImage }} style={styles.profileImage} />
+                        ) : (
+                            <Ionicons name="person-circle-outline" size={36} color="#fff" />
+                        )}
                     </TouchableOpacity>
                     <View style={{ flex: 1, alignItems: 'center' }}>
                         <Text style={styles.headerBrand}>PetCare</Text>
@@ -246,6 +252,21 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+    },
+    profileBtn: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        overflow: 'hidden',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 2,
+        borderColor: 'rgba(255,255,255,0.5)',
+    },
+    profileImage: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 20,
     },
     headerBrand: {
         fontSize: 14,
