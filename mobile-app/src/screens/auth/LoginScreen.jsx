@@ -98,21 +98,7 @@ export default function LoginScreen({ navigation }) {
                                 )}
                             </TouchableOpacity>
 
-                            <View style={styles.dividerContainer}>
-                                <View style={styles.dividerLine} />
-                                <Text style={styles.dividerText}>OR CONTINUE WITH</Text>
-                            </View>
 
-                            <View style={styles.socialContainer}>
-                                <TouchableOpacity style={styles.socialBtn}>
-                                    <FontAwesome5 name="google" size={16} color="#383833" />
-                                    <Text style={styles.socialBtnText}>GOOGLE</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={styles.socialBtn}>
-                                    <FontAwesome5 name="apple" size={18} color="#383833" />
-                                    <Text style={styles.socialBtnText}>APPLE</Text>
-                                </TouchableOpacity>
-                            </View>
                         </View>
 
                         <View style={styles.bottomAction}>
