@@ -197,7 +197,7 @@ export default function HomeScreen() {
                                 <View style={styles.bentoTitleRow}>
                                     <Text style={styles.bentoTitleTertiary}>Ask Pawly</Text>
                                     <View style={styles.askPawlyIconBadge}>
-                                        <MaterialIcons name="smart-toy" size={16} color="#1f5f91" />
+                                        <MaterialIcons name="auto-awesome" size={16} color="#1f5f91" />
                                     </View>
                                 </View>
                                 <Text style={styles.bentoSubTertiary}>Get instant help on food, vaccines, training, and everyday pet care.</Text>
@@ -244,7 +244,7 @@ export default function HomeScreen() {
                         activeOpacity={0.85}
                         onPress={() => navigation.navigate('AskPawly')}
                     >
-                        <MaterialIcons name="smart-toy" size={28} color="#ffffff" />
+                        <MaterialIcons name="auto-awesome" size={26} color="#ffffff" />
                     </TouchableOpacity>
                 </View>
             )}
@@ -365,16 +365,18 @@ const styles = StyleSheet.create({
         shadowColor: '#D4A017', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 10, elevation: 8,
     },
     fabChat: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
+        width: 48,
+        height: 48,
+        borderRadius: 24,
         backgroundColor: '#1f5f91',
         alignItems: 'center',
         justifyContent: 'center',
         shadowColor: '#1f5f91',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.28,
-        shadowRadius: 8,
+        shadowOpacity: 0.32,
+        shadowRadius: 10,
         elevation: 6,
+        borderWidth: 2.5,
+        borderColor: 'rgba(162,210,255,0.5)',
     },
 });
