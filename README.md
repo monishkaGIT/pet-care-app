@@ -1,437 +1,342 @@
-# PetCare - Pet Management System
+<div align="center">
 
-A MERN stack (MongoDB, Express, React Native, Node.js) mobile application for pet management.
+# 🐾 PetBuddy — Smart Pet Care Management System
 
-## Project Structure
+[![React Native](https://img.shields.io/badge/React_Native-0.81.5-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://reactnative.dev/)
+[![Expo](https://img.shields.io/badge/Expo-54-000020?style=for-the-badge&logo=expo&logoColor=white)](https://expo.dev/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-5.x-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 
-```
-pet-management-system/
-├── backend/                   # Node.js + Express API
-│   ├── config/                # Database configuration
-│   ├── controllers/           # Route handlers
-│   ├── middleware/             # Auth & error middleware
-│   ├── models/                # Mongoose schemas
-│   ├── routes/                # API route definitions
-│   ├── scripts/               # Utility scripts (seedAdmin.js)
-│   └── server.js              # Entry point
-│
-└── mobile-app/                # React Native (Expo) app
-    ├── src/                   # Application source code
-    │   ├── api/               # Axios API client
-    │   ├── components/        # Reusable UI components
-    │   ├── constants/         # Theme colors & shared styles
-    │   ├── context/           # Auth context provider
-    │   ├── navigation/        # Stack & Tab navigators
-    │   └── screens/           # App screens (auth, main, user, admin)
-    ├── assets/                # Images, icons, splash
-    ├── App.jsx                # Root component
-    └── index.jsx              # Expo entry point
-```
+A full-stack **MERN** (MongoDB, Express, React Native, Node.js) mobile application designed to simplify and enhance pet care management. PetBuddy empowers pet owners to manage pet profiles, track health records, book veterinary services, engage with a pet-loving community, and get AI-powered advice — all in one place.
 
-## Getting Started
-
-### Prerequisites
-- Node.js (v18+)
-- MongoDB Atlas account (or local MongoDB)
-- Expo Go app on your mobile device
-
-### Backend Setup
-```bash
-cd backend
-npm install
-npm start          # Production
-npm run dev        # Development (with nodemon)
-```
-
-### Mobile App Setup
-```bash
-cd mobile-app
-npm install
-npm start
-```
-Scan the QR code with Expo Go. **Both your phone and laptop must be on the same Wi-Fi network.**
-
-### Seed Admin Account
-```bash
-cd backend
-node scripts/seedAdmin.js
-# Login: admin@petcare.com / Password: admin123
-```
-
-## Authentication
-The app uses a simple session-based authentication via `x-user-id` header. User data is stored in `AsyncStorage` on the device and sent with every API request.
-
-## API Endpoints
-
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| POST | `/api/users/register` | Public | Register new user |
-| POST | `/api/users/login` | Public | Login |
-| GET | `/api/users/profile` | Protected | Get profile |
-| PUT | `/api/users/profile` | Protected | Update profile |
-| PUT | `/api/users/password` | Protected | Change password |
-| DELETE | `/api/users/me` | Protected | Delete own account |
-| GET | `/api/users/` | Admin | List all users |
-| POST | `/api/users/` | Admin | Create user |
-| PUT | `/api/users/:id` | Admin | Update user |
-| DELETE | `/api/users/:id` | Admin | Delete user |
-
-
-# PetCare — Pet Management Mobile App
-
-## Stitch AI Prompt
-
-> **Build a complete, production-ready React Native (Expo) mobile application for pet management called "PetCare".** The app uses a MERN stack backend (MongoDB, Express, Node.js) already built and connected. Generate all UI screens described below with full navigation, role-based authentication, and the exact design system specified. Every screen must be fully functional with API integration, form validation, loading states, and error handling.
+</div>
 
 ---
 
-## 🎨 Design System & Theme
+## 👥 Group Members — DS 1.1 | Group 10
 
-Use this **exact color palette and design language** across the entire app:
+<div align="center">
 
-| Token | Hex | Usage |
-|-------|-----|-------|
-| `primary` | `#A2D2FF` | Soft Blue — headers, buttons, active tab, input borders |
-| `secondary` | `#6F4E37` | Warm Brown — text on buttons, titles, icons |
-| `background` | `#FAF3E0` | Cream — main screen backgrounds |
-| `surface` | `#FFFFFF` | White — cards, modals, form containers |
-| `lightGray` | `#F3F4F6` | Light gray — alternate screen backgrounds |
-| `inputBg` | `#F9FAFB` | Input field background |
-| `inputBorder` | `#E5E7EB` | Default input border |
-| `danger` | `#EF4444` | Red — delete, logout, destructive actions |
-| `success` | `#10B981` | Green — success states |
-| `admin` | `#8B5CF6` | Purple — admin accent (card left border) |
-| `adminLight` | `#DBEAFE` | Light blue — admin badges |
-| `adminText` | `#1D4ED8` | Dark blue — admin badge text |
-| `textPrimary` | `#1F2937` | Dark — primary body text |
-| `textSecondary` | `#4B5563` | Medium gray — secondary text |
-| `textMuted` | `#6B7280` | Muted text, placeholders |
-| `disabledBg` | `#E5E7EB` | Disabled input background |
-| `disabledText` | `#9CA3AF` | Disabled text |
+| # | Name | Student ID | GitHub Profile |
+|:-:|:-----|:----------:|:--------------:|
+| 01 | Disanayaka S.K | `IT24102217` | [![GitHub](https://img.shields.io/badge/-Komal--Disanayaka-181717?style=flat-square&logo=github)](https://github.com/Komal-Disanayaka) |
+| 02 | Kommalage S.G | `IT24100641` | [![GitHub](https://img.shields.io/badge/-savinikommalage-181717?style=flat-square&logo=github)](https://github.com/savinikommalage) |
+| 03 | Jayathunga N.P | `IT24102981` | [![GitHub](https://img.shields.io/badge/-Nehara--Jay-181717?style=flat-square&logo=github)](https://github.com/Nehara-Jay) |
+| 04 | Gamlath G.M.W.S | `IT24102959` | [![GitHub](https://img.shields.io/badge/-wathsalagamlath-181717?style=flat-square&logo=github)](https://github.com/wathsalagamlath) |
+| 05 | Athukorala M.B | `IT24101937` | [![GitHub](https://img.shields.io/badge/-monishkaGIT-181717?style=flat-square&logo=github)](https://github.com/monishkaGIT) |
+| 06 | Jayarathna W.A.S.H.S | `IT24102968` | [![GitHub](https://img.shields.io/badge/-shyamaljayarathne-181717?style=flat-square&logo=github)](https://github.com/shyamaljayarathne) |
 
-### Design Rules
-- **Typography:** Bold titles (24–32px) in `secondary` brown. Body text in `textPrimary` or `textSecondary`.
-- **Cards:** White (`surface`) with `borderRadius: 12`, `elevation: 4` shadow.
-- **Buttons (Primary):** `primary` blue background, `secondary` brown bold text, `borderRadius: 8–10`, subtle blue shadow.
-- **Buttons (Secondary/Outline):** White background, `secondary` brown border (2px), brown text.
-- **Buttons (Destructive):** Red `danger` background or white with red border.
-- **Inputs:** `inputBg` background, 1px `primary` blue border, `borderRadius: 8`, 12px padding.
-- **Headers:** `primary` blue background with `borderBottomLeftRadius: 30` and `borderBottomRightRadius: 30`, brown shadow underneath.
-- **Icons:** Use Ionicons throughout. Icon color matches `secondary` brown (active) or `primary` blue (inactive).
+</div>
 
 ---
 
-## 📱 Navigation Architecture
+## 🚀 Deployment Details
 
-### Three Conditional Stacks (role-based routing)
+| Resource | Link |
+|:---------|:-----|
+| 🌐 **Backend API** | [https://pet-care-app-6a8l.onrender.com](https://pet-care-app-6a8l.onrender.com) |
+| 📱 **APK Download** | [Download .APK File](https://mysliit-my.sharepoint.com/:f:/g/personal/it24102217_my_sliit_lk/IgARgdctwW4dRpRlHDVzkrKhAcRrZ1DlS2g9BRcJDbXUtBA?e=u8uWJX) |
 
-```
-if (user === null)       → Auth Stack
-if (user.role === 'admin') → Admin Stack
-if (user.role === 'user')  → User Stack (contains Bottom Tabs)
-```
-
-### Auth Stack (unauthenticated)
-```
-Splash → Landing → Login
-                  → Register
-```
-
-### User Stack (authenticated, role = "user")
-```
-MainTabs (Bottom Tab Navigator)
-  ├── MyPets (Home)        — icon: home/home-outline
-  ├── Services             — icon: paw/paw-outline
-  ├── Social               — icon: people/people-outline
-  ├── PetHealth            — icon: medkit/medkit-outline
-  └── Feedback             — icon: chatbubble-ellipses/chatbubble-ellipses-outline
-
-Stack screens above tabs:
-  ├── Profile
-  └── ChangePassword
-```
-
-**Bottom Tab Bar Style:**
-- Background: `background` cream
-- Active tint: `secondary` brown
-- Inactive tint: `primary` blue
-- Height: 95px, paddingBottom: 40, paddingTop: 5
-- No top border, elevation: 10
-- Label: 11px, bold
-
-### Admin Stack (authenticated, role = "admin")
-```
-AdminDashboard → UserList → EditUser
-               → CreateUser
-```
-All admin screens show a header bar with `primary` blue background and `secondary` brown text.
+> **Note:** The backend is hosted on Render's free tier. The first request after inactivity may take ~30 seconds to spin up.
 
 ---
 
-## 📄 All Screens — Detailed Specifications
+## ✨ Key Features
 
-### 1. Splash Screen
-- Full screen, `background` cream color
-- Centered app logo (150×150px)
-- Auto-navigates to Landing after 2 seconds
-- No buttons, no text — just the logo with a fade-in animation
+### 👤 User Management & Authentication
+- Email & password registration with OTP verification
+- Secure JWT-based login/logout
+- Profile management with image upload (Cloudinary)
+- Role-based access control (User / Admin)
 
-### 2. Landing Screen
-- Background: `background` cream
-- Center content vertically:
-  - App logo (150×150px, `resizeMode: contain`)
-  - Title: **"Welcome to PetCare!"** — 32px bold, `secondary` brown
-  - Subtitle: **"The ultimate pet management system."** — 18px, gray (#888)
-- Bottom footer with two buttons (full width):
-  - **"Get Started"** — Primary button → navigates to Register
-  - **"I already have an account"** — Outline/secondary button → navigates to Login
+### 🐶 Pet Management
+- Add, edit, and delete pet profiles
+- Track pet details (name, breed, age, weight, etc.)
+- Upload pet profile photos
 
-### 3. Login Screen
-- Background: `background` cream
-- Centered white card (surface, borderRadius: 12, elevation: 4, padding: 24):
-  - Title: **"Welcome Back!"** — 24px bold, centered, `secondary` brown
-  - Email input (email-address keyboard, no auto-capitalize)
-  - Password input (secureTextEntry)
-  - **"Login"** primary button (shows ActivityIndicator while loading)
-  - Link text below: **"Don't have an account? Register"** → navigates to Register
-- **Validation:** Alert if any field is empty
-- **Error handling:** Show API error message in Alert on failure
+### 🏥 Health Records & Tracking
+- Create and manage detailed health records per pet
+- Log vaccinations with date tracking
+- Weight log history with progress monitoring
 
-### 4. Register Screen
-- Background: `background` cream, ScrollView
-- White card container:
-  - Title: **"Create Account"** — 24px bold, centered, `secondary` brown
-  - **Profile image picker** — circular (100×100px), gray placeholder with "+ Add Photo" text, tap to open image library (cropped to 1:1, base64)
-  - Input fields: Full Name, Email, Password, Phone Number, Address
-  - **Role selector** — two side-by-side toggle buttons ("User" | "Admin"), active one gets `primary` blue background
-  - **"Register"** primary button (shows ActivityIndicator while loading)
-  - Link: **"Already have an account? Login"** → navigates to Login
-- **Validation:** Alert if any required field is empty
-- Auto-login after successful registration
+### 📅 Service Booking
+- Browse available pet care services
+- Book appointments with date/time selection
+- View and manage upcoming bookings
+- Admin: Create, update, and manage service listings
 
-### 5. Home Screen (MyPets tab)
-- Background: `lightGray`
-- **Curved header:** `primary` blue background, rounded bottom corners (30px radius), brown shadow
-  - **Profile icon button** — top-left, circular white button (44×44px) with brown border, person icon (Ionicons), navigates to Profile screen
-  - Title: **"My Pets"** — 28px bold, `secondary` brown, centered
-  - Subtitle: **"Welcome back to PetCare!"** — 16px, `secondary` brown
-- **Content area:** Center — Beagle mascot Lottie animation (empty state)
-- *Future feature: list of user's pets with cards showing pet name, breed, age, photo*
+### 💬 Social Community
+- Create posts with text and images
+- Like, comment, and interact with other pet owners
+- Community feed for pet-related discussions
 
-### 6. Services Screen (Services tab)
-- Background: `lightGray`
-- **Curved header** (same style as Home):
-  - Title: **"Pet Services"** — 28px bold, `secondary` brown
-  - Subtitle: **"Discover grooming, walking, and boarding."**
-- **Content:** Empty state with Beagle mascot Lottie animation
-- *Future feature: service category cards (Grooming, Walking, Boarding, Veterinary, Training) with icons, descriptions, and booking buttons*
+### 🤖 AI-Powered Pet Assistant (Ask Pawly)
+- Get instant AI-generated advice on pet care
+- Powered by OpenAI via OpenRouter API
 
-### 7. Social Screen (Social tab)
-- Background: `background` cream
-- **Curved header** (same style):
-  - Title: **"Community Feed"** — 28px bold, `secondary` brown
-  - Subtitle: **"See what other pets are doing near you!"**
-- **Content:** Empty state with Beagle mascot Lottie animation
-- *Future feature: social media-style feed with pet photos, like/comment functionality*
+### 🔔 Notifications
+- In-app notification system for updates and reminders
 
-### 8. Pet Health Screen (PetHealth tab)
-- Background: `background` cream
-- Has header bar: title "Pet Health", `primary` blue bg, `secondary` brown text, centered
-- **Content:** Centered vertically:
-  - Medkit icon (Ionicons `medkit-outline`, size 64, `primary` blue)
-  - Text: **"No Data Available Yet"** — 18px bold, `secondary` brown
-- *Future feature: health records, vaccination tracker, vet appointment scheduler*
-
-### 9. Feedback Screen (Feedback tab)
-- Has header bar: title "Feedback", `primary` blue bg, `secondary` brown text, centered
-- Placeholder/empty state screen
-- *Future feature: feedback form with rating stars, text area, submit button*
-
-### 10. Profile Screen
-- Stack screen with header: "My Profile", `primary` blue bg, `secondary` brown tint, centered
-- Background: `background` cream, ScrollView, centered content
-- White card:
-  - **Profile image picker** — same as Register (circular 100×100, tap to change)
-  - **Email** — labeled "Email Address (Cannot be changed)", disabled input (gray background)
-  - **Full Name** — editable input with label
-  - **Phone Number** — editable, phone-pad keyboard
-  - **Address** — editable input
-  - **"Save Changes"** — primary button (ActivityIndicator while loading)
-  - **"Logout"** — white button with red danger border, red text → logs user out
-  - **"Delete Account"** — white button with red danger border, red text → confirmation Alert → permanently deletes account and logs out
-
-### 11. Change Password Screen
-- Stack screen with header: "Change Password", `primary` blue bg, `secondary` brown tint
-- White card with:
-  - Current Password input
-  - New Password input
-  - Confirm New Password input
-  - **"Update Password"** primary button
-- Validation: all fields required, new passwords must match
-
-### 12. Admin Dashboard Screen
-- Header bar: "Admin Home", `primary` blue bg, `secondary` brown tint
-- Background: `background` cream
-- Welcome section: **"Admin Panel"** (32px bold), subtitle "Welcome back, {username}"
-- Two action cards (white, borderRadius: 12, elevation: 2, **purple left border 4px**):
-  - **"Manage Users"** — "View, edit, or delete registered user accounts" → navigates to UserList
-  - **"Create New User"** — "Manually register a user or assign admin privileges" → navigates to CreateUser
-- **"Logout"** — red danger button at bottom
-
-### 13. User List Screen (Admin)
-- Header: "Manage Users", `primary` blue bg, `secondary` brown tint
-- List/FlatList of all registered users
-- Each user card shows: name, email, role badge
-- Tap a user → navigate to EditUser with user data
-- Swipe-to-delete or delete icon per row with confirmation
-
-### 14. Create User Screen (Admin)
-- Header: "Create User", `primary` blue bg, `secondary` brown tint
-- Form with: Full Name, Email, Password, Phone, Address
-- Role selector toggle (User | Admin)
-- **"Create User"** primary button
-- Validation and error handling
-
-### 15. Edit User Screen (Admin)
-- Header: "Edit User", `primary` blue bg, `secondary` brown tint
-- Pre-populated form with existing user data: Name, Email (disabled), Phone, Address
-- Role selector toggle (User | Admin)
-- **"Save Changes"** primary button
-- **"Delete User"** destructive button with confirmation Alert
-
----
-
-## 🔌 Backend API (Already Built)
-
-Base URL: `http://<server-ip>:5000/api/users`
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `POST` | `/register` | Public | Register new user (name, email, password, phone, address, profileImage, role) |
-| `POST` | `/login` | Public | Login with email + password → returns user object |
-| `GET` | `/profile` | Protected | Get current user's profile |
-| `PUT` | `/profile` | Protected | Update profile (name, phone, address, profileImage) |
-| `PUT` | `/password` | Protected | Change password (currentPassword, newPassword) |
-| `DELETE` | `/me` | Protected | Delete own account |
-| `GET` | `/` | Admin | List all users |
-| `POST` | `/` | Admin | Admin create a new user |
-| `PUT` | `/:id` | Admin | Admin update a user |
-| `DELETE` | `/:id` | Admin | Admin delete a user |
-
-**Authentication:** Uses `x-user-id` header. After login, store user data in AsyncStorage and attach user ID to every API request via Axios interceptor.
-
----
-
-## 🗄️ Data Model — User Schema
-
-```javascript
-{
-  name:         String (required),
-  email:        String (required, unique),
-  password:     String (required, hashed with bcrypt),
-  role:         String (enum: ["user", "admin"], default: "user"),
-  phone:        String (optional),
-  address:      String (optional),
-  profileImage: String (optional, base64 data URI),
-  createdAt:    Date (auto),
-  updatedAt:    Date (auto)
-}
-```
+### 📝 Feedback System
+- Submit feedback and ratings for booked services
+- Admin: View and manage user feedback
 
 ---
 
 ## 🛠️ Tech Stack
 
+<div align="center">
+
 | Layer | Technology |
-|-------|-----------|
-| Frontend | React Native (Expo SDK) |
-| Navigation | React Navigation (Native Stack + Bottom Tabs) |
-| State Management | React Context API (AuthContext) |
-| HTTP Client | Axios with interceptor for `x-user-id` header |
-| Icons | `@expo/vector-icons` (Ionicons) |
-| Image Picker | `expo-image-picker` (base64) |
-| Animations | Lottie (`lottie-react-native`) — Beagle mascot |
-| Storage | AsyncStorage |
-| Backend | Node.js + Express.js |
-| Database | MongoDB (Mongoose ODM) |
-| Auth | bcrypt (password hashing) |
+|:------|:-----------|
+| **Frontend** | React Native 0.81.5 with Expo SDK 54 |
+| **Navigation** | React Navigation 7 (Stack + Bottom Tabs) |
+| **State Management** | React Context API |
+| **Backend** | Node.js + Express 5 |
+| **Database** | MongoDB Atlas (Mongoose ODM) |
+| **Authentication** | JWT + bcrypt |
+| **File Storage** | Cloudinary |
+| **AI Integration** | OpenAI (via OpenRouter) |
+| **Email Service** | Nodemailer |
+| **HTTP Client** | Axios |
+| **Animations** | Lottie React Native |
+
+</div>
 
 ---
 
-## 📂 Project Structure
+## 📁 Project Structure
 
 ```
 pet-care-app/
-├── backend/
-│   ├── config/db.js              # MongoDB connection
-│   ├── controllers/authController.js  # All auth & user CRUD logic
-│   ├── middleware/                # Auth & error middleware
-│   ├── models/User.js            # Mongoose User schema
-│   ├── routes/authRoutes.js      # API route definitions
-│   ├── scripts/seedAdmin.js      # Seed default admin account
-│   └── server.js                 # Express entry point (port 5000)
+├── backend/                        # Node.js + Express REST API
+│   ├── config/                     # Database configuration (MongoDB)
+│   ├── controllers/                # Route handler logic
+│   │   ├── askPawlyController.js   # AI chatbot logic
+│   │   ├── authController.js       # Authentication & user management
+│   │   ├── bookingController.js    # Booking operations
+│   │   ├── feedbackController.js   # Feedback/review handling
+│   │   ├── healthRecordController.js # Pet health records
+│   │   ├── notificationController.js # Notification management
+│   │   ├── petController.js        # Pet CRUD operations
+│   │   ├── postController.js       # Social post operations
+│   │   ├── serviceController.js    # Service management
+│   │   ├── vaccinationController.js # Vaccination tracking
+│   │   └── weightLogController.js  # Weight tracking
+│   ├── middleware/                  # Auth & error middleware
+│   ├── models/                     # Mongoose schemas
+│   │   ├── Booking.js
+│   │   ├── Feedback.js
+│   │   ├── HealthRecord.js
+│   │   ├── Notification.js
+│   │   ├── OTP.js
+│   │   ├── Pet.js
+│   │   ├── Post.js
+│   │   ├── Service.js
+│   │   ├── User.js
+│   │   ├── Vaccination.js
+│   │   └── WeightLog.js
+│   ├── routes/                     # API route definitions
+│   ├── scripts/                    # Utility scripts (seed admin, etc.)
+│   ├── utils/                      # Helper utilities
+│   └── server.js                   # Application entry point
 │
-└── mobile-app/
-    ├── App.jsx                   # Root component (AuthProvider wrapper)
+└── mobile-app/                     # React Native (Expo) Mobile App
     ├── src/
-    │   ├── api/axiosConfig.js    # Axios instance + x-user-id interceptor
-    │   ├── components/
-    │   │   └── BeagleLottie.jsx  # Lottie animation component
-    │   ├── constants/theme.js    # COLORS & SHADOWS design tokens
-    │   ├── context/AuthContext.js # Auth state, login, register, logout
-    │   ├── navigation/
-    │   │   ├── AppNavigator.jsx  # Root navigator (role-based stacks)
-    │   │   └── MainTabNavigator.jsx # Bottom tab navigator (5 tabs)
-    │   └── screens/
-    │       ├── auth/             # SplashScreen, LandingScreen, LoginScreen, RegisterScreen
-    │       ├── main/             # HomeScreen, ServicesScreen, SocialScreen, PetHealthScreen
-    │       ├── user/             # ProfileScreen, ChangePasswordScreen, FeedbackScreen
-    │       └── admin/            # AdminDashboardScreen, UserListScreen, CreateUserScreen, EditUserScreen
-    └── assets/                   # logo.png, Lottie JSON files
+    │   ├── api/                    # Axios API client configuration
+    │   ├── components/             # Reusable UI components
+    │   ├── constants/              # Theme colors & shared styles
+    │   ├── context/                # Auth context provider
+    │   ├── hooks/                  # Custom React hooks
+    │   ├── navigation/             # Stack & Tab navigators
+    │   ├── screens/                # Feature-organized screens
+    │   │   ├── AI-ChatBot/         # Ask Pawly AI assistant
+    │   │   ├── admin/              # Admin dashboard & management
+    │   │   ├── auth/               # Login, Register, OTP screens
+    │   │   ├── feedback/           # Feedback & review screens
+    │   │   ├── health/             # Health records & tracking
+    │   │   ├── notifications/      # Notification center
+    │   │   ├── pet-management/     # Pet profile CRUD screens
+    │   │   ├── service-booking/    # Service browsing & booking
+    │   │   ├── social/             # Community feed & posts
+    │   │   └── user/               # User profile & settings
+    │   └── utils/                  # Utility functions
+    ├── assets/                     # Images, icons, splash screen
+    ├── App.jsx                     # Root component
+    └── index.jsx                   # Expo entry point
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🔌 API Endpoints
+
+### Authentication & Users
+| Method | Endpoint | Description |
+|:-------|:---------|:------------|
+| `POST` | `/api/users/register` | Register a new user |
+| `POST` | `/api/users/login` | User login |
+| `POST` | `/api/users/verify-otp` | Verify OTP |
+| `GET` | `/api/users/profile` | Get user profile |
+| `PUT` | `/api/users/profile` | Update profile |
+
+### Pets
+| Method | Endpoint | Description |
+|:-------|:---------|:------------|
+| `GET` | `/api/pets` | Get all pets for user |
+| `POST` | `/api/pets` | Add a new pet |
+| `PUT` | `/api/pets/:id` | Update pet details |
+| `DELETE` | `/api/pets/:id` | Delete a pet |
+
+### Health Records
+| Method | Endpoint | Description |
+|:-------|:---------|:------------|
+| `GET` | `/api/pets/:petId/health` | Get health records |
+| `POST` | `/api/pets/:petId/health` | Add health record |
+| `PUT` | `/api/pets/:petId/health/:id` | Update record |
+| `DELETE` | `/api/pets/:petId/health/:id` | Delete record |
+
+### Services & Bookings
+| Method | Endpoint | Description |
+|:-------|:---------|:------------|
+| `GET` | `/api/services` | List all services |
+| `POST` | `/api/services` | Create a service (Admin) |
+| `POST` | `/api/bookings` | Book a service |
+| `GET` | `/api/bookings` | Get user bookings |
+
+### Social / Posts
+| Method | Endpoint | Description |
+|:-------|:---------|:------------|
+| `GET` | `/api/posts` | Get community posts |
+| `POST` | `/api/posts` | Create a new post |
+| `PUT` | `/api/posts/:id/like` | Like/unlike a post |
+| `POST` | `/api/posts/:id/comment` | Comment on a post |
+
+### AI Assistant
+| Method | Endpoint | Description |
+|:-------|:---------|:------------|
+| `POST` | `/api/ask-pawly` | Ask Pawly AI a question |
+
+### Notifications & Feedback
+| Method | Endpoint | Description |
+|:-------|:---------|:------------|
+| `GET` | `/api/notifications` | Get user notifications |
+| `POST` | `/api/feedbacks` | Submit feedback |
+| `GET` | `/api/feedbacks` | Get all feedback |
+
+---
+
+## ⚙️ Getting Started
 
 ### Prerequisites
-- Node.js v18+
-- MongoDB Atlas or local MongoDB
-- Expo Go app on your phone
 
-### Backend
+- **Node.js** v18 or higher
+- **npm** or **yarn**
+- **MongoDB Atlas** account (or local MongoDB instance)
+- **Expo Go** app on your mobile device (for development)
+- **Cloudinary** account (for image uploads)
+
+### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/Pet-Care-Labs/pet-care-app.git
+cd pet-care-app
+```
+
+### 2️⃣ Backend Setup
+
 ```bash
 cd backend
 npm install
-npm run dev        # Starts with nodemon on port 5000
 ```
 
-### Seed Admin
+Create a `.env` file in the `backend/` directory:
+
+```env
+PORT=5000
+NODE_ENV=development
+MONGODB_URI=your_mongodb_atlas_connection_string
+JWT_SECRET=your_jwt_secret_key
+
+# Cloudinary Configuration
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# Email Service (Nodemailer)
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_app_password
+
+# AI Integration (OpenRouter)
+OPENROUTER_API_KEY=your_openrouter_api_key
+```
+
+Start the backend server:
+
 ```bash
-cd backend
-node scripts/seedAdmin.js
-# Default admin: admin@petcare.com / admin123
+# Development (with auto-reload)
+npm run dev
+
+# Production
+npm start
 ```
 
-### Mobile App
+### 3️⃣ Mobile App Setup
+
 ```bash
 cd mobile-app
 npm install
-npm start          # Opens Expo dev tools
 ```
-Scan QR code with Expo Go. **Phone and laptop must be on the same Wi-Fi network.**
+
+Update the API base URL in `src/api/` to point to your backend:
+- **Local development:** `http://<your-ip>:5000/api`
+- **Production:** `https://pet-care-app-6a8l.onrender.com/api`
+
+Start the Expo development server:
+
+```bash
+npx expo start
+```
+
+Scan the QR code with **Expo Go** (Android) or the **Camera app** (iOS) to launch the app.
+
+### 4️⃣ Seed Admin User (Optional)
+
+```bash
+cd backend
+node scripts/seedAdmin.js
+```
 
 ---
 
-## 📋 Feature Roadmap (Planned)
+## 📱 Building the APK
 
-- [ ] Pet profiles (CRUD) with photo, breed, age, weight
-- [ ] Pet health records & vaccination tracking
-- [ ] Vet appointment scheduling & reminders
-- [ ] Service booking (grooming, walking, boarding, training)
-- [ ] Social feed — pet photos, likes, comments
-- [ ] Push notifications for reminders
-- [ ] Feedback & rating system
-- [ ] Chat/messaging between pet owners
-- [ ] Lost & found pets feature
-- [ ] Pet adoption marketplace
+To generate a standalone Android APK:
+
+```bash
+cd mobile-app
+npx expo prebuild --platform android
+cd android
+./gradlew assembleRelease
+```
+
+The APK will be available at:
+```
+mobile-app/android/app/build/outputs/apk/release/app-release.apk
+```
+
+Or download the pre-built APK from the [📥 Download Link](https://mysliit-my.sharepoint.com/:f:/g/personal/it24102217_my_sliit_lk/IgARgdctwW4dRpRlHDVzkrKhAcRrZ1DlS2g9BRcJDbXUtBA?e=u8uWJX).
+
+---
+
+## 📄 License
+
+This project was developed as part of the **DS 1.1 Module** at **SLIIT (Sri Lanka Institute of Information Technology)**.
+
+---
+
+<div align="center">
+
+**Made with ❤️ by Group 10**
+
+</div>
