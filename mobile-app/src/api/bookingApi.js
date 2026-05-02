@@ -1,10 +1,8 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
+import { BASE_URL } from './baseUrl';
 
-const debuggerHost = Constants.expoConfig?.hostUri;
-const ip = debuggerHost ? debuggerHost.split(':')[0] : '192.168.73.16';
-const BASE_URL = `http://${ip}:5000/api/bookings`;
+const BOOKING_URL = `${BASE_URL}/bookings`;
 
 const getHeaders = async () => {
     const stored = await AsyncStorage.getItem('userData');
@@ -20,25 +18,25 @@ const getHeaders = async () => {
 
 export const createBooking = async (bookingData) => {
     const headers = await getHeaders();
-    const res = await axios.post(BASE_URL, bookingData, { headers });
+    const res = await axios.post(BOOKING_URL, bookingData, { headers });
     return res.data;
 };
 
 export const fetchBookings = async () => {
     const headers = await getHeaders();
-    const res = await axios.get(BASE_URL, { headers });
+    const res = await axios.get(BOOKING_URL, { headers });
     return res.data;
 };
 
 export const updateBooking = async (bookingId, bookingData) => {
     const headers = await getHeaders();
-    const res = await axios.put(`${BASE_URL}/${bookingId}`, bookingData, { headers });
+    const res = await axios.put(`${BOOKING_URL}/${bookingId}`, bookingData, { headers });
     return res.data;
 };
 
 export const deleteBooking = async (bookingId) => {
     const headers = await getHeaders();
-    const res = await axios.delete(`${BASE_URL}/${bookingId}`, { headers });
+    const res = await axios.delete(`${BOOKING_URL}/${bookingId}`, { headers });
     return res.data;
 };
 
@@ -46,12 +44,12 @@ export const deleteBooking = async (bookingId) => {
 
 export const fetchAllBookings = async () => {
     const headers = await getHeaders();
-    const res = await axios.get(`${BASE_URL}/admin/all`, { headers });
+    const res = await axios.get(`${BOOKING_URL}/admin/all`, { headers });
     return res.data;
 };
 
 export const updateBookingStatus = async (bookingId, status) => {
     const headers = await getHeaders();
-    const res = await axios.put(`${BASE_URL}/admin/${bookingId}/status`, { status }, { headers });
+    const res = await axios.put(`${BOOKING_URL}/admin/${bookingId}/status`, { status }, { headers });
     return res.data;
 };
