@@ -278,9 +278,9 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,0.4)',
         alignItems: 'center', justifyContent: 'center',
     },
-    headerBottomRow: { zIndex: 10, flexDirection: 'row', alignItems: 'baseline', gap: 10 },
-    pageTitle: { fontSize: 30, fontWeight: '800', color: '#79573f' },
-    petCount: { fontSize: 14, color: '#30628a', fontWeight: '600' },
+    headerBottomRow: { zIndex: 10, alignItems: 'center', width: '100%' },
+    pageTitle: { fontSize: 34, fontWeight: '900', color: '#ffffff', textAlign: 'center', letterSpacing: 0.5 },
+    petCount: { fontSize: 15, color: 'rgba(255,255,255,0.75)', fontWeight: '700', textAlign: 'center', marginTop: 4 },
     contentArea: { paddingHorizontal: 20, paddingTop: 24 },
     // Empty state
     emptyStateContainer: { alignItems: 'center', marginBottom: 32 },
