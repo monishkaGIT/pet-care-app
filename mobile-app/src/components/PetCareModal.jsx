@@ -155,8 +155,8 @@ export default function PetCareModal({
                   ]}
                   activeOpacity={0.82}
                   onPress={() => {
-                    if (onClose) onClose();
                     if (btn.onPress) btn.onPress();
+                    if (onClose) onClose();
                   }}
                 >
                   <Text

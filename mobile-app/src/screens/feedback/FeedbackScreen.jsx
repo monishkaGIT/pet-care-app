@@ -437,6 +437,9 @@ export default function FeedbackScreen() {
                     </KeyboardAvoidingView>
                 </View>
             </Modal>
+
+            {/* Alert / Confirm modal */}
+            <PetCareModal {...modalProps} />
         </View>
     );
 }
