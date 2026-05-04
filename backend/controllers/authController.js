@@ -1,15 +1,8 @@
 const User = require("../models/User");
-const OTP = require("../models/OTP");
 const Post = require("../models/Post");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { uploadToCloudinary } = require("../utils/cloudinaryHelper");
-const { sendOTPEmail } = require("../utils/emailHelper");
-
-const OTP_PURPOSES = {
-    registration: 'registration',
-    passwordReset: 'password-reset',
-};
 
 const buildUserPayload = (user) => {
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -29,21 +22,6 @@ const buildUserPayload = (user) => {
 };
 
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-const generateOtp = () => Math.floor(1000 + Math.random() * 9000).toString();
-
-const saveOtpRecord = async ({ email, otp, purpose, userData = null }) => {
-    return OTP.findOneAndUpdate(
-        { email },
-        {
-            email,
-            purpose,
-            otp,
-            userData,
-        },
-        { upsert: true, returnDocument: 'after' }
-    );
-};
 
 // ── Public Auth ────────────────────────────────────────────────────
 
@@ -75,142 +53,18 @@ exports.registerUser = async (req, res) => {
             finalProfileImage = cloudinaryResult.secure_url;
         }
 
-        const otp = generateOtp();
-
-        await saveOtpRecord({
+        const user = await User.create({
+            name,
             email,
-            otp,
-            purpose: OTP_PURPOSES.registration,
-            userData: {
-                name,
-                email,
-                password: hashedPassword,
-                phone,
-                address,
-                bio,
-                profileImage: finalProfileImage,
-                role: 'user'
-            },
+            password: hashedPassword,
+            phone,
+            address,
+            bio,
+            profileImage: finalProfileImage,
+            role: 'user'
         });
 
-        const emailSent = await sendOTPEmail(email, otp, OTP_PURPOSES.registration);
-
-        if (!emailSent) {
-            return res.status(200).json({
-                message: `Verification OTP has been generated (but email failed to send in dev mode).`,
-                email,
-                otp
-            });
-        }
-
-        res.status(200).json({
-            message: `Verification OTP has been sent to ${email}. Please check your inbox.`,
-            email,
-            otp: process.env.NODE_ENV === 'development' ? otp : undefined
-        });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-exports.verifyOTP = async (req, res) => {
-    try {
-        const { email, otp } = req.body;
-
-        if (!email || !otp) {
-            return res.status(400).json({ message: "Email and OTP are required" });
-        }
-
-        const otpRecord = await OTP.findOne({ email, purpose: OTP_PURPOSES.registration });
-        if (!otpRecord) {
-            return res.status(400).json({ message: "No verification OTP found or it has expired. Please try registering again." });
-        }
-
-        if (otpRecord.otp !== otp) {
-            return res.status(400).json({ message: "Invalid verification code. Please check and try again." });
-        }
-
-        const user = await User.create(otpRecord.userData);
-        await OTP.deleteOne({ _id: otpRecord._id });
         res.status(201).json(buildUserPayload(user));
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-exports.forgotPasswordRequest = async (req, res) => {
-    try {
-        const { email } = req.body;
-
-        if (!email) {
-            return res.status(400).json({ message: "Email is required" });
-        }
-        if (!isValidEmail(email)) {
-            return res.status(400).json({ message: "Please provide a valid email address" });
-        }
-
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(404).json({ message: "No account found for that email address" });
-        }
-
-        const otp = generateOtp();
-        await saveOtpRecord({
-            email,
-            otp,
-            purpose: OTP_PURPOSES.passwordReset,
-        });
-
-        const emailSent = await sendOTPEmail(email, otp, OTP_PURPOSES.passwordReset);
-        if (!emailSent) {
-            return res.status(200).json({
-                message: `Password reset OTP has been generated (but email failed to send in dev mode).`,
-                email,
-                otp
-            });
-        }
-
-        res.status(200).json({
-            message: `Password reset OTP has been sent to ${email}. Please check your inbox.`,
-            email,
-            otp: process.env.NODE_ENV === 'development' ? otp : undefined
-        });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-exports.resetPasswordWithOtp = async (req, res) => {
-    try {
-        const { email, otp, newPassword } = req.body;
-
-        if (!email || !otp || !newPassword) {
-            return res.status(400).json({ message: "Email, OTP, and new password are required" });
-        }
-        if (newPassword.length < 6) {
-            return res.status(400).json({ message: "New password must be at least 6 characters" });
-        }
-
-        const otpRecord = await OTP.findOne({ email, purpose: OTP_PURPOSES.passwordReset });
-        if (!otpRecord) {
-            return res.status(400).json({ message: "No password reset OTP found or it has expired. Please request a new code." });
-        }
-
-        if (otpRecord.otp !== otp) {
-            return res.status(400).json({ message: "Invalid password reset code. Please check and try again." });
-        }
-
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(404).json({ message: "No account found for that email address" });
-        }
-
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(newPassword, salt);
-        await user.save();
-        await OTP.deleteOne({ _id: otpRecord._id });
-
-        res.json({ message: "Password updated successfully" });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
