@@ -8,7 +8,7 @@ import PetCareModal from '../../components/PetCareModal';
 import usePetCareModal from '../../hooks/usePetCareModal';
 
 export default function RegisterScreen({ navigation }) {
-    const { register, verifyOtp } = useContext(AuthContext);
+    const { register } = useContext(AuthContext);
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -16,8 +16,6 @@ export default function RegisterScreen({ navigation }) {
     const [address, setAddress] = useState('');
     const [profileImage, setProfileImage] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [showOtpForm, setShowOtpForm] = useState(false);
-    const [otp, setOtp] = useState('');
     const [modalProps, showModal] = usePetCareModal();
 
     const pickImage = async () => {
@@ -59,28 +57,10 @@ export default function RegisterScreen({ navigation }) {
         setLoading(true);
         try {
             const formData = { name: name.trim(), email: email.trim(), password, phone: phone.trim(), address: address.trim(), profileImage, role: 'user' };
-            const data = await register(formData);
-            showModal('success', 'OTP Sent', data.message, [
-                { text: 'OK', style: 'primary', onPress: () => navigation.navigate('OtpVerification', { email: email.trim(), registrationData: formData }) },
-            ]);
-        } catch (error) {
-            showModal('error', 'Registration Failed', error.response?.data?.message || 'Error occurred');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleVerifyOtp = async () => {
-        if (!otp.trim()) {
-            return showModal('warning', 'Missing OTP', 'Please enter the verification OTP.');
-        }
-
-        setLoading(true);
-        try {
-            await verifyOtp(email.trim(), otp.trim());
+            await register(formData);
             showModal('success', 'Account Created', 'Your account has been created successfully!');
         } catch (error) {
-            showModal('error', 'Verification Failed', error.response?.data?.message || 'Invalid or expired OTP code.');
+            showModal('error', 'Registration Failed', error.response?.data?.message || 'Error occurred');
         } finally {
             setLoading(false);
         }
@@ -101,16 +81,11 @@ export default function RegisterScreen({ navigation }) {
                         <View style={styles.headerSection}>
                             <Text style={styles.brandTitle}>Join PetCare</Text>
                             <Text style={styles.brandSubtitle}>
-                                {showOtpForm 
-                                    ? `Enter the verification code sent to ${email}.`
-                                    : 'Create an account to start managing your pets with ease.'
-                                }
+                                Create an account to start managing your pets with ease.
                             </Text>
                         </View>
 
                         <View style={styles.card}>
-                            {!showOtpForm ? (
-                                <>
                                     {/* Profile Image Picker */}
                                     <View style={styles.imagePickerContainer}>
                                         <TouchableOpacity onPress={pickImage} style={styles.imagePicker} activeOpacity={0.8}>
@@ -177,35 +152,6 @@ export default function RegisterScreen({ navigation }) {
                                             </View>
                                         )}
                                     </TouchableOpacity>
-                                </>
-                            ) : (
-                                <>
-                                    <View style={styles.inputGroup}>
-                                        <Text style={styles.label}>VERIFICATION OTP</Text>
-                                        <View style={styles.inputContainer}>
-                                            <MaterialIcons name="vpn-key" size={20} color="#81817a" style={styles.inputIcon} />
-                                            <TextInput style={styles.input} placeholder="Enter 4 or 6-digit OTP" placeholderTextColor="#81817a" value={otp} onChangeText={setOtp} keyboardType="number-pad" />
-                                        </View>
-                                    </View>
-
-                                    {/* Submit OTP */}
-                                    <TouchableOpacity style={styles.submitBtn} onPress={handleVerifyOtp} disabled={loading} activeOpacity={0.8}>
-                                        {loading ? (
-                                            <ActivityIndicator color="#fff" />
-                                        ) : (
-                                            <View style={styles.btnContent}>
-                                                <Text style={styles.submitBtnText}>Verify OTP</Text>
-                                                <MaterialIcons name="check-circle" size={20} color="#ffffff" />
-                                            </View>
-                                        )}
-                                    </TouchableOpacity>
-
-                                    {/* Back to register form */}
-                                    <TouchableOpacity style={styles.backBtn} onPress={() => setShowOtpForm(false)}>
-                                        <Text style={styles.backBtnText}>Change details / Back</Text>
-                                    </TouchableOpacity>
-                                </>
-                            )}
                         </View>
 
                         <View style={styles.bottomAction}>

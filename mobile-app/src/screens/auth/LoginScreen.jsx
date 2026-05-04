@@ -70,9 +70,6 @@ export default function LoginScreen({ navigation }) {
                             <View style={styles.inputGroup}>
                                 <View style={styles.passwordHeader}>
                                     <Text style={styles.label}>PASSWORD</Text>
-                                    <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword', { email: email.trim() })}>
-                                        <Text style={styles.forgotText}>FORGOT?</Text>
-                                    </TouchableOpacity>
                                 </View>
                                 <View style={styles.inputContainer}>
                                     <MaterialIcons name="lock" size={20} color="#81817a" style={styles.inputIcon} />
