@@ -41,14 +41,20 @@ const sendOTPEmail = async (email, otp, purpose = "registration") => {
         const message = buildOtpMessage(purpose, otp);
 
         // Create nodemailer transporter
+        // family: 4 forces IPv4 — Render does not support IPv6 and Gmail
+        // SMTP resolves to IPv6 first, causing ENETUNREACH / timeouts.
         const transporter = nodemailer.createTransport({
             host,
             port,
-            secure: port === 465, // true for port 465, false for other ports
+            secure: port === 465,
             auth: {
                 user,
                 pass,
             },
+            family: 4,
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 15000,
         });
 
         const mailOptions = {

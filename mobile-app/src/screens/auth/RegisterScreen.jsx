@@ -58,9 +58,10 @@ export default function RegisterScreen({ navigation }) {
 
         setLoading(true);
         try {
-            const data = await register({ name: name.trim(), email: email.trim(), password, phone: phone.trim(), address: address.trim(), profileImage, role: 'user' });
+            const formData = { name: name.trim(), email: email.trim(), password, phone: phone.trim(), address: address.trim(), profileImage, role: 'user' };
+            const data = await register(formData);
             showModal('success', 'OTP Sent', data.message, [
-                { text: 'OK', style: 'primary', onPress: () => navigation.navigate('OtpVerification', { email: email.trim() }) },
+                { text: 'OK', style: 'primary', onPress: () => navigation.navigate('OtpVerification', { email: email.trim(), registrationData: formData }) },
             ]);
         } catch (error) {
             showModal('error', 'Registration Failed', error.response?.data?.message || 'Error occurred');

@@ -7,8 +7,8 @@ import PetCareModal from '../../components/PetCareModal';
 import usePetCareModal from '../../hooks/usePetCareModal';
 
 export default function OtpVerificationScreen({ route, navigation }) {
-    const { verifyOtp } = useContext(AuthContext);
-    const { email } = route.params || {};
+    const { verifyOtp, register } = useContext(AuthContext);
+    const { email, registrationData } = route.params || {};
 
     const [otpValues, setOtpValues] = useState(['', '', '', '']);
     const [loading, setLoading] = useState(false);
@@ -66,7 +66,7 @@ export default function OtpVerificationScreen({ route, navigation }) {
         <SafeAreaView style={styles.safeArea}>
             <PetCareModal {...modalProps} />
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-                
+
                 {/* Visual Banner Header matching the latest screenshot */}
                 <View style={styles.topBanner}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -81,7 +81,7 @@ export default function OtpVerificationScreen({ route, navigation }) {
                 </View>
 
                 <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                    
+
                     {/* Content Section */}
                     <View style={styles.headingContainer}>
                         <Text style={styles.mainHeading}>Verification Code</Text>
@@ -116,7 +116,20 @@ export default function OtpVerificationScreen({ route, navigation }) {
                     </TouchableOpacity>
 
                     {/* Resend Code Link */}
-                    <TouchableOpacity style={styles.resendBtn} onPress={() => showModal('success', 'OTP Resent', 'A new verification code has been sent to your email.')}>
+                    <TouchableOpacity style={styles.resendBtn} onPress={async () => {
+                        if (!registrationData) {
+                            return showModal('warning', 'Cannot Resend', 'Registration data is not available. Please go back and register again.');
+                        }
+                        try {
+                            setLoading(true);
+                            await register(registrationData);
+                            showModal('success', 'OTP Resent', 'A new verification code has been sent to your email.');
+                        } catch (err) {
+                            showModal('error', 'Resend Failed', err.response?.data?.message || 'Unable to resend OTP.');
+                        } finally {
+                            setLoading(false);
+                        }
+                    }} disabled={loading}>
                         <MaterialIcons name="refresh" size={18} color="#805d45" style={styles.resendIcon} />
                         <Text style={styles.resendText}>Resend Code</Text>
                     </TouchableOpacity>
