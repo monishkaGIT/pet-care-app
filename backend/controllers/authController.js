@@ -41,7 +41,7 @@ const saveOtpRecord = async ({ email, otp, purpose, userData = null }) => {
             otp,
             userData,
         },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: 'after' }
     );
 };
 
